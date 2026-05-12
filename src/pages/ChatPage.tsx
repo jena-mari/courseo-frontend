@@ -94,7 +94,6 @@ const INITIAL_CHATS: ChatSession[] = [
   },
 ];
 
-// Handbook modal component
 function HandbookModal({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
@@ -167,7 +166,6 @@ function HandbookModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// Typing indicator
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-3">
@@ -195,7 +193,6 @@ function TypingIndicator() {
   );
 }
 
-// Single message bubble
 function MessageBubble({ message, index }: { message: Message; index: number }) {
   const isUser = message.role === "user";
   return (
@@ -244,8 +241,8 @@ export function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingPromptSentRef = useRef(false);
 
-  // Load messages when active chat changes
   useEffect(() => {
     if (activeChatId === "new") {
       setActiveMessages([]);
@@ -255,7 +252,6 @@ export function ChatPage() {
     }
   }, [activeChatId]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages, isTyping]);
@@ -277,7 +273,6 @@ export function ChatPage() {
       setInputText("");
       setIsTyping(true);
 
-      // Capture the chatId in closure scope so async callback can reference it
       let chatId = activeChatId;
       const chatTitle = buildChatTitle({
         id: chatId,
@@ -302,7 +297,6 @@ export function ChatPage() {
         );
       }
 
-      // Simulate AI thinking time
       const delay = 1200 + Math.random() * 800;
       await new Promise((r) => setTimeout(r, delay));
 
@@ -318,7 +312,6 @@ export function ChatPage() {
       setActiveMessages(finalMessages);
       setIsTyping(false);
 
-      // Update chat session with AI response
       setChats((prev) =>
         prev.map((c) =>
           c.id === chatId
@@ -329,6 +322,15 @@ export function ChatPage() {
     },
     [activeMessages, activeChatId, enrollment, isTyping]
   );
+
+  useEffect(() => {
+    if (pendingPromptSentRef.current || isTyping) return;
+    const pendingPrompt = localStorage.getItem("courseoPendingPrompt");
+    if (!pendingPrompt) return;
+    pendingPromptSentRef.current = true;
+    localStorage.removeItem("courseoPendingPrompt");
+    sendMessage(pendingPrompt);
+  }, [isTyping, sendMessage]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -360,7 +362,6 @@ export function ChatPage() {
     <div
       className="relative w-full h-screen overflow-hidden font-['Montserrat',sans-serif]"
     >
-      {/* Background */}
       <img
         src={imgBg}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
@@ -369,9 +370,7 @@ export function ChatPage() {
       />
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      {/* Main Layout */}
       <div className="relative z-10 flex items-stretch gap-4 p-5 h-screen">
-        {/* Sidebar */}
         <CourseoSidebar
           chats={sidebarChats}
           activeChatId={activeChatId}
@@ -383,9 +382,7 @@ export function ChatPage() {
           onHandbook={() => setShowHandbook(true)}
         />
 
-        {/* Main Chat Area */}
         <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
-          {/* Top bar */}
           <div className="flex items-center justify-between px-7 py-5 shrink-0">
             <p className="font-extrabold text-2xl text-[#000181] tracking-[-0.96px]">
               Courseo
@@ -430,10 +427,8 @@ export function ChatPage() {
             </div>
           </div>
 
-          {/* Messages area */}
           <div className="flex-1 overflow-y-auto px-7 pb-4 min-h-0">
             {isEmptyChat ? (
-              // Empty state
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -460,7 +455,6 @@ export function ChatPage() {
                 )}
               </motion.div>
             ) : (
-              // Chat messages
               <div className="flex flex-col gap-4 py-4">
                 {activeMessages.map((msg, i) => (
                   <MessageBubble key={msg.id} message={msg} index={i} />
@@ -481,7 +475,6 @@ export function ChatPage() {
             )}
           </div>
 
-          {/* Suggested prompts (only shown when empty) */}
           <AnimatePresence>
             {isEmptyChat && (
               <motion.div
@@ -512,7 +505,6 @@ export function ChatPage() {
             )}
           </AnimatePresence>
 
-          {/* Input area */}
           <div className="px-7 pb-6 shrink-0">
             <div className="border border-[#0032fc] rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] flex flex-col gap-2 p-4">
               <textarea
@@ -532,9 +524,7 @@ export function ChatPage() {
               />
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => {
-                    // Attach file (mock)
-                  }}
+                  onClick={() => undefined}
                   className="text-[#000181] hover:bg-[rgba(0,1,129,0.08)] p-1.5 rounded-lg transition-colors"
                   title="Attach file"
                 >
@@ -556,14 +546,12 @@ export function ChatPage() {
         </div>
       </div>
 
-      {/* Handbook Modal */}
       <AnimatePresence>
         {showHandbook && (
           <HandbookModal onClose={() => setShowHandbook(false)} />
         )}
       </AnimatePresence>
 
-      {/* Click outside to close menu */}
       {showMenu && (
         <div
           className="fixed inset-0 z-[5]"

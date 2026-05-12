@@ -10,7 +10,6 @@ export function MessageRenderer({ content }: MessageRendererProps) {
       {lines.map((line, i) => {
         if (line === "") return <div key={i} className="h-1.5" />;
 
-        // Handle bullet lines
         const isBullet = line.trimStart().startsWith("•") || line.trimStart().startsWith("-");
         const isNumbered = /^\d+\./.test(line.trimStart());
         const isQuote = line.trimStart().startsWith(">");

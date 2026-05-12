@@ -42,7 +42,6 @@ export function CourseoSidebar({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
         <div className="flex items-center gap-2">
           <img
@@ -70,9 +69,7 @@ export function CourseoSidebar({
         </button>
       </div>
 
-      {/* Nav items */}
       <div className="px-4 flex flex-col gap-2 shrink-0">
-        {/* Search */}
         <div className="border-2 border-[rgba(0,1,129,0.5)] rounded-[15px] h-9 flex items-center px-3 gap-2 overflow-hidden">
           <Search size={11} className="text-[#000181] opacity-50 shrink-0" />
           {!collapsed && (
@@ -86,7 +83,6 @@ export function CourseoSidebar({
           )}
         </div>
 
-        {/* Create Chat */}
         <button
           onClick={onNewChat}
           className="bg-[rgba(131,231,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-3 gap-2 overflow-hidden hover:bg-[rgba(131,231,255,0.7)] transition-colors group"
@@ -102,7 +98,6 @@ export function CourseoSidebar({
           {!collapsed && <ChevronRight size={13} className="text-[#000181]" />}
         </button>
 
-        {/* Handbook */}
         {showHandbook && (
           <button
             onClick={onHandbook}
@@ -111,12 +106,9 @@ export function CourseoSidebar({
             <div className="flex items-center gap-2">
               <BookOpen size={11} className="text-[#000181] shrink-0" />
               {!collapsed && (
-                <div>
-                  <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
-                    Your Handbook
-                  </span>
-                  <p className="text-[9px] text-[rgba(0,1,129,0.65)]">Dev note: editable soon</p>
-                </div>
+                <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+                  Your Handbook
+                </span>
               )}
             </div>
             {!collapsed && <ChevronRight size={13} className="text-[#000181]" />}
@@ -124,10 +116,8 @@ export function CourseoSidebar({
         )}
       </div>
 
-      {/* Divider */}
       <div className="mx-4 border-t border-[#000181] my-3" />
 
-      {/* Previous Chats */}
       <div className="flex-1 overflow-y-auto px-4 min-h-0">
         {!collapsed && (
           <p className="text-[11px] font-black text-[#000181] mb-2 tracking-tight">
@@ -162,10 +152,8 @@ export function CourseoSidebar({
         </div>
       </div>
 
-      {/* Divider */}
       <div className="mx-4 border-t border-[#000181] my-3" />
 
-      {/* Settings & Help */}
       <div className="px-4 pb-4 shrink-0">
         {!collapsed && (
           <p className="text-[11px] font-black text-[#000181] mb-2 tracking-tight">
@@ -188,7 +176,6 @@ export function CourseoSidebar({
         </div>
       </div>
 
-      {/* Bottom brand */}
       {!collapsed && (
         <div className="pb-5 text-center shrink-0">
           <p className="font-extrabold text-2xl text-[#000181] tracking-[-0.96px]">
