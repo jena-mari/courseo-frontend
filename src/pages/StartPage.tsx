@@ -11,36 +11,44 @@ import imgLogo from "../assets/courseo-logo.png";
 // Static preview of sidebar behind the modal
 function SidebarPreview() {
   return (
-    <div className="bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-[240px] h-[700px] shrink-0 flex flex-col p-5 overflow-hidden">
-      <div className="flex items-center gap-3 mb-5">
-        <img src={imgLogo} alt="Courseo" className="w-9 h-9 object-contain" />
+    <div className="bg-white rounded-[30px] shadow-[2px_2px_12px_4px_rgba(0,0,0,0.12)] w-[230px] h-[660px] shrink-0 flex flex-col p-5 overflow-hidden">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <img src={imgLogo} alt="Courseo" className="w-9 h-9 object-contain" />
+          <p className="text-sm font-black text-[#000181] tracking-tight">Courseo</p>
+        </div>
+        <span className="text-[10px] font-bold text-[rgba(0,1,129,0.6)]">Preview</span>
       </div>
 
-      <div className="border-2 border-[rgba(0,1,129,0.5)] rounded-[15px] h-8 flex items-center px-3 gap-2 mb-2">
-        <Search size={10} className="text-[rgba(0,1,129,0.5)]" />
-        <span className="text-[10px] font-extrabold text-[rgba(0,1,129,0.5)]">Search Chat</span>
+      <div className="border-2 border-[rgba(0,1,129,0.5)] rounded-[16px] h-9 flex items-center px-3 gap-2 mb-3">
+        <Search size={11} className="text-[rgba(0,1,129,0.55)]" />
+        <span className="text-[10px] font-semibold text-[rgba(0,1,129,0.55)]">Search Chat</span>
       </div>
-      <div className="bg-[rgba(131,231,255,0.5)] rounded-[15px] h-8 flex items-center px-3 gap-2 mb-2">
-        <PenLine size={10} className="text-[#000181]" />
-        <span className="text-[10px] font-extrabold text-[#000181]">Create Chat</span>
+      <div className="bg-[rgba(131,231,255,0.55)] rounded-[16px] h-9 flex items-center px-3 gap-2 mb-2">
+        <PenLine size={11} className="text-[#000181]" />
+        <span className="text-[10px] font-semibold text-[#000181]">Create Chat</span>
       </div>
-      <div className="bg-[rgba(131,231,255,0.5)] rounded-[15px] h-8 flex items-center px-3 gap-2 mb-3">
-        <BookOpen size={10} className="text-[#000181]" />
-        <span className="text-[10px] font-extrabold text-[#000181]">Your Handbook</span>
+      <div className="bg-[rgba(131,231,255,0.55)] rounded-[16px] h-9 flex items-center px-3 gap-2 mb-4">
+        <BookOpen size={11} className="text-[#000181]" />
+        <span className="text-[10px] font-semibold text-[#000181]">Your Handbook</span>
       </div>
 
       <div className="border-t border-[#000181] mb-3" />
-      <p className="text-[10px] font-black text-[#000181] mb-2">Previous Chats</p>
-      <div className="space-y-1.5">
-        <p className="text-[9px] font-semibold text-[#000181] px-2">Previous Chat #1</p>
-        <div className="bg-[rgba(232,160,255,0.5)] rounded-[15px] px-2 py-1">
-          <p className="text-[9px] font-semibold text-[#000181]">Previous Chat #2</p>
+      <p className="text-[10px] font-black text-[#000181] mb-2">Recent chats</p>
+      <div className="space-y-2 text-[10px] text-[#000181]">
+        <div className="rounded-[18px] bg-[rgba(232,160,255,0.45)] px-3 py-2">
+          <p className="font-semibold">Study Plan for Autumn session</p>
         </div>
-        <p className="text-[9px] font-semibold text-[#000181] px-2">Previous Chat #3</p>
+        <div className="rounded-[18px] bg-[rgba(131,231,255,0.35)] px-3 py-2">
+          <p className="font-semibold">Game development pathway</p>
+        </div>
+        <div className="rounded-[18px] bg-[rgba(255,210,132,0.35)] px-3 py-2">
+          <p className="font-semibold">Prerequisite check</p>
+        </div>
       </div>
 
       <div className="border-t border-[#000181] my-3" />
-      <p className="text-[10px] font-black text-[#000181] mb-2">Settings &amp; Help</p>
+      <p className="text-[10px] font-black text-[#000181] mb-2">More</p>
       <div className="space-y-1">
         <div className="flex items-center gap-2 px-2">
           <Settings size={9} className="text-[#000181]" />
@@ -68,14 +76,14 @@ function ChatPreview() {
   ];
 
   return (
-    <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-[700px] flex flex-col p-7 overflow-hidden">
-      <div className="flex items-center justify-between mb-auto">
+    <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_12px_4px_rgba(0,0,0,0.12)] h-[660px] flex flex-col p-6 overflow-hidden">
+      <div className="flex items-center justify-between mb-5">
         <p className="font-extrabold text-2xl text-[#000181] tracking-tight">Courseo</p>
         <MoreVertical size={22} className="text-[#000181]" />
       </div>
 
       <div className="flex items-center justify-center flex-1">
-        <h1 className="font-extrabold text-[clamp(48px,6vw,80px)] text-[#000181] text-center tracking-[-3px] leading-none">
+        <h1 className="font-extrabold text-[clamp(34px,5vw,54px)] text-[#000181] text-center tracking-[-2px] leading-tight">
           How can I help?
         </h1>
       </div>
@@ -84,17 +92,17 @@ function ChatPreview() {
         {suggestedPrompts.map((p, i) => (
           <div
             key={i}
-            className="bg-[rgba(131,231,255,0.5)] rounded-[15px] px-4 py-2.5"
+            className="bg-[rgba(131,231,255,0.5)] rounded-[18px] px-4 py-2"
           >
-            <p className="text-[12px] font-extrabold text-[rgba(0,1,129,0.6)]">{p}</p>
+            <p className="text-[11px] font-semibold text-[rgba(0,1,129,0.7)]">{p}</p>
           </div>
         ))}
       </div>
 
-      <div className="border border-[#0032fc] rounded-[20px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] p-4 flex items-center gap-3">
-        <Plus size={22} className="text-[#000181] shrink-0" />
-        <p className="flex-1 text-xl font-semibold text-[rgba(0,1,129,0.6)]">Start typing...</p>
-        <div className="w-7 h-7 rounded-full bg-[#000181] flex items-center justify-center shrink-0">
+      <div className="border border-[#0032fc] rounded-[22px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] p-4 flex items-center gap-3">
+        <Plus size={20} className="text-[#000181] shrink-0" />
+        <p className="flex-1 text-base font-semibold text-[rgba(0,1,129,0.65)]">Start typing to open a new chat instantly.</p>
+        <div className="w-9 h-9 rounded-full bg-[#000181] flex items-center justify-center shrink-0">
           <ArrowRight size={14} className="text-white" />
         </div>
       </div>
@@ -124,7 +132,7 @@ function GetStartedModal({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[50px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[700px] p-10 relative"
+      className="bg-white/95 backdrop-blur-sm rounded-[40px] shadow-[2px_2px_20px_5px_rgba(0,0,0,0.12)] w-full max-w-[620px] p-8 relative"
     >
       {/* Logo top-left */}
       <div className="absolute top-8 left-8">
@@ -140,20 +148,39 @@ function GetStartedModal({ onClose }: { onClose: () => void }) {
       </button>
 
       {/* Heading */}
-      <div className="text-center mt-8 mb-6">
-        <h1 className="font-extrabold text-[clamp(48px,6vw,72px)] text-[#000181] tracking-[-2.5px] leading-[1.05]">
-          Get Started<br />with Courseo
+      <div className="text-center mt-4 mb-4">
+        <h1 className="font-extrabold text-[clamp(34px,4.5vw,50px)] text-[#000181] tracking-[-1.8px] leading-tight">
+          Get started with Courseo
         </h1>
+        <p className="mt-3 text-[14px] font-semibold text-[rgba(0,1,129,0.75)] max-w-[520px] mx-auto">
+          Paste your enrolment record below and unlock a personalised academic planning chat experience.
+        </p>
       </div>
 
-      {/* Subtext */}
-      <p className="text-center text-[15px] font-semibold text-[#000181] mb-6 px-4">
-        Copy and paste your enrolment record below to start chatting with our AI assistant.
-        For a guide on how to do this,{" "}
-        <button className="text-[#0032fc] underline font-extrabold hover:opacity-80 transition-opacity">
-          click here.
-        </button>
-      </p>
+      {/* Input */}
+      <div className="space-y-3 mb-4">
+        <div className="border border-[#0032fc] rounded-[28px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] flex items-center px-4 py-3 gap-3">
+          <input
+            type="text"
+            placeholder="Paste your enrolment record here..."
+            value={enrollment}
+            onChange={(e) => setEnrollment(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 text-base font-semibold text-[rgba(0,1,129,0.7)] placeholder:text-[rgba(0,1,129,0.45)] outline-none bg-transparent"
+          />
+          <motion.button
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={handleSubmit}
+            className="w-10 h-10 rounded-full bg-[#000181] flex items-center justify-center shrink-0"
+          >
+            <ArrowRight size={14} className="text-white" />
+          </motion.button>
+        </div>
+        <p className="text-[13px] text-[rgba(0,1,129,0.65)]">
+          This is a prototype, but all controls work to simulate a realistic user flow.
+        </p>
+      </div>
 
       {/* Input */}
       <div className="border border-[#0032fc] rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] flex items-center px-5 py-3 gap-3 mb-5">
@@ -175,18 +202,12 @@ function GetStartedModal({ onClose }: { onClose: () => void }) {
         </motion.button>
       </div>
 
-      {/* Save plan prompt */}
-      <p className="text-center text-[15px] font-semibold text-[#000181] mb-5">
-        Want to save your study plan for future reference or changes?
-      </p>
-
-      {/* CTA buttons */}
-      <div className="flex items-center justify-center gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row items-center justify-center mt-3">
         <motion.button
           whileHover={{ scale: 1.04, boxShadow: "4px 4px 10px rgba(0,0,0,0.2)" }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/register")}
-          className="bg-[rgba(232,160,255,0.5)] border-2 border-[#000181] rounded-[20px] h-[50px] w-[170px] font-bold text-[15px] text-[#000181] shadow-[2px_2px_4px_rgba(0,0,0,0.25)] transition-all"
+          className="bg-[rgba(232,160,255,0.5)] border-2 border-[#000181] rounded-[20px] h-[48px] min-w-[150px] font-bold text-[14px] text-[#000181] shadow-[2px_2px_4px_rgba(0,0,0,0.25)] transition-all"
         >
           Register now
         </motion.button>
@@ -194,7 +215,7 @@ function GetStartedModal({ onClose }: { onClose: () => void }) {
           whileHover={{ scale: 1.04, boxShadow: "4px 4px 10px rgba(0,0,0,0.2)" }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/login")}
-          className="bg-[rgba(131,231,255,0.5)] border-2 border-[#000181] rounded-[20px] h-[50px] w-[170px] font-bold text-[15px] text-[#000181] shadow-[2px_2px_4px_rgba(0,0,0,0.25)] transition-all"
+          className="bg-[rgba(131,231,255,0.5)] border-2 border-[#000181] rounded-[20px] h-[48px] min-w-[150px] font-bold text-[14px] text-[#000181] shadow-[2px_2px_4px_rgba(0,0,0,0.25)] transition-all"
         >
           Log-In
         </motion.button>

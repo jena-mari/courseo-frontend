@@ -31,10 +31,20 @@ const SUGGESTED_PROMPTS = [
   '"Am I allowed to take five subjects this semester?"',
 ];
 
+function buildChatTitle(session: ChatSession) {
+  const lastUserMessage = [...session.messages]
+    .reverse()
+    .find((message) => message.role === "user");
+
+  const content = lastUserMessage?.content ?? session.messages[0]?.content ?? "New Chat";
+  const normalized = content.replace(/\s+/g, " ").trim();
+  return normalized.length > 38 ? `${normalized.slice(0, 38)}…` : normalized;
+}
+
 const INITIAL_CHATS: ChatSession[] = [
   {
     id: "chat-1",
-    title: "Previous Chat #1",
+    title: "What are my core subjects for Year 2?",
     messages: [
       {
         id: "m1",
@@ -53,7 +63,7 @@ const INITIAL_CHATS: ChatSession[] = [
   },
   {
     id: "chat-2",
-    title: "Previous Chat #2",
+    title: "Can I get into game development with this degree?",
     messages: [
       {
         id: "m3",
@@ -72,7 +82,7 @@ const INITIAL_CHATS: ChatSession[] = [
   },
   {
     id: "chat-3",
-    title: "Previous Chat #3",
+    title: "How do I check my prerequisites?",
     messages: [
       {
         id: "m5",
@@ -267,12 +277,13 @@ export function ChatPage() {
       setInputText("");
       setIsTyping(true);
 
-      // Update or create chat session
-      const chatTitle =
-        trimmed.length > 40 ? trimmed.slice(0, 40) + "…" : trimmed;
-
       // Capture the chatId in closure scope so async callback can reference it
       let chatId = activeChatId;
+      const chatTitle = buildChatTitle({
+        id: chatId,
+        title: trimmed,
+        messages: [{ ...userMsg }],
+      });
 
       if (activeChatId === "new") {
         chatId = `chat-${Date.now()}`;
@@ -286,7 +297,7 @@ export function ChatPage() {
       } else {
         setChats((prev) =>
           prev.map((c) =>
-            c.id === chatId ? { ...c, messages: newMessages } : c
+            c.id === chatId ? { ...c, title: buildChatTitle({ ...c, messages: newMessages }), messages: newMessages } : c
           )
         );
       }
@@ -310,7 +321,9 @@ export function ChatPage() {
       // Update chat session with AI response
       setChats((prev) =>
         prev.map((c) =>
-          c.id === chatId ? { ...c, messages: finalMessages } : c
+          c.id === chatId
+            ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
+            : c
         )
       );
     },
@@ -340,7 +353,7 @@ export function ChatPage() {
 
   const sidebarChats: Chat[] = chats.map((c) => ({
     id: c.id,
-    title: c.title,
+    title: buildChatTitle(c),
   }));
 
   return (

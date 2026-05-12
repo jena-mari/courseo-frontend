@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, LayoutDashboard } from "lucide-react";
+import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, LayoutDashboard, MessageSquare } from "lucide-react";
 import imgLogo from "../assets/courseo-logo.png";
 import { motion } from "framer-motion";
 
@@ -111,9 +111,12 @@ export function CourseoSidebar({
             <div className="flex items-center gap-2">
               <BookOpen size={11} className="text-[#000181] shrink-0" />
               {!collapsed && (
-                <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
-                  Your Handbook
-                </span>
+                <div>
+                  <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+                    Your Handbook
+                  </span>
+                  <p className="text-[9px] text-[rgba(0,1,129,0.65)]">Dev note: editable soon</p>
+                </div>
               )}
             </div>
             {!collapsed && <ChevronRight size={13} className="text-[#000181]" />}
@@ -149,7 +152,11 @@ export function CourseoSidebar({
               `}
               title={chat.title}
             >
-              {collapsed ? "•" : chat.title}
+              {collapsed ? (
+                <MessageSquare size={16} className="text-[#000181]" />
+              ) : (
+                chat.title
+              )}
             </motion.button>
           ))}
         </div>
