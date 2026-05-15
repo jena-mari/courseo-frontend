@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, User, Lock, X } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Mail, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 
@@ -13,6 +13,7 @@ interface RegisterCardProps {
 export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +27,9 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
     e.preventDefault();
     setError("");
     if (!username.trim()) return setError("Please enter a username.");
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return setError("Please enter a valid email address.");
+    }
     if (password.length < 6) return setError("Password must be at least 6 characters.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
     if (!agreePrivacy) return setError("Please agree to the Privacy Policy.");
@@ -33,7 +37,15 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1400));
     setLoading(false);
-    localStorage.setItem("courseoUser", JSON.stringify({ username }));
+    localStorage.setItem("courseoUser", JSON.stringify({ username, email }));
+    navigate("/chat");
+  };
+
+  const handleProviderRegister = (provider: "Google" | "Yahoo") => {
+    localStorage.setItem(
+      "courseoUser",
+      JSON.stringify({ username: provider, email: "", provider }),
+    );
     navigate("/chat");
   };
 
@@ -43,10 +55,10 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[50px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[650px] p-10 relative overflow-y-auto max-h-[90vh]"
+      className="bg-white rounded-[42px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[620px] px-7 py-8 sm:px-10 sm:py-9 relative overflow-y-auto max-h-[92vh]"
     >
       <div className="absolute top-8 left-8">
-        <img src={imgLogo} alt="Courseo" className="w-14 h-14 object-contain" />
+        <img src={imgLogo} alt="Courseo" className="w-12 h-12 object-contain" />
       </div>
 
       <button
@@ -57,18 +69,18 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
         <X size={22} strokeWidth={3} />
       </button>
 
-      <div className="text-center mt-8 mb-7">
-        <h1 className="font-extrabold text-[clamp(36px,5vw,60px)] text-[#000181] tracking-[-2px] leading-[1.1]">
+      <div className="text-center mt-7 mb-5">
+        <h1 className="font-extrabold text-[clamp(32px,5vw,54px)] text-[#000181] tracking-[-2px] leading-[1.05]">
           Register for<br />Courseo!
         </h1>
       </div>
 
-      <form onSubmit={handleRegister} className="space-y-4 px-2">
+      <form onSubmit={handleRegister} className="space-y-3 px-1 sm:px-2">
         <div>
-          <label className="font-bold text-[18px] text-[#000181] block mb-2">
+          <label className="font-bold text-[15px] text-[#000181] block mb-1.5">
             Username
           </label>
-          <div className="border-2 border-[#000181] rounded-[20px] h-[50px] flex items-center px-4 gap-3">
+          <div className="border-2 border-[#000181] rounded-[18px] h-[44px] flex items-center px-4 gap-3">
             <User size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type="text"
@@ -81,10 +93,26 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
         </div>
 
         <div>
-          <label className="font-bold text-[18px] text-[#000181] block mb-2">
+          <label className="font-bold text-[15px] text-[#000181] block mb-1.5">
+            Email
+          </label>
+          <div className="border-2 border-[#000181] rounded-[18px] h-[44px] flex items-center px-4 gap-3">
+            <Mail size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
+            <input
+              type="email"
+              placeholder="Enter your email..."
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1 text-[14px] font-normal text-[rgba(0,1,129,0.5)] placeholder:text-[rgba(0,1,129,0.5)] outline-none bg-transparent min-w-0"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="font-bold text-[15px] text-[#000181] block mb-1.5">
             Password
           </label>
-          <div className="border-2 border-[#000181] rounded-[20px] h-[50px] flex items-center px-4 gap-3">
+          <div className="border-2 border-[#000181] rounded-[18px] h-[44px] flex items-center px-4 gap-3">
             <Lock size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type={showPassword ? "text" : "password"}
@@ -105,10 +133,10 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
         </div>
 
         <div>
-          <label className="font-bold text-[18px] text-[#000181] block mb-2">
+          <label className="font-bold text-[15px] text-[#000181] block mb-1.5">
             Confirm Password
           </label>
-          <div className="border-2 border-[#000181] rounded-[20px] h-[50px] flex items-center px-4 gap-3">
+          <div className="border-2 border-[#000181] rounded-[18px] h-[44px] flex items-center px-4 gap-3">
             <Lock size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type={showConfirm ? "text" : "password"}
@@ -133,9 +161,9 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="w-5 h-5 border-2 border-[#000181] rounded accent-[#000181]"
+            className="w-4 h-4 border-2 border-[#000181] rounded accent-[#000181]"
           />
-          <span className="font-bold text-[14px] text-[#000181]">Remember Me</span>
+          <span className="font-bold text-[13px] text-[#000181]">Remember Me</span>
         </label>
 
         <label className="flex items-center gap-2.5 cursor-pointer">
@@ -143,9 +171,9 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
             type="checkbox"
             checked={agreePrivacy}
             onChange={(e) => setAgreePrivacy(e.target.checked)}
-            className="w-5 h-5 border-2 border-[#000181] rounded accent-[#000181]"
+            className="w-4 h-4 border-2 border-[#000181] rounded accent-[#000181]"
           />
-          <span className="font-bold text-[14px] text-[#000181]">
+          <span className="font-bold text-[13px] text-[#000181]">
             I agree to the{" "}
             <button
               type="button"
@@ -186,6 +214,41 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
             "Register now"
           )}
         </motion.button>
+
+        <div className="flex items-center gap-3 py-0.5">
+          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
+          <span className="text-[12px] font-bold text-[rgba(0,1,129,0.55)]">
+            or register with
+          </span>
+          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => handleProviderRegister("Google")}
+            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
+          >
+            <span className="w-6 h-6 rounded-full bg-[#fff4f0] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[13px] font-black">
+              G
+            </span>
+            Google
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => handleProviderRegister("Yahoo")}
+            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
+          >
+            <span className="w-6 h-6 rounded-full bg-[rgba(232,160,255,0.28)] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[12px] font-black">
+              Y!
+            </span>
+            Yahoo
+          </motion.button>
+        </div>
 
         <p className="text-center text-[14px] text-[#000181]">
           <span className="font-normal">Have an account? </span>
