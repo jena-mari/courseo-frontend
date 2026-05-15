@@ -1,183 +1,315 @@
-export function generateMockResponse(message: string, enrollmentData?: string): string {
+export function generateMockResponse(
+  message: string,
+  enrollmentData?: string
+): string {
   const msg = message.toLowerCase();
 
-  // Extract student name from enrollment record
+  // Extract student name
   const nameMatch = enrollmentData?.match(/Name[:\s]+([^\n,]+)/i);
+
   const firstName = nameMatch
     ? nameMatch[1].trim().split(" ")[0]
     : "there";
 
+  // AUTUMN SUBJECT PLANNING
   if (
     msg.includes("autumn") ||
-    (msg.includes("subject") && (msg.includes("take") || msg.includes("should")))
+    (msg.includes("subject") &&
+      (msg.includes("take") || msg.includes("should")))
   ) {
-    return `Hi ${firstName}! Based on your enrolment record, here's my recommended study plan for the **Autumn session**:
+    return `Hi ${firstName}! Based on your current progression in the Bachelor of Computer Science, here’s a recommended study plan for your next Autumn session.
 
-**📚 Recommended Subjects (4 subjects · 20 Credit Points)**
+## 📚 Recommended Autumn Study Plan
+**20 Credit Points · Standard Full-Time Load**
 
-1. **COMP3210 — Algorithms & Data Structures** *(Core — Required)*
-   > Prerequisites met ✅ | Moderate difficulty · 4 hours/week contact
+### Core Subjects
+1. **CSCI203 — Algorithms and Data Structures**
+   → Essential core subject for software engineering, AI, and game development pathways.
 
-2. **MATH2050 — Linear Algebra** *(Mathematics requirement)*
-   > Prerequisites met ✅ | Moderate workload · 3 hours/week contact
+2. **CSCI251 — Advanced Programming**
+   → Builds practical software development and object-oriented design skills.
 
-3. **COMP3340 — Software Engineering Fundamentals** *(Core — Required)*
-   > Prerequisites met ✅ | Heavy assessment load · 4 hours/week contact
+3. **CSIT214 — Database Management Systems**
+   → Covers relational databases, SQL, and backend system design.
 
-4. **COMP2890 — Human-Computer Interaction** *(Elective)*
-   > No prerequisites needed | Light workload · 2 hours/week contact
+4. **CSCI235 — Database Systems Development**
+   → Strong complement to CSIT214 with practical application focus.
 
-**💡 Plan Notes:**
-• Total weekly contact hours: ~13 hours
-• Estimated self-study: ~25 hours/week
-• COMP3450 (Computer Graphics) is also suitable but has a Week 10 deadline clash
+## 📊 Estimated Workload
+• Weekly contact hours: ~12–14 hours  
+• Recommended independent study: ~20–25 hours/week  
+• Assessment intensity: Moderate to High
 
-Would you like me to explore alternative subject combinations or check your prerequisites for other courses?`;
+## 💡 Planning Notes
+• This combination keeps you aligned with most UOW Computer Science majors.
+• Algorithms + Advanced Programming together create a heavier coding workload, but they are commonly paired.
+• You remain on track for specialisations like:
+  - Software Engineering
+  - Cyber Security
+  - Game & Mobile Development
+  - Artificial Intelligence & Big Data
+
+Would you like me to:
+• build a lighter workload version,
+• generate a 3-year study roadmap,
+• or recommend subjects for a specific career path?`;
   }
 
-  if (msg.includes("game") || msg.includes("game development") || msg.includes("game dev")) {
-    return `Great choice! Game development is an exciting career path. Here's a tailored study pathway based on your Computer Science degree:
+  // GAME DEVELOPMENT
+  if (
+    msg.includes("game") ||
+    msg.includes("game development") ||
+    msg.includes("game dev")
+  ) {
+    return `Great choice, ${firstName}! The Game & Mobile Development pathway in the Bachelor of Computer Science is one of the most creative specialisations at UOW.
 
-**🎮 Game Development Pathway**
+## 🎮 Suggested Game Development Pathway
 
-**Now (Year 2):**
-• **COMP3450 — Computer Graphics** *(highly recommended — foundational)*
-• **COMP2890 — Human-Computer Interaction** *(important for game UX)*
+### Year 1–2 Foundations
+• **CSCI203 — Algorithms and Data Structures**  
+• **CSCI251 — Advanced Programming**  
+• **CSIT111 — Programming Fundamentals**  
+• **CSIT121 — Object Oriented Design and Programming**
 
-**Year 3:**
-• **COMP4200 — Game Engine Architecture** *(needs COMP3210 first)*
-• **COMP3360 — Real-time Rendering**
-• **MATH3050 — Applied Mathematics for Games** *(elective)*
+These subjects build the programming foundation needed for graphics and engine development.
 
-**Year 4:**
-• **COMP4890 — Capstone: Game Development Project**
-• **COMP4100 — Advanced Computer Graphics**
+### Year 2–3 Focus Areas
+• Computer Graphics  
+• Human-Computer Interaction  
+• Mobile Application Development  
+• Real-Time Systems  
+• Software Engineering Practices
 
-**📌 Extra Tips:**
-• Join your university's Game Dev Society to build a portfolio
-• Unity and Unreal Engine both offer free student licences
-• Itch.io game jams are great for practical experience
+## 🕹️ Skills You Should Build Alongside Uni
+• Unity or Unreal Engine
+• Git/GitHub collaboration
+• 3D math and vectors
+• Game physics basics
+• Portfolio projects and game jams
 
-Shall I work out a complete 4-year academic plan with prerequisite chains?`;
+## 🚀 Career Outcomes
+Graduates commonly move into:
+• Gameplay Programming
+• Technical Design
+• Mobile App Development
+• Graphics Programming
+• Backend Game Services
+• Software Engineering
+
+## 💡 Industry Advice
+A strong portfolio matters just as much as grades in game development. Small polished projects usually stand out more than large unfinished ones.
+
+Would you like me to generate:
+• a semester-by-semester game dev roadmap,
+• recommended electives,
+• or a portfolio plan for internships?`;
   }
 
+  // OVERLOAD
   if (
     msg.includes("five") ||
     msg.includes("5 subject") ||
-    msg.includes("overload") ||
-    msg.includes("five subject")
+    msg.includes("overload")
   ) {
-    return `I've reviewed your academic record to assess this request:
+    return `I've reviewed your request for a 5-subject overload semester.
 
-**📊 Workload Assessment**
+## 📊 Academic Load Analysis
 
-• **Current GPA:** 5.8 / 7.0 ⭐ (strong performance)
-• **Standard load:** 4 subjects (20 CP) per semester
-• **Maximum allowed:** 5 subjects (25 CP) with overload approval
-• **Overload eligibility:** ✅ You qualify (GPA > 5.0 required)
+### Current Position
+• Degree: Bachelor of Computer Science  
+• Current GPA: 5.8 / 7.0  
+• Standard full-time load: 20 Credit Points  
+• Overload study: Requires faculty approval
 
-**⚠️ However, I'd caution against it because:**
+## ⚠️ Important Considerations
+Taking 5 technical subjects simultaneously in Computer Science can become extremely demanding because many subjects include:
+• weekly labs,
+• coding assignments,
+• group projects,
+• and practical assessments.
 
-1. Two of your planned subjects have major projects due in the **same week (Week 10)**
-2. The average student taking 5 subjects experiences a **0.4 GPA drop**
-3. Estimated weekly workload: ~50 study hours — quite demanding
+A typical overload semester can reach:
+• ~16–18 contact hours/week
+• ~35–50 total study hours/week
 
-**🎯 My Recommendation:**
+## 💡 My Recommendation
+Based on your current performance, you could likely manage an overload if:
+• you are not working many hours externally,
+• you maintain strong time management,
+• and your subjects are balanced carefully.
 
-Stick with **4 subjects this semester** and take the 5th in a Summer or Intensive session instead. Several core subjects run in Summer with lighter cohorts.
+However, I would avoid pairing too many programming-heavy subjects together in the same session.
 
-Would you like me to check which of your required subjects are available in Summer session?`;
+## ✅ Better Alternative
+Many students instead:
+• take Summer subjects,
+• spread difficult coding subjects across sessions,
+• or use Spring/Summer to accelerate progression with less burnout.
+
+Would you like me to build:
+• a realistic 5-subject timetable,
+• a balanced 4-subject alternative,
+• or a fast-track graduation plan?`;
   }
 
+  // PREREQUISITES
   if (msg.includes("prerequisite") || msg.includes("prereq")) {
-    return `Let me check what you can enrol in right now based on your completed subjects:
+    return `Based on your completed subjects, here’s a snapshot of what you’re likely eligible to enrol in next.
 
-**✅ Open to You Now:**
-• **COMP3210** — Algorithms & Data Structures
-• **COMP3340** — Software Engineering Fundamentals
-• **COMP2890** — Human-Computer Interaction
-• **MATH2050** — Linear Algebra
-• **COMP3100** — Database Systems
-• **COMP3450** — Computer Graphics
+## ✅ Available Subjects
+• **CSCI203 — Algorithms and Data Structures**  
+• **CSCI251 — Advanced Programming**  
+• **CSIT214 — Database Management Systems**  
+• **CSCI235 — Database Systems Development**  
+• **ISIT219 — Network Design and Management**
 
-**🔒 Locked — More Prerequisites Needed:**
-• **COMP4200** — Game Engine Architecture *(requires COMP3210 first)*
-• **COMP4100** — Advanced Computer Graphics *(requires COMP3450)*
-• **COMP4890** — Capstone Project *(requires 120 CP completed)*
+## 🔒 Subjects Likely Still Locked
+These usually require additional prerequisites or higher-level progression:
 
-**📋 Summary:**
-You have **6 subjects** available to choose from right now across multiple specialisation streams.
+• Advanced capstone/project subjects  
+• Certain cybersecurity specialisations  
+• Some third-year AI and graphics subjects
 
-Would you like a recommendation on which combination to prioritise this semester?`;
+## 📌 Important Notes
+At UOW:
+• 100-level subjects are typically first-year,
+• 200-level subjects are second-year,
+• 300-level subjects are advanced/specialisation subjects.
+
+Eligibility depends primarily on:
+• completed prerequisites,
+• total credit points,
+• and degree progression requirements.
+
+Would you like me to:
+• map your prerequisite chains,
+• identify missing requirements,
+• or show the fastest pathway to a specialisation?`;
   }
 
-  if (msg.includes("handbook") || msg.includes("rule") || msg.includes("policy") || msg.includes("allowed")) {
-    return `Here are the key academic rules from your **Bachelor of Computer Science Handbook**:
+  // HANDBOOK / POLICY
+  if (
+    msg.includes("handbook") ||
+    msg.includes("rule") ||
+    msg.includes("policy") ||
+    msg.includes("allowed")
+  ) {
+    return `Here are some key academic rules and degree details from the UOW Bachelor of Computer Science handbook.
 
-**📋 Enrolment Rules**
-• Standard load: **4 subjects per semester** (20 CP)
-• Maximum load: **5 subjects** (requires GPA ≥ 5.0 and faculty approval)
-• Minimum load for full-time status: **2 subjects**
+## 📘 Degree Overview
+• Course: Bachelor of Computer Science  
+• Duration: 3 years full-time  
+• Total Requirement: 144 Credit Points  
+• Intake Sessions: Autumn and Spring
 
-**📝 Assessment Policies**
-• Late submission penalty: **5% per calendar day** (automatic)
-• Extensions must be requested **before the due date**
-• Special Consideration available for medical or personal circumstances
-• Academic misconduct: zero tolerance — automatic fail for the subject
+## 🧩 Available Majors
+• Artificial Intelligence & Big Data  
+• Cyber Security  
+• Digital Systems Security  
+• Game & Mobile Development  
+• Software Engineering
 
-**📈 Academic Progression**
-• Must pass ≥ 50% of enrolled subjects per year
-• GPA below 4.0 for two consecutive semesters → Academic Probation
-• Three consecutive failures in the same subject → required withdrawal
+## 📋 General Study Rules
+• Standard full-time load: 20 CP per session  
+• Most subjects are worth 6 CP  
+• Overloads require approval  
+• Prerequisites must be satisfied before enrolment
 
-**🎓 Graduation Requirements**
-• Total: **240 credit points** (typically 8 semesters full-time)
-• Must include all core subjects and at least one major specialisation
+## ⚠️ Academic Progression
+Students may face academic progression monitoring if they:
+• repeatedly fail subjects,
+• fall below progression requirements,
+• or fail prerequisite/core subjects multiple times.
 
-Is there a specific rule or policy you'd like more detail on?`;
+## 💡 Good Planning Strategy
+UOW Computer Science students generally benefit from:
+• spreading coding-heavy subjects,
+• completing prerequisites early,
+• and building portfolio projects alongside coursework.
+
+Would you like help understanding:
+• majors,
+• graduation requirements,
+• subject sequencing,
+• or handbook terminology?`;
   }
 
-  if (msg.includes("gpa") || msg.includes("grade") || msg.includes("marks") || msg.includes("performance")) {
-    return `Here's an overview of your **Academic Performance**:
+  // GPA
+  if (
+    msg.includes("gpa") ||
+    msg.includes("grade") ||
+    msg.includes("marks") ||
+    msg.includes("performance")
+  ) {
+    return `Here’s a snapshot of your current academic performance.
 
-**📊 Current GPA: 5.8 / 7.0** (Distinction average)
+## 📊 Academic Performance Overview
 
-**Grade Scale:**
-• 7.0 — High Distinction (HD) ≥ 85%
-• 6.0 — Distinction (D) 75–84%
-• **5.0 — Credit (CR) 65–74%** ← you're just above this band
-• 4.0 — Pass (P) 50–64%
-• < 4.0 — Fail
+### Current GPA
+**5.8 / 7.0**  
+→ Equivalent to a strong Credit / low Distinction average.
 
-**Your completed subjects:**
-• COMP1010 — Introduction to Programming: **HD (7.0)**
-• COMP1020 — Data Structures: **D (6.0)**
-• MATH1010 — Calculus I: **CR (5.0)**
-• MATH1020 — Discrete Mathematics: **D (6.0)**
+## 🎓 UOW GPA Scale
+• 7.0 → High Distinction (85–100)  
+• 6.0 → Distinction (75–84)  
+• 5.0 → Credit (65–74)  
+• 4.0 → Pass (50–64)
 
-**💡 To reach a 6.0 GPA (Distinction average):**
-You'd need to average approximately **6.5 across your next 4 subjects** — very achievable with your current trajectory!
+## 💡 Performance Insights
+Your current results suggest:
+• strong progression,
+• solid technical understanding,
+• and good standing for most Computer Science specialisations.
 
-Would you like study tips for any specific upcoming subjects?`;
+## 📈 GPA Projection
+If you maintain mostly:
+• Distinctions (6s),
+• with occasional Credits or HDs,
+
+you could realistically graduate with:
+• a Distinction average,
+• competitive internship eligibility,
+• and strong postgraduate options.
+
+## 🚀 Recommended Focus Areas
+To improve GPA efficiently:
+• prioritise consistent assignment marks,
+• avoid overloading difficult coding subjects,
+• and begin major projects early.
+
+Would you like:
+• GPA target calculations,
+• WAM estimates,
+• or subject-specific study strategies?`;
   }
 
-  // Default contextual response
-  return `Thanks for your message! Let me pull up your academic profile...
+  // DEFAULT
+  return `Hi ${firstName}! I’m your AI academic planning assistant for the Bachelor of Computer Science at UOW.
 
-**📋 Your Academic Summary**
-• Degree: Bachelor of Computer Science (Year 2, Semester 1)
-• Completed: 8 subjects (40 Credit Points)
-• Remaining: ~16 subjects (80 CP) to graduation
-• Current GPA: 5.8 / 7.0 ⭐
+## 🎓 Your Academic Snapshot
+• Degree: Bachelor of Computer Science  
+• Estimated progression: Year 2  
+• Current GPA: 5.8 / 7.0  
+• Remaining study: ~2 years full-time
 
-**I'm your personalised academic planning assistant.** Here's what I can help with:
+## 💡 I Can Help With
+• 📅 Subject recommendations  
+• 🧩 Prerequisite checking  
+• 🎮 Career pathway planning  
+• 📊 GPA and workload analysis  
+• 📘 Handbook and policy questions  
+• 🗺️ Long-term study roadmaps
 
-• **📅 Subject selection** — Recommendations tailored to your goals
-• **⚖️ Workload planning** — Balance your semester effectively
-• **🗺️ Career pathways** — Align your subjects to your dream career
-• **✅ Prerequisite checking** — See exactly what you can enrol in
-• **📚 Handbook queries** — Rules, policies, and procedures explained
-• **📊 GPA planning** — Strategies to hit your academic targets
+## 🚀 Popular Pathways
+• Software Engineering  
+• Cyber Security  
+• Artificial Intelligence & Big Data  
+• Game & Mobile Development
 
-Try asking me something like *"What subjects should I take this Autumn?"* or *"I want to get into game development — what should I study?"*`;
+Try asking something like:
+• “What subjects should I take next Autumn?”
+• “Can I overload next semester?”
+• “I want to become a game developer.”
+• “What prerequisites am I missing?”
+• “Help me plan my degree roadmap.”`;
 }
