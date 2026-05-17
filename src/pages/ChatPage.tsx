@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { generateMockResponse } from "../lib/mockAI";
 
@@ -108,7 +109,7 @@ function HandbookModal({ onClose }: { onClose: () => void }) {
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 20, opacity: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 28 }}
-        className="bg-white rounded-[40px] shadow-xl w-full max-w-xl p-8 relative"
+        className="bg-white rounded-[40px] shadow-xl w-full max-w-2xl p-8 relative max-h-[80vh] overflow-y-scroll"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -236,6 +237,7 @@ export function ChatPage() {
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [studyPlanCollapsed, setStudyPlanCollapsed] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -433,7 +435,7 @@ export function ChatPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full min-h-[300px]"
+                className="flex flex-col items-center justify-center h-full min-h-[100px]"
               >
                 <motion.h1
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -544,6 +546,11 @@ export function ChatPage() {
             </div>
           </div>
         </div>
+
+        <StudyPlan
+          collapsed={studyPlanCollapsed}
+          onToggle={() => setStudyPlanCollapsed((v) => !v)}
+        />
       </div>
 
       <AnimatePresence>

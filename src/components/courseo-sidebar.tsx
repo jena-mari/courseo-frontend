@@ -38,7 +38,7 @@ export function CourseoSidebar({
   return (
     <motion.div
       initial={false}
-      animate={{ width: collapsed ? 72 : 280 }}
+      animate={{ width: collapsed ? 72 : 220 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
     >

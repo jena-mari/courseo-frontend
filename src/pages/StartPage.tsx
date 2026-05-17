@@ -52,7 +52,7 @@ export function StartPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 20 }}
                 transition={{ type: "spring", stiffness: 280, damping: 28 }}
-                className="bg-white rounded-[38px] shadow-[2px_2px_16px_4px_rgba(0,0,0,0.12)] w-full max-w-[980px] min-h-[560px] px-10 py-9 sm:px-14 sm:py-10 relative flex flex-col"
+                className="bg-white rounded-[38px] shadow-[2px_2px_16px_4px_rgba(0,0,0,0.12)] w-full max-w-[980px] max-h-[90vh] overflow-y-auto px-10 py-5 sm:px-14 sm:py-5 relative flex flex-col"
               >
                 <div className="absolute top-8 left-8">
                   <img src={imgLogo} alt="Courseo" className="w-12 h-12 object-contain" />
@@ -66,9 +66,9 @@ export function StartPage() {
                   <X size={30} strokeWidth={2.5} />
                 </button>
 
-                <div className="flex flex-1 flex-col items-center justify-center pt-12 pb-6">
-                  <div className="text-center mb-7">
-                    <h1 className="font-extrabold text-[clamp(46px,6vw,72px)] text-[#000181] tracking-[-2px] leading-[0.9]">
+                <div className="flex flex-1 flex-col items-center justify-center pt-8 pb-6">
+                  <div className="text-center mb-6">
+                    <h1 className="font-extrabold text-[clamp(46px,6vw,68px)] text-[#000181] tracking-[-2px] leading-[0.9]">
                       Get Started<br />with Courseo
                     </h1>
                     <p className="mt-6 text-[14px] font-extrabold leading-tight text-[rgba(0,1,129,0.78)] max-w-[520px] mx-auto">
@@ -84,7 +84,7 @@ export function StartPage() {
                   </div>
 
                   <div className="w-full max-w-[470px]">
-                    <div className="border-2 border-[#7890ff] rounded-[22px] h-[58px] shadow-[2px_2px_8px_rgba(0,1,129,0.22)] flex items-center pl-8 pr-3 gap-3">
+                    <div className="border-2 border-[#7890ff] rounded-[22px] h-[52px] shadow-[2px_2px_8px_rgba(0,1,129,0.22)] flex items-center pl-8 pr-3 gap-3">
                       <input
                         type="text"
                         placeholder="Paste your enrolment record here..."
@@ -106,7 +106,7 @@ export function StartPage() {
                     </div>
                   </div>
 
-                  <p className="mt-7 text-center text-[15px] font-extrabold text-[rgba(0,1,129,0.82)]">
+                  <p className="mt-6 text-center text-[15px] font-extrabold text-[rgba(0,1,129,0.82)]">
                     Want to save your study plan for future reference or changes?
                   </p>
 
