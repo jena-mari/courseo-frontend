@@ -19,6 +19,8 @@ interface CourseoSidebarProps {
   onHandbook?: () => void;
   showAccount?: boolean;
   onAccount?: () => void;
+  showHelp?: boolean;
+  onHelp?: () => void;
 }
 
 export function CourseoSidebar({
@@ -32,6 +34,8 @@ export function CourseoSidebar({
   onHandbook,
   showAccount = true,
   onAccount,
+  showHelp = true,
+  onHelp,
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -175,7 +179,8 @@ export function CourseoSidebar({
             <Settings size={11} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
           </button>
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors">
+          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors"
+          onClick={onHelp}>
             <HelpCircle size={11} className="shrink-0" />
             {!collapsed && <span>Help</span>}
           </button>

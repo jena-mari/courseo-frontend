@@ -6,8 +6,9 @@ import imgLogo from "../assets/courseo-logo.png";
 import { ChatPage } from "./ChatPage";
 import { LoginCard } from "./LoginPage";
 import { RegisterCard } from "./RegisterPage";
+import { HelpSlider } from "../components/help-carousel";
 
-type StartMode = "start" | "login" | "register";
+type StartMode = "start" | "login" | "register" | "tutorial";
 
 export function StartPage() {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export function StartPage() {
                       <br className="hidden sm:block" /> our AI assistant. For a guide on how to do this,{" "}
                       <button
                         type="button"
+                        onClick={() => setMode("tutorial")}
                         className="font-black underline underline-offset-2 hover:opacity-70"
                       >
                         click here.
@@ -143,6 +145,12 @@ export function StartPage() {
               <RegisterCard
                 onClose={() => setMode("start")}
                 onLogin={() => setMode("login")}
+              />
+            )}
+
+            {mode === "tutorial" && (
+              <HelpSlider
+                onClose={() => setMode("start")}
               />
             )}
           </div>

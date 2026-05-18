@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, ArrowRight, MoreVertical, Sparkles,
-  BookOpen, X, User, Mail, Lock, Eye, EyeOff
+  BookOpen, X, User, Mail, Lock, Eye, EyeOff, HelpCircle
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { generateMockResponse } from "../lib/mockAI";
+import { HelpSlider } from "../components/help-carousel";
 
 type Role = "user" | "assistant";
 
@@ -403,10 +404,8 @@ function AccountManagement({ onClose }: { onClose: () => void }) {
                   </motion.button>
                 </div>      
 
-                </div>
-                            
+                </div>          
                 </>
-
               )}
 
               {error && (
@@ -526,6 +525,8 @@ export function ChatPage() {
   const [showHandbook, setShowHandbook] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -670,6 +671,8 @@ export function ChatPage() {
           onHandbook={() => setShowHandbook(true)}
           showAccount={true}
           onAccount={() => setShowAccount(true)}
+          showHelp={true}
+          onHelp={() => setShowHelp(true)}
         />
 
         <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
@@ -717,13 +720,15 @@ export function ChatPage() {
             </div>
           </div>
 
+          {/* <Slider onClose={() => setShowHelp(false)}></Slider> */}
+
           <div className="flex-1 overflow-y-auto px-7 pb-4 min-h-0">
             {isEmptyChat ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-items-start h-full min-h-[200px]"
+                className="flex flex-col items-center justify-center h-full min-h-[200px]"
               >
                 <motion.h1
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -772,7 +777,7 @@ export function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.2 }}
-                className="px-7 pb-3 flex-col gap-2 shrink-0 hidden md:flex"
+                className="px-7 pb-3 flex-col gap-2 shrink-0 hidden max-h-48 overflow-auto md:flex"
               >
                 {SUGGESTED_PROMPTS.map((prompt, i) => (
                   <motion.button
@@ -850,6 +855,12 @@ export function ChatPage() {
       <AnimatePresence>
         {showAccount && (
           <AccountManagement onClose={() => setShowAccount(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showHelp && (
+          <HelpSlider onClose={() => setShowHelp(false)} />
         )}
       </AnimatePresence>
 

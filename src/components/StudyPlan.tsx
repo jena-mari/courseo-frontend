@@ -54,10 +54,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(131,231,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(131,231,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Autumn</p>
                 <div className='grid grid-cols-2 gap-2'>
+                  <SubjectCard code='CSIT110' title='Fundamental Programming with Python' cp={6} color='rgba(131,231,255,0.65)' />
                   <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT114' title='System Analysis' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT115' title='Database Management Systems' cp={6} color='rgba(131,231,255,0.65)' />
                 </div>
               </div>
             </div>
@@ -66,10 +66,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(232,160,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(232,160,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Spring</p>
                 <div className='grid grid-cols-2 gap-2'>
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT121' title='Object Oriented Design and Programming' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT127' title='Networks and Communications' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT128' title='Introduction to Web Technology' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT226' title='Human Computer Interaction' cp={6} color='rgba(232,160,255,0.65)' />
                 </div>    
               </div>
             </div>
@@ -79,10 +79,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(131,231,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(131,231,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Autumn</p>
                 <div className='grid grid-cols-2 gap-2'>
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT235' title='Database Systems' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT214' title='IT Project Management' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSI205' title='Generative AI' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='MAJOR SUBJECT' cp={6} color='rgba(131,231,255,0.65)' />
                 </div>
               </div>
             </div>
@@ -91,10 +91,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(232,160,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(232,160,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Spring</p>
                 <div className='grid grid-cols-2 gap-2'>
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSCI203' title='Algorithms and Data Structures' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSCI251' title='Advanced Programming' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='MAJOR SUBJECT' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='ELECTIVE' cp={6} color='rgba(232,160,255,0.65)' />
                 </div>    
               </div>
             </div>
@@ -104,10 +104,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(131,231,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(131,231,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Autumn</p>
                 <div className='grid grid-cols-2 gap-2'>
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT314' title='Software Development Methodologies' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT321' title='Project - semester 1' cp={12} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='MAJOR SUBJECT' cp={6} color='rgba(131,231,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='ELECTIVE' cp={6} color='rgba(131,231,255,0.65)' />
                 </div>
               </div>
             </div>
@@ -116,10 +116,10 @@ export function StudyPlan({
               <div className="border-3 rounded-3xl border-[rgba(232,160,255,1)] p-2 shadow-[0_0_30px_-5px_rgba(232,160,255,1)]">
                 <p className="font-extrabold text-center text-xl text-[#000181] tracking-tight whitespace-nowrap p-2">Spring</p>
                 <div className='grid grid-cols-2 gap-2'>
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
-                  <SubjectCard code='CSIT123' title='Computing and Cyber Security Fundamentals' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT321' title='Project - semester 2' cp={12} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='MAJOR SUBJECT' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='ELECTIVE' cp={6} color='rgba(232,160,255,0.65)' />
+                  <SubjectCard code='CSIT000' title='ELECTIVE' cp={6} color='rgba(232,160,255,0.65)' />
                 </div>    
               </div>
             </div>
