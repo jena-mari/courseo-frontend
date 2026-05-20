@@ -17,9 +17,9 @@ interface CourseoSidebarProps {
   onToggle?: () => void;
   showHandbook?: boolean;
   onHandbook?: () => void;
-  showAccount?: boolean;
+  activeUtility?: "account" | "settings" | "help";
   onAccount?: () => void;
-  showHelp?: boolean;
+  onSettings?: () => void;
   onHelp?: () => void;
 }
 
@@ -32,9 +32,9 @@ export function CourseoSidebar({
   onToggle,
   showHandbook = true,
   onHandbook,
-  showAccount = true,
+  activeUtility,
   onAccount,
-  showHelp = true,
+  onSettings,
   onHelp,
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,18 +169,36 @@ export function CourseoSidebar({
           </p>
         )}
         <div className="flex flex-col gap-1.5">
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors"
-          onClick={onAccount}>
+          <button
+            onClick={onAccount}
+            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+              activeUtility === "account"
+                ? "bg-[rgba(232,160,255,0.5)]"
+                : "hover:bg-[rgba(131,231,255,0.2)]"
+            }`}
+          >
             <User size={11} className="shrink-0" />
             {!collapsed && <span>Account</span>}
           </button>
-
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors">
+          <button
+            onClick={onSettings}
+            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+              activeUtility === "settings"
+                ? "bg-[rgba(232,160,255,0.5)]"
+                : "hover:bg-[rgba(131,231,255,0.2)]"
+            }`}
+          >
             <Settings size={11} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
           </button>
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors"
-          onClick={onHelp}>
+          <button
+            onClick={onHelp}
+            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+              activeUtility === "help"
+                ? "bg-[rgba(232,160,255,0.5)]"
+              : "hover:bg-[rgba(131,231,255,0.2)]"
+            }`}
+          >
             <HelpCircle size={11} className="shrink-0" />
             {!collapsed && <span>Help</span>}
           </button>

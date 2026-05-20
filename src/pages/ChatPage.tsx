@@ -669,10 +669,9 @@ export function ChatPage() {
           onToggle={() => setSidebarCollapsed((v) => !v)}
           showHandbook={true}
           onHandbook={() => setShowHandbook(true)}
-          showAccount={true}
           onAccount={() => setShowAccount(true)}
-          showHelp={true}
           onHelp={() => setShowHelp(true)}
+          onSettings={() => navigate("/settings")}
         />
 
         <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
@@ -699,7 +698,7 @@ export function ChatPage() {
                     {[
                       { label: "New Chat", action: handleNewChat },
                       { label: "Your Handbook", action: () => { setShowHandbook(true); setShowMenu(false); } },
-                      { label: "Settings", action: () => setShowMenu(false) },
+                      { label: "Settings", action: () => navigate("/settings") },
                       {
                         label: enrollment ? "Update Enrolment" : "Add Enrolment",
                         action: () => navigate("/"),

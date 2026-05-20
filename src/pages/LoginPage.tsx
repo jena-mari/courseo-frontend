@@ -4,6 +4,13 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, User, Lock, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+
+const AUTH_SIDEBAR_CHATS: Chat[] = [
+  { id: "chat-1", title: "Study plan - Autumn 2026" },
+  { id: "chat-2", title: "Elective recommendations" },
+  { id: "chat-3", title: "Prerequisite check" },
+];
 
 interface LoginCardProps {
   onClose?: () => void;
@@ -30,6 +37,14 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
     await new Promise((r) => setTimeout(r, 1200));
     setLoading(false);
     localStorage.setItem("courseoUser", JSON.stringify({ username }));
+    navigate("/chat");
+  };
+
+  const handleProviderLogin = (provider: "Google" | "Yahoo") => {
+    localStorage.setItem(
+      "courseoUser",
+      JSON.stringify({ username: provider, provider }),
+    );
     navigate("/chat");
   };
 
@@ -149,6 +164,41 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
           )}
         </motion.button>
 
+        <div className="flex items-center gap-3 py-0.5">
+          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
+          <span className="text-[12px] font-bold text-[rgba(0,1,129,0.55)]">
+            or log in with
+          </span>
+          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => handleProviderLogin("Google")}
+            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
+          >
+            <span className="w-6 h-6 rounded-full bg-[#fff4f0] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[13px] font-black">
+              G
+            </span>
+            Google
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => handleProviderLogin("Yahoo")}
+            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
+          >
+            <span className="w-6 h-6 rounded-full bg-[rgba(232,160,255,0.28)] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[12px] font-black">
+              Y!
+            </span>
+            Yahoo
+          </motion.button>
+        </div>
+
         <p className="text-center text-[14px] text-[#000181]">
           <span className="font-normal">Don't have an account? </span>
           <button
@@ -165,6 +215,11 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const goToChat = () => navigate("/chat");
+
   return (
     <div className="relative w-full h-screen overflow-hidden font-['Montserrat',sans-serif]">
       <img
@@ -176,8 +231,23 @@ export function LoginPage() {
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
-      <div className="absolute inset-0 flex items-center justify-center px-6 py-8 z-10">
-        <LoginCard />
+      <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
+        <CourseoSidebar
+          chats={AUTH_SIDEBAR_CHATS}
+          onNewChat={goToChat}
+          onSelectChat={goToChat}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((value) => !value)}
+          showHandbook={false}
+          activeUtility="account"
+          onAccount={() => navigate("/login")}
+          onSettings={() => navigate("/settings")}
+          onHelp={() => undefined}
+        />
+
+        <main className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[30px] bg-white/20 px-6 py-8">
+          <LoginCard />
+        </main>
       </div>
     </div>
   );

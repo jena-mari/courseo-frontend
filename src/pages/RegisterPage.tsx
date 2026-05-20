@@ -4,6 +4,13 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, User, Lock, Mail, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+
+const AUTH_SIDEBAR_CHATS: Chat[] = [
+  { id: "chat-1", title: "Study plan - Autumn 2026" },
+  { id: "chat-2", title: "Elective recommendations" },
+  { id: "chat-3", title: "Prerequisite check" },
+];
 
 interface RegisterCardProps {
   onClose?: () => void;
@@ -266,6 +273,11 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const goToChat = () => navigate("/chat");
+
   return (
     <div className="relative w-full h-screen overflow-hidden font-['Montserrat',sans-serif]">
       <img
@@ -277,8 +289,23 @@ export function RegisterPage() {
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
-      <div className="absolute inset-0 flex items-center justify-center px-6 py-8 z-10">
-        <RegisterCard />
+      <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
+        <CourseoSidebar
+          chats={AUTH_SIDEBAR_CHATS}
+          onNewChat={goToChat}
+          onSelectChat={goToChat}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((value) => !value)}
+          showHandbook={false}
+          activeUtility="account"
+          onAccount={() => navigate("/login")}
+          onSettings={() => navigate("/settings")}
+          onHelp={() => undefined}
+        />
+
+        <main className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[30px] bg-white/20 px-6 py-8">
+          <RegisterCard />
+        </main>
       </div>
     </div>
   );
