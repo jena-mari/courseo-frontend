@@ -17,6 +17,10 @@ interface CourseoSidebarProps {
   onToggle?: () => void;
   showHandbook?: boolean;
   onHandbook?: () => void;
+  showAccount?: boolean;
+  onAccount?: () => void;
+  showHelp?: boolean;
+  onHelp?: () => void;
 }
 
 export function CourseoSidebar({
@@ -28,6 +32,10 @@ export function CourseoSidebar({
   onToggle,
   showHandbook = true,
   onHandbook,
+  showAccount = true,
+  onAccount,
+  showHelp = true,
+  onHelp,
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,7 +46,7 @@ export function CourseoSidebar({
   return (
     <motion.div
       initial={false}
-      animate={{ width: collapsed ? 72 : 280 }}
+      animate={{ width: collapsed ? 72 : 220 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
     >
@@ -161,15 +169,18 @@ export function CourseoSidebar({
           </p>
         )}
         <div className="flex flex-col gap-1.5">
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors">
+          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors"
+          onClick={onAccount}>
             <User size={11} className="shrink-0" />
             {!collapsed && <span>Account</span>}
           </button>
+
           <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors">
             <Settings size={11} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
           </button>
-          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors">
+          <button className="flex items-center gap-2 text-[10px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] rounded-lg px-2 py-1 transition-colors"
+          onClick={onHelp}>
             <HelpCircle size={11} className="shrink-0" />
             {!collapsed && <span>Help</span>}
           </button>

@@ -39,7 +39,7 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[50px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[650px] p-10 relative"
+      className="bg-white rounded-[50px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[650px] max-h-[90vh] overflow-y-auto p-10 relative"
     >
       <div className="absolute top-8 left-8">
         <img src={imgLogo} alt="Courseo" className="w-14 h-14 object-contain" />
