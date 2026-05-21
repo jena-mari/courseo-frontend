@@ -180,6 +180,7 @@ export function CourseoSidebar({
             <User size={11} className="shrink-0" />
             {!collapsed && <span>Account</span>}
           </button>
+          
           <button
             onClick={onSettings}
             className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
@@ -191,6 +192,7 @@ export function CourseoSidebar({
             <Settings size={11} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
           </button>
+
           <button
             onClick={onHelp}
             className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${

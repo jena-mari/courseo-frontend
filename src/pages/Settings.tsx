@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+import { HelpSlider } from "../components/help-carousel";
+import { AccountManagement } from "../components/AccountManagementPopup";
+import { HandbookModal } from "../components/HandbookModalPopup";
 
 type SettingsTab = "profile" | "ai" | "notifications" | "system";
 
@@ -242,6 +245,9 @@ function DangerButton({ children }: { children: ReactNode }) {
 export function SettingsPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [showAccount, setShowAccount] = useState(false);
+  const [showHandbook, setShowHandbook] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profile, setProfile] = useState(getStoredProfile);
   const [degree, setDegree] = useState("Bachelor of Computer Science");
@@ -324,7 +330,9 @@ export function SettingsPage() {
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((value) => !value)}
           showHandbook={true}
-          onHandbook={goToChat}
+          onHandbook={() => setShowHandbook(true)}
+          onAccount={() => setShowAccount(true)}
+          onHelp={() => setShowHelp(true)}
           onSettings={() => navigate("/settings")}
         />
 
@@ -652,6 +660,27 @@ export function SettingsPage() {
           </div>
         </main>
       </div>
+
+      <AnimatePresence>
+        {showHandbook && (
+          <HandbookModal onClose={() => setShowHandbook(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAccount && (
+          <AccountManagement onClose={() => setShowAccount(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showHelp && (
+          <HelpSlider onClose={() => setShowHelp(false)} />
+        )}
+      </AnimatePresence>
+
+
+
     </div>
   );
 }
