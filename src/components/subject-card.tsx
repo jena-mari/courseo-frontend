@@ -7,12 +7,20 @@ type FieldProps = {
   title: string;
   cp: number;
   color: string;
+  year: string;
 };
 
-function SubjectCard({code, title, cp, color}:FieldProps) {
+function SubjectCard({code, title, cp, color, year}:FieldProps) {
+
+  //takes the user to the subject's uow handbook page
+  const openInNewTab = (url: string): void => {
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+    if (newWindow) newWindow.opener = null
+  }
 
   return (
-      <div className='max-w-72 flex-1 justify-center items-stretch w-full'>
+      <button className='max-w-72 flex-1 justify-center items-stretch w-full'
+              onClick={() => openInNewTab(`https://courses.uow.edu.au/subjects/${year}/${code}`)}>
         <div style={{backgroundColor: color}}
         className='rounded-3xl h-full'>             
             <div className="rounded-3xl p-2 flex flex-col justify-center items-center text-center text-[#000181]">
@@ -37,7 +45,7 @@ function SubjectCard({code, title, cp, color}:FieldProps) {
 
         </div>
 
-      </div>
+      </button>
     
 
     
