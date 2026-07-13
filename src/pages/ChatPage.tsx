@@ -236,25 +236,80 @@ export function ChatPage() {
       const delay = 1200 + Math.random() * 800;
       await new Promise((r) => setTimeout(r, delay));
 
-      const aiContent = generateMockResponse(trimmed, enrollment);
-      const aiMsg: Message = {
-        id: `msg-${Date.now() + 1}`,
-        role: "assistant",
-        content: aiContent,
-        timestamp: new Date(),
-      };
+      const sanitizedData = trimmed.replace(/[\n\r\t]/g, (match) => {
+        if (match === '\n') return '\\n';
+        if (match === '\r') return '\\r';
+        if (match === '\t') return '\\t';
+        return match;
+      });
+      const aiMessage = `{"message": "${sanitizedData}"}`;
+      const postData = JSON.parse(aiMessage);
 
-      const finalMessages = [...newMessages, aiMsg];
-      setActiveMessages(finalMessages);
-      setIsTyping(false);
+      console.log(postData);
+      try {
+        const response = await fetch('http://localhost:7777/api/v1/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Instructs server to expect JSON data
+          },
+          body: JSON.stringify(postData), // Serializes your object into a string
+        });
 
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatId
-            ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
-            : c
-        )
-      );
+        const data = await response.json();
+        console.log('Success:', data.reply.content);
+
+        const aiMsg: Message = {
+          id: `msg-${Date.now() + 1}`,
+          role: "assistant",
+          content: data.reply.content,
+          timestamp: new Date(),
+        };
+
+        const finalMessages = [...newMessages, aiMsg];
+        setActiveMessages(finalMessages);
+        setIsTyping(false);
+
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chatId
+              ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
+              : c
+          )
+        );
+
+      } catch (error) {
+        console.error('Error:', error);
+      }
+      // try {
+      //   const aiContent = await fetch(`http://localhost:7777/api/v1/chat${trimmed}`);
+      //   const data = await aiContent;
+      //   console.log('Search Results:', data);
+
+      //   // const aiMsg: Message = {
+      //   //   id: `msg-${Date.now() + 1}`,
+      //   //   role: "assistant",
+      //   //   content: data.json(),
+      //   //   timestamp: new Date(),
+      //   // };
+
+      //   // const finalMessages = [...newMessages, aiMsg];
+      //   // setActiveMessages(finalMessages);
+      //   // setIsTyping(false);
+
+      //   // setChats((prev) =>
+      //   //   prev.map((c) =>
+      //   //     c.id === chatId
+      //   //       ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
+      //   //       : c
+      //   //   )
+      //   // );
+
+
+      // } catch (error) {
+      //   console.error('Search failed:', error);
+      // }
+
+      
     },
     [activeMessages, activeChatId, enrollment, isTyping]
   );
