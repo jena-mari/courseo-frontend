@@ -77,7 +77,7 @@ export function StudyPlan({
           ) : (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-3xl p-4 text-center">
               <p className="text-[#000181] font-semibold text-sm">No plan generated yet</p>
-              <p className="text-gray-400 text-xs mt-1">Ask the academic advisor to generate a course sequence for you.</p>
+              <p className="text-gray-400 text-xs mt-1">Enter your enrolment details to generate a study plan specifically for you!</p>
             </div>
           )}
         </div>
