@@ -13,6 +13,7 @@ import { generateMockResponse } from "../lib/mockAI";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
+import type { StudyPlanResponse } from "../types/studyPlanType";
 
 type Role = "user" | "assistant";
 
@@ -27,6 +28,11 @@ interface ChatSession {
   id: string;
   title: string;
   messages: Message[];
+}
+
+export interface ExtractedAIContent {
+  cleanText: string;
+  studyPlanData: StudyPlanResponse | null;
 }
 
 const SUGGESTED_PROMPTS = [
@@ -173,11 +179,58 @@ export function ChatPage() {
   const [showAccount, setShowAccount] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  
+  const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(null);  
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
+  
+
+  const parseAIResponse = (aiResponseText: unknown): ExtractedAIContent => {
+    // Default fallback state if nothing is provided
+    const fallbackResult: ExtractedAIContent = { cleanText: '', studyPlanData: null };
+    if (!aiResponseText) return fallbackResult;
+
+    let originalText = '';
+
+    // 1. Resolve input type safely down to a string
+    if (typeof aiResponseText === 'string') {
+      originalText = aiResponseText;
+    } else if (typeof aiResponseText === 'object' && aiResponseText !== null) {
+      const obj = aiResponseText as Record<string, any>;
+      if (typeof obj.text === 'string') {
+        originalText = obj.text;
+      } else {
+        return fallbackResult;
+      }
+    }
+
+    if (!originalText) return fallbackResult;
+
+    // 2. Setup regex to match the JSON markdown fence block
+    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+    const jsonMatch = originalText.match(jsonRegex);
+
+    let studyPlanData: StudyPlanResponse | null = null;
+    
+    // 3. Try to parse the isolated JSON block
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        studyPlanData = JSON.parse(jsonMatch[1].trim()) as StudyPlanResponse;
+      } catch (error) {
+        console.error("Failed to parse extracted Study Plan JSON:", error);
+      }
+    }
+
+    // 4. Remove the json code block entirely from the text to get clean markdown text
+    // .replace() removes the whole block. Then .trim() removes hanging line breaks.
+    const cleanText = originalText.replace(jsonRegex, '').trim();
+
+    return {
+      cleanText,
+      studyPlanData
+    };
+  };
 
   useEffect(() => {
     if (activeChatId === "new") {
@@ -236,25 +289,57 @@ export function ChatPage() {
       const delay = 1200 + Math.random() * 800;
       await new Promise((r) => setTimeout(r, delay));
 
-      const aiContent = generateMockResponse(trimmed, enrollment);
-      const aiMsg: Message = {
-        id: `msg-${Date.now() + 1}`,
-        role: "assistant",
-        content: aiContent,
-        timestamp: new Date(),
-      };
+      const sanitizedData = trimmed.replace(/[\n\r\t]/g, (match) => {
+        if (match === '\n') return '\\n';
+        if (match === '\r') return '\\r';
+        if (match === '\t') return '\\t';
+        return match;
+      });
+      const aiMessage = `{"message": "${sanitizedData}"}`;
+      const postData = JSON.parse(aiMessage);
 
-      const finalMessages = [...newMessages, aiMsg];
-      setActiveMessages(finalMessages);
-      setIsTyping(false);
+      console.log(postData);
+      try {
+        const response = await fetch('http://localhost:7777/api/v1/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Instructs server to expect JSON data
+          },
+          body: JSON.stringify(postData), // Serializes your object into a string
+        });
 
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatId
-            ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
-            : c
-        )
-      );
+        const data = await response.json();
+        console.log('Success:', data.reply.content);
+
+        const content = parseAIResponse(data.reply.content);
+        console.log(content.studyPlanData);
+        if (content.studyPlanData) {
+          setStudyPlanData(content.studyPlanData);
+        }
+
+        const aiMsg: Message = {
+          id: `msg-${Date.now() + 1}`,
+          role: "assistant",
+          content: content.cleanText,
+          timestamp: new Date(),
+        };
+
+        const finalMessages = [...newMessages, aiMsg];
+        setActiveMessages(finalMessages);
+        setIsTyping(false);
+
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chatId
+              ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
+              : c
+          )
+        );
+
+      } catch (error) {
+        console.error('Error:', error);
+      }
+      
     },
     [activeMessages, activeChatId, enrollment, isTyping]
   );
@@ -489,6 +574,7 @@ export function ChatPage() {
         <StudyPlan
           collapsed={studyPlanCollapsed}
           onToggle={() => setStudyPlanCollapsed((v) => !v)}
+          studyPlanInput={studyPlanData}
         />
       </div>
 
