@@ -381,7 +381,7 @@ export function ChatPage() {
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden font-['Montserrat',sans-serif]"
+      className="relative w-full h-[100dvh] overflow-hidden font-['Montserrat',sans-serif]"
     >
       <img
         src={imgBg}
@@ -391,8 +391,9 @@ export function ChatPage() {
       />
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      <div className="relative z-10 flex items-stretch gap-4 p-5 h-screen">
-        <CourseoSidebar
+      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 h-[100dvh]">
+        <div className="hidden md:block h-full">
+          <CourseoSidebar
           chats={sidebarChats}
           activeChatId={activeChatId}
           onNewChat={handleNewChat}
@@ -404,11 +405,12 @@ export function ChatPage() {
           onAccount={() => setShowAccount(true)}
           onHelp={() => setShowHelp(true)}
           onSettings={() => navigate("/settings")}
-        />
+          />
+        </div>
 
-        <div className="flex-1 bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
-          <div className="flex items-center justify-between px-7 py-5 shrink-0">
-            <p className="font-extrabold text-2xl text-[#000181] tracking-[-0.96px]">
+        <main className="flex-1 bg-white rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 shrink-0">
+            <p className="font-extrabold text-xl sm:text-2xl text-[#000181] tracking-[-0.96px]">
               Courseo
             </p>
             <div className="relative">
@@ -453,19 +455,19 @@ export function ChatPage() {
 
           {/* <Slider onClose={() => setShowHelp(false)}></Slider> */}
 
-          <div className="flex-1 overflow-y-auto px-7 pb-4 min-h-0">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
             {isEmptyChat ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full min-h-[200px]"
+                className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
               >
                 <motion.h1
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="font-extrabold text-[clamp(48px,6vw,88px)] text-[#000181] text-center tracking-[-3px] leading-[0.95] mb-4"
+                  className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
                 >
                   How can I help?
                 </motion.h1>
@@ -481,7 +483,7 @@ export function ChatPage() {
                 )}
               </motion.div>
             ) : (
-              <div className="flex flex-col gap-4 py-4">
+              <div className="flex flex-col gap-5 py-4 w-full max-w-3xl mx-auto">
                 {activeMessages.map((msg, i) => (
                   <MessageBubble key={msg.id} message={msg} index={i} />
                 ))}
@@ -508,7 +510,7 @@ export function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.2 }}
-                className="px-7 pb-3 flex-col gap-2 shrink-0 hidden max-h-48 overflow-auto md:flex"
+                className="px-4 sm:px-6 pb-3 flex-col gap-2 shrink-0 hidden max-h-48 overflow-auto md:flex w-full max-w-[816px] mx-auto"
               >
                 {SUGGESTED_PROMPTS.map((prompt, i) => (
                   <motion.button
@@ -531,8 +533,8 @@ export function ChatPage() {
             )}
           </AnimatePresence>
 
-          <div className="px-7 pb-6 shrink-0">
-            <div className="border border-[#0032fc] rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,1,129,0.1)] flex flex-col gap-2 p-4">
+          <div className="px-3 sm:px-6 pb-3 sm:pb-5 shrink-0">
+            <div className="border border-[rgba(0,50,252,0.65)] rounded-[24px] sm:rounded-[28px] shadow-[0_4px_18px_rgba(0,1,129,0.1)] flex flex-col gap-2 px-4 py-3 w-full max-w-3xl mx-auto">
               <textarea
                 ref={inputRef}
                 rows={1}
@@ -540,7 +542,7 @@ export function ChatPage() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 resize-none text-xl font-semibold text-[rgba(0,1,129,0.6)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-hidden w-full"
+                className="flex-1 resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-hidden w-full"
                 style={{ minHeight: "1.6em", maxHeight: "8em" }}
                 onInput={(e) => {
                   const el = e.currentTarget;
@@ -569,13 +571,15 @@ export function ChatPage() {
               </div>
             </div>
           </div>
-        </div>
+        </main>
 
-        <StudyPlan
-          collapsed={studyPlanCollapsed}
-          onToggle={() => setStudyPlanCollapsed((v) => !v)}
-          studyPlanInput={studyPlanData}
-        />
+        <div className="hidden xl:block h-full">
+          <StudyPlan
+            collapsed={studyPlanCollapsed}
+            onToggle={() => setStudyPlanCollapsed((v) => !v)}
+            studyPlanInput={studyPlanData}
+          />
+        </div>
       </div>
 
       <AnimatePresence>
