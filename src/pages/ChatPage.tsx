@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, ArrowRight, MoreVertical, Sparkles,
-  BookOpen, X, User, Mail, Lock, Eye, EyeOff, HelpCircle
+  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen,
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
-import { generateMockResponse } from "../lib/mockAI";
+import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
+import { clearAuthSession } from "../lib/authSession";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
@@ -26,8 +26,10 @@ interface Message {
 
 interface ChatSession {
   id: string;
+  backendSessionId: string;
   title: string;
   messages: Message[];
+  studyPlanData: StudyPlanResponse | null;
 }
 
 export interface ExtractedAIContent {
@@ -51,58 +53,107 @@ function buildChatTitle(session: ChatSession) {
   return normalized.length > 38 ? `${normalized.slice(0, 38)}…` : normalized;
 }
 
-const INITIAL_CHATS: ChatSession[] = [
-  {
-    id: "chat-1",
-    title: "What are my core subjects for Year 2?",
-    messages: [
-      {
-        id: "m1",
-        role: "user",
-        content: "What are my core subjects for Year 2?",
-        timestamp: new Date(Date.now() - 86400000 * 3),
-      },
-      {
-        id: "m2",
-        role: "assistant",
-        content:
-          "Based on your enrolment record, your **core Year 2 subjects** are:\n\n1. **COMP3210 — Algorithms & Data Structures** *(Required)*\n2. **COMP3340 — Software Engineering** *(Required)*\n3. **MATH2050 — Linear Algebra** *(Required)*\n\nYou also need to complete **one elective** to reach full load. Would you like recommendations?",
-        timestamp: new Date(Date.now() - 86400000 * 3 + 30000),
-      },
-    ],
-  },
-  {
-    id: "chat-2",
-    title: "Can I get into game development with this degree?",
-    messages: [
-      {
-        id: "m3",
-        role: "user",
-        content: "Can I get into game development with this degree?",
-        timestamp: new Date(Date.now() - 86400000 * 1),
-      },
-      {
-        id: "m4",
-        role: "assistant",
-        content:
-          "Absolutely! Your **Bachelor of Computer Science** is a perfect foundation for game development. Here are the most relevant subjects:\n\n• **COMP3450** — Computer Graphics *(start here!)*\n• **COMP4200** — Game Engine Architecture\n• **COMP3360** — Real-time Rendering\n\nI can build you a full game-dev focused plan — just ask!",
-        timestamp: new Date(Date.now() - 86400000 * 1 + 30000),
-      },
-    ],
-  },
-  {
-    id: "chat-3",
-    title: "How do I check my prerequisites?",
-    messages: [
-      {
-        id: "m5",
-        role: "user",
-        content: "How do I check my prerequisites?",
-        timestamp: new Date(Date.now() - 86400000 * 0.5),
-      },
-    ],
-  },
-];
+function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
+  const fallbackResult: ExtractedAIContent = {
+    cleanText: "",
+    studyPlanData: null,
+  };
+  if (!aiResponseText) return fallbackResult;
+
+  let originalText = "";
+
+  if (typeof aiResponseText === "string") {
+    originalText = aiResponseText;
+  } else if (typeof aiResponseText === "object" && aiResponseText !== null) {
+    const obj = aiResponseText as Record<string, unknown>;
+    if (typeof obj.text === "string") {
+      originalText = obj.text;
+    } else {
+      return fallbackResult;
+    }
+  }
+
+  if (!originalText) return fallbackResult;
+
+  const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+  const jsonMatch = originalText.match(jsonRegex);
+  let studyPlanData: StudyPlanResponse | null = null;
+
+  if (jsonMatch?.[1]) {
+    try {
+      studyPlanData = JSON.parse(jsonMatch[1].trim()) as StudyPlanResponse;
+    } catch (error) {
+      console.error("Failed to parse extracted Study Plan JSON:", error);
+    }
+  }
+
+  return {
+    cleanText: originalText.replace(jsonRegex, "").trim(),
+    studyPlanData,
+  };
+}
+
+function toFrontendMessage(message: BackendMessage): Message {
+  const parsed = parseAIResponse(message.content);
+
+  return {
+    id: String(message.id),
+    role: message.role === "user" ? "user" : "assistant",
+    content: parsed.cleanText,
+    timestamp: new Date(message.created_at),
+  };
+}
+
+function loadInitialChats(): ChatSession[] {
+  let savedChats: ChatSession[] = [];
+  const savedChatsRaw = localStorage.getItem("courseoChats");
+
+  if (savedChatsRaw) {
+    try {
+      const parsedChats = JSON.parse(savedChatsRaw) as ChatSession[];
+      savedChats = parsedChats
+        .filter((chat) => chat.backendSessionId)
+        .map((chat) => ({
+          ...chat,
+          studyPlanData: chat.studyPlanData ?? null,
+          messages: chat.messages.map((message) => ({
+            ...message,
+            timestamp: new Date(message.timestamp),
+          })),
+        }));
+    } catch {
+      localStorage.removeItem("courseoChats");
+    }
+  }
+
+  const bootstrapRaw = localStorage.getItem("courseoBootstrapChat");
+  if (!bootstrapRaw) return savedChats;
+
+  try {
+    const bootstrap = JSON.parse(bootstrapRaw) as {
+      sessionId: string;
+      reply: BackendMessage;
+    };
+    const parsedReply = parseAIResponse(bootstrap.reply.content);
+    const bootstrapChat: ChatSession = {
+      id: bootstrap.sessionId,
+      backendSessionId: bootstrap.sessionId,
+      title: "My study plan",
+      messages: [toFrontendMessage(bootstrap.reply)],
+      studyPlanData: parsedReply.studyPlanData,
+    };
+
+    return [
+      bootstrapChat,
+      ...savedChats.filter(
+        (chat) => chat.backendSessionId !== bootstrap.sessionId
+      ),
+    ];
+  } catch {
+    localStorage.removeItem("courseoBootstrapChat");
+    return savedChats;
+  }
+}
 
 function TypingIndicator() {
   return (
@@ -164,82 +215,53 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 
 export function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const enrollment = localStorage.getItem("courseoEnrollment") ?? "";
-  const userRaw = localStorage.getItem("courseoUser");
-  const user = userRaw ? JSON.parse(userRaw) : null;
+  const initialChats = useMemo(loadInitialChats, []);
+  const initialActiveChat = initialChats[0];
 
-  const [chats, setChats] = useState<ChatSession[]>(INITIAL_CHATS);
-  const [activeChatId, setActiveChatId] = useState<string>("new");
-  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
+  const [chats, setChats] = useState<ChatSession[]>(initialChats);
+  const [activeChatId, setActiveChatId] = useState<string>(
+    initialActiveChat?.id ?? "new"
+  );
+  const [activeMessages, setActiveMessages] = useState<Message[]>(
+    initialActiveChat?.messages ?? []
+  );
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [chatError, setChatError] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [studyPlanCollapsed, setStudyPlanCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileStudyPlanOpen, setMobileStudyPlanOpen] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(null);  
+  const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
+    initialActiveChat?.studyPlanData ?? null
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
-  
-
-  const parseAIResponse = (aiResponseText: unknown): ExtractedAIContent => {
-    // Default fallback state if nothing is provided
-    const fallbackResult: ExtractedAIContent = { cleanText: '', studyPlanData: null };
-    if (!aiResponseText) return fallbackResult;
-
-    let originalText = '';
-
-    // 1. Resolve input type safely down to a string
-    if (typeof aiResponseText === 'string') {
-      originalText = aiResponseText;
-    } else if (typeof aiResponseText === 'object' && aiResponseText !== null) {
-      const obj = aiResponseText as Record<string, any>;
-      if (typeof obj.text === 'string') {
-        originalText = obj.text;
-      } else {
-        return fallbackResult;
-      }
-    }
-
-    if (!originalText) return fallbackResult;
-
-    // 2. Setup regex to match the JSON markdown fence block
-    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-    const jsonMatch = originalText.match(jsonRegex);
-
-    let studyPlanData: StudyPlanResponse | null = null;
-    
-    // 3. Try to parse the isolated JSON block
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        studyPlanData = JSON.parse(jsonMatch[1].trim()) as StudyPlanResponse;
-      } catch (error) {
-        console.error("Failed to parse extracted Study Plan JSON:", error);
-      }
-    }
-
-    // 4. Remove the json code block entirely from the text to get clean markdown text
-    // .replace() removes the whole block. Then .trim() removes hanging line breaks.
-    const cleanText = originalText.replace(jsonRegex, '').trim();
-
-    return {
-      cleanText,
-      studyPlanData
-    };
-  };
-
   useEffect(() => {
     if (activeChatId === "new") {
       setActiveMessages([]);
+      setStudyPlanData(null);
     } else {
       const found = chats.find((c) => c.id === activeChatId);
       setActiveMessages(found?.messages ?? []);
+      setStudyPlanData(found?.studyPlanData ?? null);
     }
-  }, [activeChatId]);
+  }, [activeChatId, chats]);
+
+  useEffect(() => {
+    if (location.pathname !== "/chat") return;
+    localStorage.setItem("courseoChats", JSON.stringify(chats));
+    localStorage.removeItem("courseoBootstrapChat");
+  }, [chats, location.pathname]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -250,6 +272,17 @@ export function ChatPage() {
       const trimmed = text.trim();
       if (!trimmed || isTyping) return;
 
+      const activeChat = chats.find((chat) => chat.id === activeChatId);
+      if (!activeChat?.backendSessionId) {
+        setChatError(
+          enrollment
+            ? "Create a new chat before sending a message."
+            : "Add your enrolment record before starting a study-planning chat."
+        );
+        return;
+      }
+
+      setChatError("");
       const userMsg: Message = {
         id: `msg-${Date.now()}`,
         role: "user",
@@ -262,96 +295,95 @@ export function ChatPage() {
       setInputText("");
       setIsTyping(true);
 
-      let chatId = activeChatId;
-      const chatTitle = buildChatTitle({
-        id: chatId,
-        title: trimmed,
-        messages: [{ ...userMsg }],
-      });
+      setChats((previousChats) =>
+        previousChats.map((chat) =>
+          chat.id === activeChat.id
+            ? {
+                ...chat,
+                title: buildChatTitle({ ...chat, messages: newMessages }),
+                messages: newMessages,
+              }
+            : chat
+        )
+      );
 
-      if (activeChatId === "new") {
-        chatId = `chat-${Date.now()}`;
-        const newSession: ChatSession = {
-          id: chatId,
-          title: chatTitle,
-          messages: newMessages,
-        };
-        setChats((prev) => [newSession, ...prev]);
-        setActiveChatId(chatId);
-      } else {
-        setChats((prev) =>
-          prev.map((c) =>
-            c.id === chatId ? { ...c, title: buildChatTitle({ ...c, messages: newMessages }), messages: newMessages } : c
-          )
-        );
-      }
-
-      const delay = 1200 + Math.random() * 800;
-      await new Promise((r) => setTimeout(r, delay));
-
-      const sanitizedData = trimmed.replace(/[\n\r\t]/g, (match) => {
-        if (match === '\n') return '\\n';
-        if (match === '\r') return '\\r';
-        if (match === '\t') return '\\t';
-        return match;
-      });
-      const aiMessage = `{"message": "${sanitizedData}"}`;
-      const postData = JSON.parse(aiMessage);
-
-      console.log(postData);
       try {
-        const response = await fetch('http://localhost:7777/api/v1/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json', // Instructs server to expect JSON data
-          },
-          body: JSON.stringify(postData), // Serializes your object into a string
-        });
-
-        const data = await response.json();
-        console.log('Success:', data.reply.content);
-
+        const data = await continueChat(activeChat.backendSessionId, trimmed);
         const content = parseAIResponse(data.reply.content);
-        console.log(content.studyPlanData);
+
         if (content.studyPlanData) {
           setStudyPlanData(content.studyPlanData);
         }
 
         const aiMsg: Message = {
-          id: `msg-${Date.now() + 1}`,
+          id: String(data.reply.id),
           role: "assistant",
           content: content.cleanText,
-          timestamp: new Date(),
+          timestamp: new Date(data.reply.created_at),
         };
 
         const finalMessages = [...newMessages, aiMsg];
         setActiveMessages(finalMessages);
-        setIsTyping(false);
 
-        setChats((prev) =>
-          prev.map((c) =>
-            c.id === chatId
-              ? { ...c, title: buildChatTitle({ ...c, messages: finalMessages }), messages: finalMessages }
-              : c
+        setChats((previousChats) =>
+          previousChats.map((chat) =>
+            chat.id === activeChat.id
+              ? {
+                  ...chat,
+                  title: buildChatTitle({
+                    ...chat,
+                    messages: finalMessages,
+                  }),
+                  messages: finalMessages,
+                  studyPlanData:
+                    content.studyPlanData ?? chat.studyPlanData,
+                }
+              : chat
           )
         );
-
       } catch (error) {
-        console.error('Error:', error);
+        const errorText =
+          error instanceof Error
+            ? error.message
+            : "Courseo could not complete that request.";
+        setChatError(errorText);
+
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: errorText,
+          timestamp: new Date(),
+        };
+        const failedMessages = [...newMessages, errorMessage];
+        setActiveMessages(failedMessages);
+        setChats((previousChats) =>
+          previousChats.map((chat) =>
+            chat.id === activeChat.id
+              ? { ...chat, messages: failedMessages }
+              : chat
+          )
+        );
+      } finally {
+        setIsTyping(false);
       }
-      
     },
-    [activeMessages, activeChatId, enrollment, isTyping]
+    [activeMessages, activeChatId, chats, enrollment, isTyping]
   );
 
   useEffect(() => {
-    if (pendingPromptSentRef.current || isTyping) return;
+    if (
+      location.pathname !== "/chat" ||
+      pendingPromptSentRef.current ||
+      isTyping
+    ) {
+      return;
+    }
     const pendingPrompt = localStorage.getItem("courseoPendingPrompt");
     if (!pendingPrompt) return;
     pendingPromptSentRef.current = true;
     localStorage.removeItem("courseoPendingPrompt");
-    sendMessage(pendingPrompt);
-  }, [isTyping, sendMessage]);
+    void sendMessage(pendingPrompt);
+  }, [isTyping, location.pathname, sendMessage]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -360,16 +392,51 @@ export function ChatPage() {
     }
   };
 
-  const handleNewChat = () => {
-    setActiveChatId("new");
-    setActiveMessages([]);
-    setInputText("");
+  const handleNewChat = async () => {
+    setShowMenu(false);
+    setChatError("");
+
+    if (!enrollment) {
+      navigate("/");
+      return;
+    }
+
+    if (isCreatingChat) return;
+    setIsCreatingChat(true);
+
+    try {
+      const result = await startChat(enrollment);
+      const parsedReply = parseAIResponse(result.reply.content);
+      const newChat: ChatSession = {
+        id: result.session_id,
+        backendSessionId: result.session_id,
+        title: "New study plan",
+        messages: [toFrontendMessage(result.reply)],
+        studyPlanData: parsedReply.studyPlanData,
+      };
+
+      setChats((existingChats) => [newChat, ...existingChats]);
+      setActiveChatId(newChat.id);
+      setActiveMessages(newChat.messages);
+      setStudyPlanData(newChat.studyPlanData);
+      setInputText("");
+    } catch (error) {
+      setChatError(
+        error instanceof Error
+          ? error.message
+          : "Courseo could not create a new chat."
+      );
+    } finally {
+      setIsCreatingChat(false);
+    }
   };
 
   const handleSelectChat = (id: string) => {
     setActiveChatId(id);
     const found = chats.find((c) => c.id === id);
     setActiveMessages(found?.messages ?? []);
+    setStudyPlanData(found?.studyPlanData ?? null);
+    setChatError("");
   };
 
   const isEmptyChat = activeMessages.length === 0;
@@ -409,11 +476,30 @@ export function ChatPage() {
         </div>
 
         <main className="flex-1 bg-white rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4 shrink-0">
-            <p className="font-extrabold text-xl sm:text-2xl text-[#000181] tracking-[-0.96px]">
-              Courseo
-            </p>
-            <div className="relative">
+          <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 shrink-0">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setMobileSidebarOpen(true)}
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#000181] hover:bg-gray-100 transition-colors"
+                aria-label="Open navigation"
+              >
+                <PanelLeftOpen size={21} />
+              </button>
+              <p className="font-extrabold text-xl sm:text-2xl text-[#000181] tracking-[-0.96px]">
+                Courseo
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileStudyPlanOpen(true)}
+                className="xl:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#000181] hover:bg-gray-100 transition-colors"
+                aria-label="Open study plan"
+              >
+                <PanelRightOpen size={21} />
+              </button>
+              <div className="relative">
               <button
                 onClick={() => setShowMenu((v) => !v)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-[#000181]"
@@ -430,14 +516,25 @@ export function ChatPage() {
                     className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-44 z-10"
                   >
                     {[
-                      { label: "New Chat", action: handleNewChat },
+                      {
+                        label: isCreatingChat ? "Creating Chat…" : "New Chat",
+                        action: () => void handleNewChat(),
+                      },
                       { label: "Your Handbook", action: () => { setShowHandbook(true); setShowMenu(false); } },
                       { label: "Settings", action: () => navigate("/settings") },
                       {
                         label: enrollment ? "Update Enrolment" : "Add Enrolment",
                         action: () => navigate("/"),
                       },
-                      { label: "Log Out", action: () => { localStorage.clear(); navigate("/"); } },
+                      {
+                        label: "Log Out",
+                        action: () => {
+                          clearAuthSession();
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          navigate("/");
+                        },
+                      },
                     ].map((item) => (
                       <button
                         key={item.label}
@@ -450,6 +547,7 @@ export function ChatPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </div>
 
@@ -534,6 +632,14 @@ export function ChatPage() {
           </AnimatePresence>
 
           <div className="px-3 sm:px-6 pb-3 sm:pb-5 shrink-0">
+            {chatError && (
+              <p
+                role="alert"
+                className="w-full max-w-3xl mx-auto mb-2 px-2 text-[12px] font-semibold text-red-600"
+              >
+                {chatError}
+              </p>
+            )}
             <div className="border border-[rgba(0,50,252,0.65)] rounded-[24px] sm:rounded-[28px] shadow-[0_4px_18px_rgba(0,1,129,0.1)] flex flex-col gap-2 px-4 py-3 w-full max-w-3xl mx-auto">
               <textarea
                 ref={inputRef}
@@ -581,6 +687,83 @@ export function ChatPage() {
           />
         </div>
       </div>
+
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-[#050515]/45 backdrop-blur-[2px] md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          >
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="h-full p-2.5"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <CourseoSidebar
+                chats={sidebarChats}
+                activeChatId={activeChatId}
+                onNewChat={() => {
+                  setMobileSidebarOpen(false);
+                  void handleNewChat();
+                }}
+                onSelectChat={(id) => {
+                  handleSelectChat(id);
+                  setMobileSidebarOpen(false);
+                }}
+                onToggle={() => setMobileSidebarOpen(false)}
+                expandedWidth="min(86vw, 320px)"
+                showHandbook
+                onHandbook={() => {
+                  setMobileSidebarOpen(false);
+                  setShowHandbook(true);
+                }}
+                onAccount={() => {
+                  setMobileSidebarOpen(false);
+                  setShowAccount(true);
+                }}
+                onHelp={() => {
+                  setMobileSidebarOpen(false);
+                  setShowHelp(true);
+                }}
+                onSettings={() => navigate("/settings")}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {mobileStudyPlanOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex justify-end bg-[#050515]/45 backdrop-blur-[2px] xl:hidden"
+            onClick={() => setMobileStudyPlanOpen(false)}
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="h-full p-2.5"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <StudyPlan
+                onToggle={() => setMobileStudyPlanOpen(false)}
+                expandedWidth="min(92vw, 360px)"
+                studyPlanInput={studyPlanData}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showHandbook && (

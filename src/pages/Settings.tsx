@@ -17,6 +17,7 @@ import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
+import { getAuthSession, updateAuthSessionUser } from "../lib/authSession";
 
 type SettingsTab = "profile" | "ai" | "notifications" | "system";
 
@@ -52,17 +53,12 @@ const MAJORS = [
 ];
 
 function getStoredProfile() {
-  try {
-    const raw = localStorage.getItem("courseoUser");
-    const user = raw ? JSON.parse(raw) : {};
-    return {
-      email: typeof user.email === "string" ? user.email : "",
-      username: typeof user.username === "string" ? user.username : "",
-      password: "",
-    };
-  } catch {
-    return { email: "", username: "", password: "" };
-  }
+  const user = getAuthSession()?.user;
+  return {
+    email: user?.email ?? "",
+    username: user?.username ?? "",
+    password: "",
+  };
 }
 
 function Panel({
@@ -274,23 +270,13 @@ export function SettingsPage() {
   };
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("courseoUser");
-      const current = raw ? JSON.parse(raw) : {};
-      localStorage.setItem(
-        "courseoUser",
-        JSON.stringify({
-          ...current,
-          email: profile.email,
-          username: profile.username,
-        })
-      );
-    } catch {
-      localStorage.setItem(
-        "courseoUser",
-        JSON.stringify({ email: profile.email, username: profile.username })
-      );
-    }
+    const current = getAuthSession()?.user;
+    if (!current) return;
+    updateAuthSessionUser({
+      ...current,
+      email: profile.email,
+      username: profile.username,
+    });
   }, [profile.email, profile.username]);
 
   const setProfileField = (key: keyof typeof profile, value: string) => {
@@ -322,19 +308,21 @@ export function SettingsPage() {
       <div className="absolute inset-0 bg-black/10" />
 
       <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
-        <CourseoSidebar
-          chats={SIDEBAR_CHATS}
-          activeChatId="settings"
-          onNewChat={goToChat}
-          onSelectChat={goToChat}
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((value) => !value)}
-          showHandbook={true}
-          onHandbook={() => setShowHandbook(true)}
-          onAccount={() => setShowAccount(true)}
-          onHelp={() => setShowHelp(true)}
-          onSettings={() => navigate("/settings")}
-        />
+        <div className="hidden h-full md:block">
+          <CourseoSidebar
+            chats={SIDEBAR_CHATS}
+            activeChatId="settings"
+            onNewChat={goToChat}
+            onSelectChat={goToChat}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((value) => !value)}
+            showHandbook={true}
+            onHandbook={() => setShowHandbook(true)}
+            onAccount={() => setShowAccount(true)}
+            onHelp={() => setShowHelp(true)}
+            onSettings={() => navigate("/settings")}
+          />
+        </div>
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
           <div className="shrink-0 px-7 pt-6">

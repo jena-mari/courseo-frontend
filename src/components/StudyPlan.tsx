@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, LayoutDashboard, MessageSquare } from "lucide-react";
-import imgLogo from "../assets/courseo-logo.png";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import SubjectCard from "./subject-card";
 import type { StudyPlanResponse } from "../types/studyPlanType";
@@ -10,24 +8,28 @@ interface studyPlanProps {
   collapsed?: boolean;
   onToggle?: () => void;
   studyPlanInput: StudyPlanResponse | null;
+  expandedWidth?: number | string;
 }
 
 export function StudyPlan({
   collapsed = false,
   onToggle,
   studyPlanInput = null,
+  expandedWidth = "clamp(270px, 24vw, 300px)",
 }: studyPlanProps) {
 
   return (
     <motion.div
       initial={false}
-      animate={{ width: collapsed ? 48 : 300 }}
+      animate={{ width: collapsed ? 56 : expandedWidth }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
     >
-      <div className="flex items-center justify-between px-3 pt-5 pb-3 shrink-0">
-        <div></div>
-        <div className="flex items-center gap-2">
+      <div className={`flex items-center pt-5 pb-3 shrink-0 ${
+        collapsed ? "justify-center px-2" : "justify-between px-4"
+      }`}>
+        {!collapsed && <div className="w-10" aria-hidden="true" />}
+        <div className="flex items-center gap-2 min-w-0">
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0 }}
@@ -41,10 +43,12 @@ export function StudyPlan({
         </div>
         <button
           onClick={onToggle}
-          className="rounded-lg hover:bg-gray-100 transition-colors text-[#000181]"
-          title="Toggle sidebar"
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-[#000181] shrink-0"
+          title={collapsed ? "Expand study plan" : "Collapse study plan"}
+          aria-label={collapsed ? "Expand study plan" : "Collapse study plan"}
+          aria-expanded={!collapsed}
         >
-          <LayoutDashboard size={20} />
+          {collapsed ? <PanelRightOpen size={20} /> : <PanelRightClose size={20} />}
         </button>
       </div>
 

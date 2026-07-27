@@ -5,6 +5,7 @@ import {
   Plus, ArrowRight, MoreVertical, Sparkles,
   BookOpen, X, User, Mail, Lock, Eye, EyeOff, HelpCircle
 } from "lucide-react";
+import { getAuthSession, updateAuthSessionUser } from "../lib/authSession";
 
 interface UserData {
   username: string;
@@ -39,7 +40,11 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
     setLoading(false);
-    localStorage.setItem("courseoUser", JSON.stringify({ username, email }));
+    updateAuthSessionUser({
+      ...(getAuthSession()?.user ?? { username }),
+      username: username.trim(),
+      email: email.trim(),
+    });
     setError("Account updated.");
     await new Promise((r) => setTimeout(r, 2000));
     onClose();
@@ -48,11 +53,12 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
   const [user, setData] = useState<UserData | null>(null);
 
   useEffect(() => {
-    const person = localStorage.getItem("courseoUser");
-
-    if (person) {
-      const gottenUser = JSON.parse(person) as UserData;
-      setData(gottenUser);
+    const sessionUser = getAuthSession()?.user;
+    if (sessionUser) {
+      setData({
+        username: sessionUser.username,
+        email: sessionUser.email ?? "",
+      });
     }
   }, []);
 

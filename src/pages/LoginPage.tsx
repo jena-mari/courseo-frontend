@@ -5,6 +5,7 @@ import { Eye, EyeOff, User, Lock, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+import { createAuthSession } from "../lib/authSession";
 
 const AUTH_SIDEBAR_CHATS: Chat[] = [
   { id: "chat-1", title: "Study plan - Autumn 2026" },
@@ -34,17 +35,16 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    localStorage.setItem("courseoUser", JSON.stringify({ username }));
-    navigate("/chat");
+    try {
+      createAuthSession({ username: username.trim() }, rememberMe);
+      navigate("/chat");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleProviderLogin = (provider: "Google" | "Yahoo") => {
-    localStorage.setItem(
-      "courseoUser",
-      JSON.stringify({ username: provider, provider }),
-    );
+    createAuthSession({ username: provider, provider }, rememberMe);
     navigate("/chat");
   };
 
@@ -232,18 +232,20 @@ export function LoginPage() {
       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
       <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
-        <CourseoSidebar
-          chats={AUTH_SIDEBAR_CHATS}
-          onNewChat={goToChat}
-          onSelectChat={goToChat}
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((value) => !value)}
-          showHandbook={false}
-          activeUtility="account"
-          onAccount={() => navigate("/login")}
-          onSettings={() => navigate("/settings")}
-          onHelp={() => undefined}
-        />
+        <div className="hidden h-full md:block">
+          <CourseoSidebar
+            chats={AUTH_SIDEBAR_CHATS}
+            onNewChat={goToChat}
+            onSelectChat={goToChat}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed((value) => !value)}
+            showHandbook={false}
+            activeUtility="account"
+            onAccount={() => navigate("/login")}
+            onSettings={() => navigate("/settings")}
+            onHelp={() => undefined}
+          />
+        </div>
 
         <main className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[30px] bg-white/20 px-6 py-8">
           <LoginCard />
