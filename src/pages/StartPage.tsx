@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
+import { startChat } from "../lib/chatApi";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, LogIn, UserPlus, X } from "lucide-react";
@@ -15,17 +16,48 @@ export function StartPage() {
   const [modalOpen, setModalOpen] = useState(true);
   const [mode, setMode] = useState<StartMode>("start");
   const [enrollment, setEnrollment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = () => {
-    if (!enrollment.trim()) return;
-    localStorage.setItem("courseoEnrollment", enrollment.trim());
-    navigate("/chat");
+  const handleSubmit = async () => {
+    const record = enrollment.trim();
+
+    if (!record || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const result = await startChat(record);
+
+      localStorage.setItem("courseoEnrollment", record);
+
+      localStorage.setItem(
+        "courseoBootstrapChat",
+        JSON.stringify({
+          sessionId: result.session_id,
+          reply: result.reply,
+        })
+      );
+
+      navigate("/chat");
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Unable to start your study-planning session."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSubmit();
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      void handleSubmit();
+    }
   };
-
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-['Montserrat',sans-serif]">
       <div className={modalOpen ? "pointer-events-none" : ""}>
@@ -88,21 +120,21 @@ export function StartPage() {
                     <label htmlFor="enrolment-record" className="block mb-2 text-[13px] font-extrabold text-[#000181]">
                       Enrolment record
                     </label>
-                    <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[58px] shadow-[0_4px_14px_rgba(0,1,129,0.08)] flex items-center pl-5 pr-3 gap-3 transition-colors">
-                      <input
+                    <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] min-h-[112px] shadow-[0_4px_14px_rgba(0,1,129,0.08)] flex items-end p-3 pl-5 gap-3 transition-colors">
+                      <textarea
                         id="enrolment-record"
-                        type="text"
                         placeholder="Paste your enrolment record here..."
                         value={enrollment}
                         onChange={(e) => setEnrollment(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
+                        rows={4}
+                        className="flex-1 self-stretch resize-none text-[14px] font-semibold leading-relaxed text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
                       />
                       <motion.button
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={handleSubmit}
-                        disabled={!enrollment.trim()}
+                        onClick={() => void handleSubmit()}
+                        disabled={!enrollment.trim() || isSubmitting}
                         className="w-9 h-9 rounded-full bg-[#000181] flex items-center justify-center shrink-0 disabled:opacity-35"
                         aria-label="Continue"
                       >
@@ -110,15 +142,23 @@ export function StartPage() {
                       </motion.button>
                     </div>
                   </div>
+                  {submitError && (
+                      <p
+                        role="alert"
+                        className="mt-3 text-center text-sm font-semibold text-red-600"
+                      >
+                        {submitError}
+                      </p>
+                    )}
 
                   <motion.button
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={handleSubmit}
-                    disabled={!enrollment.trim()}
+                    onClick={() => void handleSubmit()}
+                    disabled={!enrollment.trim() || isSubmitting}
                     className="mt-4 w-full h-[54px] rounded-[18px] bg-[#000181] text-white font-extrabold text-[15px] disabled:opacity-35 transition-opacity"
                   >
-                    Continue
+                    {isSubmitting ? "Creating your study plan…" : "Continue"}
                   </motion.button>
 
                   <div className="my-7 flex items-center gap-4 w-full text-[12px] font-extrabold text-[rgba(0,1,129,0.42)]">

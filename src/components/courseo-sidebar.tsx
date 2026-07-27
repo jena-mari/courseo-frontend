@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, PanelLeftClose, PanelLeftOpen, MessageSquare } from "lucide-react";
 import imgLogo from "../assets/courseo-logo.png";
 import { motion } from "framer-motion";
 
@@ -21,6 +21,7 @@ interface CourseoSidebarProps {
   onAccount?: () => void;
   onSettings?: () => void;
   onHelp?: () => void;
+  expandedWidth?: number | string;
 }
 
 export function CourseoSidebar({
@@ -36,6 +37,7 @@ export function CourseoSidebar({
   onAccount,
   onSettings,
   onHelp,
+  expandedWidth = "clamp(216px, 19vw, 244px)",
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,18 +48,20 @@ export function CourseoSidebar({
   return (
     <motion.div
       initial={false}
-      animate={{ width: collapsed ? 68 : 244 }}
+      animate={{ width: collapsed ? 64 : expandedWidth }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
     >
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <img
-            src={imgLogo}
-            alt="Courseo"
-            className="w-10 h-10 object-contain shrink-0"
-          />
-          {!collapsed && (
+      <div className={`flex items-center pt-5 pb-3 shrink-0 ${
+        collapsed ? "justify-center px-2" : "justify-between px-5"
+      }`}>
+        {!collapsed && (
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src={imgLogo}
+              alt="Courseo"
+              className="w-10 h-10 object-contain shrink-0"
+            />
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -66,14 +70,16 @@ export function CourseoSidebar({
             >
               Courseo
             </motion.span>
-          )}
-        </div>
+          </div>
+        )}
         <button
           onClick={onToggle}
-          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-[#000181]"
-          title="Toggle sidebar"
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-[#000181] shrink-0"
+          title={collapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!collapsed}
         >
-          <LayoutDashboard size={20} />
+          {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
         </button>
       </div>
 

@@ -1,0 +1,14 @@
+# Local environment overrides and secrets
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Generated production output
+dist/
+
+# Editor and operating-system files
+.DS_Store
+*.log
