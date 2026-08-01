@@ -1,5 +1,7 @@
-const AUTH_SESSION_KEY = "courseoAuthSession";
-const USER_KEY = "courseoUser";
+import { STORAGE_KEYS } from "./storageKeys";
+
+const AUTH_SESSION_KEY = STORAGE_KEYS.authSession;
+const USER_KEY = STORAGE_KEYS.user;
 const REMEMBERED_SESSION_LIFETIME = 30 * 24 * 60 * 60 * 1000;
 const BROWSER_SESSION_LIFETIME = 12 * 60 * 60 * 1000;
 

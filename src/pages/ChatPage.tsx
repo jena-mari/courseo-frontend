@@ -10,10 +10,11 @@ import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
 import { clearAuthSession } from "../lib/authSession";
+import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
-import type { StudyPlanResponse } from "../types/studyPlanType";
+import { isStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import MyDocument from "../functions/pdf";
@@ -84,7 +85,12 @@ function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
 
   if (jsonMatch?.[1]) {
     try {
-      studyPlanData = JSON.parse(jsonMatch[1].trim()) as StudyPlanResponse;
+      const parsedPlan: unknown = JSON.parse(jsonMatch[1].trim());
+      if (isStudyPlanResponse(parsedPlan)) {
+        studyPlanData = parsedPlan;
+      } else {
+        console.warn("Ignored an assistant study plan with an invalid structure.");
+      }
     } catch (error) {
       console.error("Failed to parse extracted Study Plan JSON:", error);
     }
@@ -109,7 +115,7 @@ function toFrontendMessage(message: BackendMessage): Message {
 
 function loadInitialChats(): ChatSession[] {
   let savedChats: ChatSession[] = [];
-  const savedChatsRaw = localStorage.getItem("courseoChats");
+  const savedChatsRaw = localStorage.getItem(STORAGE_KEYS.chats);
 
   if (savedChatsRaw) {
     try {
@@ -125,11 +131,11 @@ function loadInitialChats(): ChatSession[] {
           })),
         }));
     } catch {
-      localStorage.removeItem("courseoChats");
+      localStorage.removeItem(STORAGE_KEYS.chats);
     }
   }
 
-  const bootstrapRaw = localStorage.getItem("courseoBootstrapChat");
+  const bootstrapRaw = localStorage.getItem(STORAGE_KEYS.bootstrapChat);
   if (!bootstrapRaw) return savedChats;
 
   try {
@@ -153,7 +159,7 @@ function loadInitialChats(): ChatSession[] {
       ),
     ];
   } catch {
-    localStorage.removeItem("courseoBootstrapChat");
+    localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
     return savedChats;
   }
 }
@@ -219,7 +225,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 export function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const enrollment = localStorage.getItem("courseoEnrollment") ?? "";
+  const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
   const initialChats = useMemo(loadInitialChats, []);
   const initialActiveChat = initialChats[0];
 
@@ -262,8 +268,8 @@ export function ChatPage() {
 
   useEffect(() => {
     if (location.pathname !== "/chat") return;
-    localStorage.setItem("courseoChats", JSON.stringify(chats));
-    localStorage.removeItem("courseoBootstrapChat");
+    localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(chats));
+    localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
   }, [chats, location.pathname]);
 
   useEffect(() => {
@@ -381,10 +387,10 @@ export function ChatPage() {
     ) {
       return;
     }
-    const pendingPrompt = localStorage.getItem("courseoPendingPrompt");
+    const pendingPrompt = localStorage.getItem(STORAGE_KEYS.pendingPrompt);
     if (!pendingPrompt) return;
     pendingPromptSentRef.current = true;
-    localStorage.removeItem("courseoPendingPrompt");
+    localStorage.removeItem(STORAGE_KEYS.pendingPrompt);
     void sendMessage(pendingPrompt);
   }, [isTyping, location.pathname, sendMessage]);
 
@@ -536,8 +542,7 @@ export function ChatPage() {
                         label: "Log Out",
                         action: () => {
                           clearAuthSession();
-                          localStorage.clear();
-                          sessionStorage.clear();
+                          clearCourseoStorage();
                           navigate("/");
                         },
                       },

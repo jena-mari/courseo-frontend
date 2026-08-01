@@ -3,11 +3,12 @@ import { startChat } from "../lib/chatApi";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, LogIn, UserPlus, X } from "lucide-react";
+import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
-import { ChatPage } from "./ChatPage";
 import { LoginCard } from "./LoginPage";
 import { RegisterCard } from "./RegisterPage";
 import { HelpSlider } from "../components/help-carousel";
+import { STORAGE_KEYS } from "../lib/storageKeys";
 
 type StartMode = "start" | "login" | "register" | "tutorial";
 
@@ -30,10 +31,10 @@ export function StartPage() {
     try {
       const result = await startChat(record);
 
-      localStorage.setItem("courseoEnrollment", record);
+      localStorage.setItem(STORAGE_KEYS.enrolment, record);
 
       localStorage.setItem(
-        "courseoBootstrapChat",
+        STORAGE_KEYS.bootstrapChat,
         JSON.stringify({
           sessionId: result.session_id,
           reply: result.reply,
@@ -60,9 +61,13 @@ export function StartPage() {
   };
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-['Montserrat',sans-serif]">
-      <div className={modalOpen ? "pointer-events-none" : ""}>
-        <ChatPage />
-      </div>
+      <img
+        src={imgBg}
+        className="absolute inset-0 h-full w-full object-cover"
+        alt=""
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-black/10" />
 
       <AnimatePresence>
         {modalOpen && (

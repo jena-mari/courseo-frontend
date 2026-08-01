@@ -43,66 +43,68 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
     }
   };
 
-  const handleProviderLogin = (provider: "Google" | "Yahoo") => {
-    createAuthSession({ username: provider, provider }, rememberMe);
-    navigate("/chat");
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[50px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] w-full max-w-[650px] max-h-[90vh] overflow-y-auto p-10 relative"
+      className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_28px_80px_rgba(0,0,0,0.32)] border border-white/70 w-full max-w-[590px] max-h-[calc(100dvh-32px)] overflow-y-auto px-6 py-7 sm:px-12 sm:py-10 relative"
     >
-      <div className="absolute top-8 left-8">
-        <img src={imgLogo} alt="Courseo" className="w-14 h-14 object-contain" />
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
+        <img src={imgLogo} alt="Courseo" className="w-10 h-10 object-contain" />
       </div>
 
       <button
         onClick={onClose ?? (() => navigate("/"))}
-        className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center text-[#000181] hover:bg-gray-100 rounded-full transition-colors"
+        className="absolute top-6 right-6 sm:top-8 sm:right-8 w-10 h-10 flex items-center justify-center text-[#000181] hover:bg-[#f1f3ff] rounded-full transition-colors"
         aria-label="Close"
       >
-        <X size={22} strokeWidth={3} />
+        <X size={24} strokeWidth={2.25} />
       </button>
 
-      <div className="text-center mt-8 mb-8">
-        <h1 className="font-extrabold text-[clamp(40px,5vw,64px)] text-[#000181] tracking-[-2px] leading-[1.1]">
-          Welcome back<br />to Courseo!
+      <div className="text-center pt-14 sm:pt-12 mb-7">
+        <h1 className="font-extrabold text-[clamp(32px,7vw,46px)] text-[#000181] tracking-[-1.5px] leading-[1.05]">
+          Welcome back
         </h1>
+        <p className="mt-3 text-[14px] sm:text-[15px] font-semibold text-[rgba(0,1,129,0.68)]">
+          Log in to continue with Courseo.
+        </p>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-5 px-2">
+      <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="font-bold text-[18px] text-[#000181] block mb-2">
+          <label htmlFor="login-username" className="font-extrabold text-[13px] text-[#000181] block mb-2">
             Username
           </label>
-          <div className="border-2 border-[#000181] rounded-[20px] h-[50px] flex items-center px-4 gap-3">
+          <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
             <User size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type="text"
+              id="login-username"
+              autoComplete="username"
               placeholder="Enter your username..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="flex-1 text-[14px] font-normal text-[rgba(0,1,129,0.5)] placeholder:text-[rgba(0,1,129,0.5)] outline-none bg-transparent min-w-0"
+              className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
             />
           </div>
         </div>
 
         <div>
-          <label className="font-bold text-[18px] text-[#000181] block mb-2">
+          <label htmlFor="login-password" className="font-extrabold text-[13px] text-[#000181] block mb-2">
             Password
           </label>
-          <div className="border-2 border-[#000181] rounded-[20px] h-[50px] flex items-center px-4 gap-3">
+          <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
             <Lock size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type={showPassword ? "text" : "password"}
+              id="login-password"
+              autoComplete="current-password"
               placeholder="Enter your password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="flex-1 text-[14px] font-normal text-[rgba(0,1,129,0.5)] placeholder:text-[rgba(0,1,129,0.5)] outline-none bg-transparent min-w-0"
+              className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
             />
             <button
               type="button"
@@ -115,7 +117,7 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -148,56 +150,21 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="w-full bg-[#83e7ff] border-2 border-[#000181] rounded-[20px] h-[50px] font-bold text-[15px] text-[#000181] shadow-[2px_2px_4px_rgba(0,0,0,0.25)] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+          className="w-full h-[54px] rounded-[18px] bg-[#000181] text-white font-extrabold text-[15px] transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                className="w-4 h-4 border-2 border-[#000181] border-t-transparent rounded-full"
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
               />
               Logging in...
             </>
           ) : (
-            "Log-In"
+            "Log in"
           )}
         </motion.button>
-
-        <div className="flex items-center gap-3 py-0.5">
-          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
-          <span className="text-[12px] font-bold text-[rgba(0,1,129,0.55)]">
-            or log in with
-          </span>
-          <div className="h-px flex-1 bg-[rgba(0,1,129,0.18)]" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => handleProviderLogin("Google")}
-            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
-          >
-            <span className="w-6 h-6 rounded-full bg-[#fff4f0] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[13px] font-black">
-              G
-            </span>
-            Google
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => handleProviderLogin("Yahoo")}
-            className="h-[42px] rounded-[16px] border-2 border-[#000181] bg-white font-bold text-[14px] text-[#000181] shadow-[1px_1px_3px_rgba(0,0,0,0.14)] flex items-center justify-center gap-2"
-          >
-            <span className="w-6 h-6 rounded-full bg-[rgba(232,160,255,0.28)] border border-[rgba(0,1,129,0.18)] flex items-center justify-center text-[12px] font-black">
-              Y!
-            </span>
-            Yahoo
-          </motion.button>
-        </div>
 
         <p className="text-center text-[14px] text-[#000181]">
           <span className="font-normal">Don't have an account? </span>
