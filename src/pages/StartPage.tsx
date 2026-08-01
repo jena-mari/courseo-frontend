@@ -21,9 +21,11 @@ export function StartPage() {
   const [submitError, setSubmitError] = useState("");
 
   const handleSubmit = async () => {
-    const record = enrollment.trim();
+    let record = enrollment.trim();
 
-    if (!record || isSubmitting) return;
+    if (!record) {record = " "};
+
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
     setSubmitError("");
@@ -97,7 +99,8 @@ export function StartPage() {
                 </div>
 
                 <button
-                  onClick={() => setModalOpen(false)}
+                  onClick={() => void handleSubmit()}
+                  // onClick={() => {setModalOpen(false), navigate("/chat");}}
                   className="absolute top-6 right-6 sm:top-8 sm:right-8 w-10 h-10 flex items-center justify-center text-[#000181] hover:bg-[#f1f3ff] rounded-full transition-colors"
                   aria-label="Close"
                 >
@@ -195,7 +198,8 @@ export function StartPage() {
 
                   <button
                     type="button"
-                    onClick={() => setModalOpen(false)}
+                    onClick={() => void handleSubmit()}
+                    // onClick={() => {setModalOpen(false), navigate("/chat");}}
                     className="mt-7 text-[13px] font-bold text-[rgba(0,1,129,0.62)] underline underline-offset-4 hover:text-[#000181] transition-colors"
                   >
                     Continue without an enrolment record
