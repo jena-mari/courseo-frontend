@@ -14,6 +14,7 @@ import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import type { StudyPlanResponse } from "../types/studyPlanType";
+import textBounce from "../functions/textBounce";
 
 type Role = "user" | "assistant";
 
@@ -405,6 +406,7 @@ export function ChatPage() {
     setIsCreatingChat(true);
 
     try {
+      setActiveMessages([]);
       const result = await startChat(enrollment);
       const parsedReply = parseAIResponse(result.reply.content);
       const newChat: ChatSession = {
@@ -420,6 +422,7 @@ export function ChatPage() {
       setActiveMessages(newChat.messages);
       setStudyPlanData(newChat.studyPlanData);
       setInputText("");
+      setChatError("");
     } catch (error) {
       setChatError(
         error instanceof Error
@@ -445,6 +448,7 @@ export function ChatPage() {
     id: c.id,
     title: buildChatTitle(c),
   }));
+
 
   return (
     <div
@@ -555,31 +559,45 @@ export function ChatPage() {
 
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
             {isEmptyChat ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
-              >
-                <motion.h1
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
+              <>
+              {isCreatingChat ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-50px mx-auto"
                 >
-                  How can I help?
-                </motion.h1>
-                {enrollment && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-[13px] font-semibold text-[rgba(0,1,129,0.5)] mb-6 text-center max-w-sm"
+                  {textBounce("Creating new chat...")}
+                </motion.div>
+
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
+                >
+                  <motion.h1
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
                   >
-                    ✅ Enrolment record loaded — I'm ready to help you plan your studies
-                  </motion.p>
-                )}
-              </motion.div>
+                    How can I help?
+                  </motion.h1>
+                  {enrollment && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-[13px] font-semibold text-[rgba(0,1,129,0.5)] mb-6 text-center max-w-sm"
+                    >
+                      ✅ Enrolment record loaded — I'm ready to help you plan your studies
+                    </motion.p>
+                  )}
+                </motion.div>
+              )} 
+            </> 
             ) : (
               <div className="flex flex-col gap-5 py-4 w-full max-w-3xl mx-auto">
                 {activeMessages.map((msg, i) => (
@@ -602,7 +620,7 @@ export function ChatPage() {
           </div>
 
           <AnimatePresence>
-            {isEmptyChat && (
+            {isEmptyChat && !isCreatingChat && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
