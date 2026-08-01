@@ -14,7 +14,7 @@ import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
-import type { StudyPlanResponse } from "../types/studyPlanType";
+import { isStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 
 type Role = "user" | "assistant";
 
@@ -82,7 +82,12 @@ function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
 
   if (jsonMatch?.[1]) {
     try {
-      studyPlanData = JSON.parse(jsonMatch[1].trim()) as StudyPlanResponse;
+      const parsedPlan: unknown = JSON.parse(jsonMatch[1].trim());
+      if (isStudyPlanResponse(parsedPlan)) {
+        studyPlanData = parsedPlan;
+      } else {
+        console.warn("Ignored an assistant study plan with an invalid structure.");
+      }
     } catch (error) {
       console.error("Failed to parse extracted Study Plan JSON:", error);
     }

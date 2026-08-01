@@ -1,5 +1,7 @@
 # Courseo Frontend System Architecture
 
+> Verified against repository commit `6ad2dce` and the subsequent working-tree architecture pass on 1 August 2026.
+
 ## 1. Scope and system boundary
 
 This document describes the frontend in this repository as implemented. The backend is an external system; only the HTTP contract visible in `src/lib/chatApi.ts` is documented. Labels in the Settings UI such as “Planning Agent”, “Validation Engine”, and “Data Sanitisation Engine” are presentation-only status rows and are not frontend integrations.
@@ -116,7 +118,7 @@ There is currently no route guard, nested layout route, 404 route, or error boun
 | `SubjectCard` | Renders one subject summary |
 | `MessageRenderer` | Renders a limited markdown-like subset: bold, bullets, numbering, quotes |
 | `HelpSlider` | Swiper-driven tutorial modal |
-| `AccountManagement` | Local auth-profile editing modal |
+| `AccountManagement` | Validates and updates username/email in the current local auth session |
 | `HandbookModal` | Static handbook/policy presentation |
 | `CourseoBackground` | Reusable background wrapper; currently not consumed by pages |
 
@@ -135,7 +137,7 @@ Chat-specific domain types and transformations currently live inside `ChatPage.t
 
 Study plan types live in `src/types/studyPlanType.tsx`: `StudyPlanResponse → YearPlan[] → SessionPlan[] → Subject[]`.
 
-Important boundary: the parsed JSON is cast to `StudyPlanResponse` but not runtime-schema validated. Invalid-but-parseable structures can therefore fail later during rendering.
+The extracted JSON passes through `isStudyPlanResponse` before it reaches UI state. The guard validates the complete year → session → subject hierarchy and rejects malformed-but-parseable payloads. The HTTP response envelope itself is still TypeScript-only and is not runtime-schema validated.
 
 ### 4.6 Integration/service layer
 
@@ -265,7 +267,7 @@ Desired rule: components should not import pages, and integration modules should
 ### High priority
 
 1. Replace local-only auth with a backend identity flow, secure cookie/token handling, and route authorization.
-2. Runtime-validate API responses and extracted study-plan JSON before rendering.
+2. Runtime-validate the HTTP response envelope before consuming backend fields. Extracted study-plan JSON is already guarded.
 3. Add request cancellation/timeouts so navigation and repeated requests do not leave stale updates.
 4. Avoid storing raw enrolment records and full chat content indefinitely in unencrypted local storage if they can contain personal data.
 
@@ -295,6 +297,8 @@ Desired rule: components should not import pages, and integration modules should
 - Replaced broad `localStorage.clear()` / `sessionStorage.clear()` logout behavior.
 - Fixed a machine-specific absolute asset import.
 - Retained and validated the optimised auth popup changes made immediately before this pass.
+- Replaced the account popup's dead password workflow and simulated delays with a responsive, accessible username/email session editor.
+- Added runtime validation for the complete AI-generated study-plan hierarchy before rendering.
 
 ## 10. Diagram-generation index
 
@@ -317,4 +321,3 @@ Use these node identifiers consistently in derived diagrams:
 | `FE_AUTH` | authSession | Session adapter |
 | `FE_STORAGE` | storageKeys/Web Storage | Persistence adapter |
 | `BE_CHAT` | Courseo Chat API | External system |
-
