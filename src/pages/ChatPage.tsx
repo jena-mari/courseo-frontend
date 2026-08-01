@@ -401,12 +401,53 @@ export function ChatPage() {
     }
   };
 
+  const handleNewChatNoEnrol = async (prompt : string) => {
+    const trimmed = prompt.trim();
+    if (!trimmed || isTyping) return;
+
+    setChatError("");
+    setShowMenu(false);
+
+    if (isCreatingChat) return;
+    setIsCreatingChat(true);
+
+    try {
+      setActiveMessages([]);
+      const result = await startChat(prompt);
+      const parsedReply = parseAIResponse(result.reply.content);
+      const newChat: ChatSession = {
+        id: result.session_id,
+        backendSessionId: result.session_id,
+        title: "New study plan",
+        messages: [toFrontendMessage(result.reply)],
+        studyPlanData: parsedReply.studyPlanData,
+      };
+
+      setChats((existingChats) => [newChat, ...existingChats]);
+      setActiveChatId(newChat.id);
+      setActiveMessages(newChat.messages);
+      setStudyPlanData(newChat.studyPlanData);
+      setInputText("");
+      setChatError("");
+
+    } catch (error) {
+      setChatError(
+        error instanceof Error
+          ? error.message
+          : "Courseo could not create a new chat."
+      );
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
+
   const handleNewChat = async () => {
     setShowMenu(false);
     setChatError("");
 
     if (!enrollment) {
-      navigate("/");
+      // navigate("/");
+      localStorage.setItem(STORAGE_KEYS.enrolment, " ");
       return;
     }
 
@@ -415,6 +456,9 @@ export function ChatPage() {
 
     try {
       setActiveMessages([]);
+      // if (enrollment != " ") {
+        
+      // }
       const result = await startChat(enrollment);
       const parsedReply = parseAIResponse(result.reply.content);
       const newChat: ChatSession = {
@@ -431,6 +475,7 @@ export function ChatPage() {
       setStudyPlanData(newChat.studyPlanData);
       setInputText("");
       setChatError("");
+
     } catch (error) {
       setChatError(
         error instanceof Error
@@ -646,7 +691,7 @@ export function ChatPage() {
                       backgroundColor: "rgba(131,231,255,0.65)",
                     }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={() => sendMessage(prompt.replace(/^"|"$/g, ""))}
+                    onClick={() => handleNewChatNoEnrol(prompt.replace(/^"|"$/g, ""))}
                     className="bg-[rgba(131,231,255,0.5)] rounded-[15px] px-4 py-2.5 text-left text-[13px] font-extrabold text-[rgba(0,1,129,0.7)] transition-colors"
                   >
                     {prompt}
