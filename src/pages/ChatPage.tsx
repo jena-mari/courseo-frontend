@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent }
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen,
+  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen, FileDown
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
@@ -15,6 +15,8 @@ import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import type { StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import MyDocument from "../functions/pdf";
 
 type Role = "user" | "assistant";
 
@@ -658,6 +660,35 @@ export function ChatPage() {
                 {chatError}
               </p>
             )}
+
+            {/*button to download study plan*/}
+            {studyPlanData && (
+              <div className="flex ml-[75%] px-4 pb-3">
+                  <PDFDownloadLink 
+                    document={<MyDocument studyPlan={studyPlanData} />} 
+                    fileName="myStudyPlan.pdf"
+                    className="bg-[rgba(232,160,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-5 gap-2 overflow-hidden hover:bg-[rgba(232,160,255,0.9)] transition-colors group cursor-pointer"
+                  >
+                    {({ loading }) => (
+                      <div className="flex items-center gap-2">
+                        <FileDown size={14} className="text-[#000181] shrink-0" />
+                        <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+                          {loading ? "Preparing PDF..." : "StudyPlan"}
+                        </span>
+                      </div>
+                    )}
+                  </PDFDownloadLink>
+              </div>
+
+            // code to test the pdf formatting without having to download it every time
+            // <div style={{ width: '100%', height: '100vh' }}>
+            //   <PDFViewer width="100%" height="100%">
+            //     <MyDocument studyPlan={studyPlanData} />
+            //   </PDFViewer>
+            // </div>
+            )}
+            
+            
             <div className="border border-[rgba(0,50,252,0.65)] rounded-[24px] sm:rounded-[28px] shadow-[0_4px_18px_rgba(0,1,129,0.1)] flex flex-col gap-2 px-4 py-3 w-full max-w-3xl mx-auto">
               <textarea
                 ref={inputRef}
