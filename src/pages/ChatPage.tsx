@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent }
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen,
+  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen, FileDown
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
@@ -15,6 +15,9 @@ import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import { isStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
+import textBounce from "../functions/textBounce";
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import MyDocument from "../functions/pdf";
 
 type Role = "user" | "assistant";
 
@@ -411,6 +414,7 @@ export function ChatPage() {
     setIsCreatingChat(true);
 
     try {
+      setActiveMessages([]);
       const result = await startChat(enrollment);
       const parsedReply = parseAIResponse(result.reply.content);
       const newChat: ChatSession = {
@@ -426,6 +430,7 @@ export function ChatPage() {
       setActiveMessages(newChat.messages);
       setStudyPlanData(newChat.studyPlanData);
       setInputText("");
+      setChatError("");
     } catch (error) {
       setChatError(
         error instanceof Error
@@ -451,6 +456,7 @@ export function ChatPage() {
     id: c.id,
     title: buildChatTitle(c),
   }));
+
 
   return (
     <div
@@ -560,31 +566,45 @@ export function ChatPage() {
 
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
             {isEmptyChat ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
-              >
-                <motion.h1
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
+              <>
+              {isCreatingChat ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-50px mx-auto"
                 >
-                  How can I help?
-                </motion.h1>
-                {enrollment && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-[13px] font-semibold text-[rgba(0,1,129,0.5)] mb-6 text-center max-w-sm"
+                  {textBounce("Creating new chat...")}
+                </motion.div>
+
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
+                >
+                  <motion.h1
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
                   >
-                    ✅ Enrolment record loaded — I'm ready to help you plan your studies
-                  </motion.p>
-                )}
-              </motion.div>
+                    How can I help?
+                  </motion.h1>
+                  {enrollment && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-[13px] font-semibold text-[rgba(0,1,129,0.5)] mb-6 text-center max-w-sm"
+                    >
+                      ✅ Enrolment record loaded — I'm ready to help you plan your studies
+                    </motion.p>
+                  )}
+                </motion.div>
+              )} 
+            </> 
             ) : (
               <div className="flex flex-col gap-5 py-4 w-full max-w-3xl mx-auto">
                 {activeMessages.map((msg, i) => (
@@ -607,7 +627,7 @@ export function ChatPage() {
           </div>
 
           <AnimatePresence>
-            {isEmptyChat && (
+            {isEmptyChat && !isCreatingChat && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -645,6 +665,35 @@ export function ChatPage() {
                 {chatError}
               </p>
             )}
+
+            {/*button to download study plan*/}
+            {studyPlanData && (
+              <div className="flex ml-[75%] px-4 pb-3">
+                  <PDFDownloadLink 
+                    document={<MyDocument studyPlan={studyPlanData} />} 
+                    fileName="myStudyPlan.pdf"
+                    className="bg-[rgba(232,160,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-5 gap-2 overflow-hidden hover:bg-[rgba(232,160,255,0.9)] transition-colors group cursor-pointer"
+                  >
+                    {({ loading }) => (
+                      <div className="flex items-center gap-2">
+                        <FileDown size={14} className="text-[#000181] shrink-0" />
+                        <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+                          {loading ? "Preparing PDF..." : "StudyPlan"}
+                        </span>
+                      </div>
+                    )}
+                  </PDFDownloadLink>
+              </div>
+
+            // code to test the pdf formatting without having to download it every time
+            // <div style={{ width: '100%', height: '100vh' }}>
+            //   <PDFViewer width="100%" height="100%">
+            //     <MyDocument studyPlan={studyPlanData} />
+            //   </PDFViewer>
+            // </div>
+            )}
+            
+            
             <div className="border border-[rgba(0,50,252,0.65)] rounded-[24px] sm:rounded-[28px] shadow-[0_4px_18px_rgba(0,1,129,0.1)] flex flex-col gap-2 px-4 py-3 w-full max-w-3xl mx-auto">
               <textarea
                 ref={inputRef}

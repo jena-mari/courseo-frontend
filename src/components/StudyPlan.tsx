@@ -2,6 +2,8 @@ import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import SubjectCard from "./subject-card";
 import type { StudyPlanResponse } from "../types/studyPlanType";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import MyDocument from "../functions/pdf";
 
 
 interface studyPlanProps {
@@ -86,6 +88,7 @@ export function StudyPlan({
           )}
         </div>
       )}
+
     </motion.div>
   );
 }
