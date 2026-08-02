@@ -137,7 +137,7 @@ Chat-specific domain types and transformations currently live inside `ChatPage.t
 
 Study plan types live in `src/types/studyPlanType.tsx`: `StudyPlanResponse → YearPlan[] → SessionPlan[] → Subject[]`.
 
-The extracted JSON passes through `isStudyPlanResponse` before it reaches UI state. The guard validates the complete year → session → subject hierarchy and rejects malformed-but-parseable payloads. The HTTP response envelope itself is still TypeScript-only and is not runtime-schema validated.
+The extracted JSON passes through `normalizeStudyPlanResponse` before it reaches UI state. It validates the complete year → session → subject hierarchy, accepts string or numeric representations for years and credit points, treats unused subject notes as optional, and returns the single normalized shape consumed by the cards. The HTTP response envelope itself is still TypeScript-only and is not runtime-schema validated.
 
 ### 4.6 Integration/service layer
 

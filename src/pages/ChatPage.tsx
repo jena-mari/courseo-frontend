@@ -14,7 +14,7 @@ import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
-import { isStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
+import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import MyDocument from "../functions/pdf";
@@ -86,8 +86,9 @@ function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
   if (jsonMatch?.[1]) {
     try {
       const parsedPlan: unknown = JSON.parse(jsonMatch[1].trim());
-      if (isStudyPlanResponse(parsedPlan)) {
-        studyPlanData = parsedPlan;
+      const normalizedPlan = normalizeStudyPlanResponse(parsedPlan);
+      if (normalizedPlan) {
+        studyPlanData = normalizedPlan;
       } else {
         console.warn("Ignored an assistant study plan with an invalid structure.");
       }
