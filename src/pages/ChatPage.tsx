@@ -87,6 +87,7 @@ function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
     try {
       const parsedPlan: unknown = JSON.parse(jsonMatch[1].trim());
       const normalizedPlan = normalizeStudyPlanResponse(parsedPlan);
+      console.log(normalizedPlan)
       if (normalizedPlan) {
         studyPlanData = normalizedPlan;
       } else {

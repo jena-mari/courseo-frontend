@@ -31,9 +31,17 @@ function normalizeText(value: unknown): string | null {
 }
 
 function normalizeCreditPoints(value: unknown): number | null {
-  if (typeof value !== "number" && typeof value !== "string") return null;
-  const normalized = typeof value === "number" ? value : Number(value.trim());
-  return Number.isFinite(normalized) ? normalized : null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  
+  if (typeof value === "string") {
+    // Extract first numeric value (e.g. "6 CP" -> 6)
+    const match = value.match(/[-+]?\d*\.?\d+/);
+    if (match) {
+      const parsed = parseFloat(match[0]);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+  }
+  return null;
 }
 
 /**
@@ -44,12 +52,25 @@ function normalizeCreditPoints(value: unknown): number | null {
 export function normalizeStudyPlanResponse(
   value: unknown
 ): StudyPlanResponse | null {
-  if (!isRecord(value) || !Array.isArray(value.plan)) return null;
+  let parsedValue = value;
+
+  // Auto-parse JSON string if passed directly
+  if (typeof value === "string") {
+    try {
+      parsedValue = JSON.parse(value);
+    } catch {
+      console.warn("Invalid JSON string provided.");
+      return null;
+    }
+  }
+
+  if (!isRecord(parsedValue) || !Array.isArray(parsedValue.plan)) return null;
 
   const plan: YearPlan[] = [];
 
-  for (const rawYear of value.plan) {
+  for (const rawYear of parsedValue.plan) {
     if (!isRecord(rawYear) || !Array.isArray(rawYear.sessions)) return null;
+    
     const year = normalizeText(rawYear.year);
     if (!year) return null;
 
@@ -59,6 +80,7 @@ export function normalizeStudyPlanResponse(
       if (!isRecord(rawSession) || !Array.isArray(rawSession.subjects)) {
         return null;
       }
+
       const session = normalizeText(rawSession.session);
       if (!session) return null;
 
@@ -66,16 +88,15 @@ export function normalizeStudyPlanResponse(
 
       for (const rawSubject of rawSession.subjects) {
         if (!isRecord(rawSubject)) return null;
+
         const code = normalizeText(rawSubject.code);
         const name = normalizeText(rawSubject.name);
         const cp = normalizeCreditPoints(rawSubject.cp);
+
         if (!code || !name || cp === null) return null;
 
-        const notes =
-          rawSubject.notes === undefined || rawSubject.notes === null
-            ? undefined
-            : normalizeText(rawSubject.notes);
-        if (rawSubject.notes != null && notes === null) return null;
+        const rawNotes = normalizeText(rawSubject.notes);
+        const notes = rawNotes ?? undefined;
 
         subjects.push({
           code,
