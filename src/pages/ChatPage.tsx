@@ -399,7 +399,11 @@ export function ChatPage() {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(inputText);
+      const activeChat = chats.find((chat) => chat.id === activeChatId);
+      if (!activeChat?.backendSessionId) {
+        handleNewChatNoEnrol(inputText);
+      }
+      else { sendMessage(inputText); }
     }
   };
 
@@ -413,15 +417,37 @@ export function ChatPage() {
     if (isCreatingChat) return;
     setIsCreatingChat(true);
 
+    //user message
+    const userMsg: Message = {
+      id: `msg-${Date.now()}`,
+      role: "user",
+      content: trimmed,
+      timestamp: new Date(),
+    };
+
+    setActiveMessages([userMsg]);
+    setInputText("");
+    setIsTyping(true);
+
     try {
-      setActiveMessages([]);
       const result = await startChat(prompt);
       const parsedReply = parseAIResponse(result.reply.content);
+
+      const aiMsg: Message = {
+          id: String(result.reply.id),
+          role: "assistant",
+          content: parsedReply.cleanText,
+          timestamp: new Date(result.reply.created_at),
+        };
+
+      const chatMessages = [userMsg, aiMsg];
+
       const newChat: ChatSession = {
         id: result.session_id,
         backendSessionId: result.session_id,
         title: "New study plan",
-        messages: [toFrontendMessage(result.reply)],
+        messages: chatMessages,
+        // messages: [toFrontendMessage(result.reply)],
         studyPlanData: parsedReply.studyPlanData,
       };
 
@@ -429,7 +455,7 @@ export function ChatPage() {
       setActiveChatId(newChat.id);
       setActiveMessages(newChat.messages);
       setStudyPlanData(newChat.studyPlanData);
-      setInputText("");
+      // setInputText("");
       setChatError("");
 
     } catch (error) {
@@ -440,6 +466,7 @@ export function ChatPage() {
       );
     } finally {
       setIsCreatingChat(false);
+      setIsTyping(false);
     }
   };
 
