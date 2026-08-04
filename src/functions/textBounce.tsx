@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-export default function textBounce(words : string) {
+export default function textBounce(words : string, classname : string, bounce : number) {
   
   // Container variant to handle layout orchestration
   const containerVariants = {
@@ -17,7 +17,7 @@ export default function textBounce(words : string) {
   // Individual letter animation properties
   const letterVariants = {
     animate: {
-      y: [0, -15, 0],
+      y: [0, bounce, 0],
       transition: {
         duration: 0.6,
         repeat: Infinity,
@@ -32,7 +32,7 @@ export default function textBounce(words : string) {
         variants={containerVariants} 
         initial="initial"
         animate="animate"
-        className="font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
+        className={classname}
     >
       {words.split("").map((letter, index) => (
         <motion.span key={index} variants={letterVariants} className="inline-block">

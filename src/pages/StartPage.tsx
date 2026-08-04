@@ -9,6 +9,7 @@ import { LoginCard } from "./LoginPage";
 import { RegisterCard } from "./RegisterPage";
 import { HelpSlider } from "../components/help-carousel";
 import { STORAGE_KEYS } from "../lib/storageKeys";
+import textBounce from "../functions/textBounce";
 
 type StartMode = "start" | "login" | "register" | "tutorial";
 
@@ -192,7 +193,7 @@ export function StartPage() {
                     disabled={!enrollment.trim() || isSubmitting}
                     className="mt-4 w-full h-[54px] rounded-[18px] bg-[#000181] text-white font-extrabold text-[15px] disabled:opacity-35 transition-opacity"
                   >
-                    {isSubmitting ? "Creating your study plan…" : "Continue"}
+                    {isSubmitting ? textBounce("Creating your study plan…", "mt-4 w-full h-[54px] rounded-[18px] text-white font-extrabold text-[15px]", -10) : "Continue"}
                   </motion.button>
 
                   <div className="my-7 flex items-center gap-4 w-full text-[12px] font-extrabold text-[rgba(0,1,129,0.42)]">

@@ -621,7 +621,7 @@ export function ChatPage() {
                   transition={{ duration: 0.5 }}
                   className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-50px mx-auto"
                 >
-                  {textBounce("Creating new chat...")}
+                  {textBounce("Creating new chat...", "font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4", -15)}
                 </motion.div>
 
               ) : (
