@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   chats: "courseoChats",
   bootstrapChat: "courseoBootstrapChat",
   pendingPrompt: "courseoPendingPrompt",
+  serviceHealth: "courseoServiceHealth",
 } as const;
 
 const COURSE_STORAGE_KEYS = Object.values(STORAGE_KEYS);

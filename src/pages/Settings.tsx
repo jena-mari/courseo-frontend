@@ -15,9 +15,11 @@ import {
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { HelpSlider } from "../components/help-carousel";
-import { AccountManagement } from "../components/AccountManagementPopup";
+import { AccountAccessPopup } from "../components/AccountAccessPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import { getAuthSession, updateAuthSessionUser } from "../lib/authSession";
+import { STORAGE_KEYS } from "../lib/storageKeys";
+import { getServiceHealth, type CourseoServiceHealth } from "../lib/serviceHealth";
 
 type SettingsTab = "profile" | "ai" | "notifications" | "system";
 
@@ -28,11 +30,22 @@ const TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "system", label: "System" },
 ];
 
-const SIDEBAR_CHATS: Chat[] = [
-  { id: "chat-1", title: "What are my core subjects for Year 2?" },
-  { id: "chat-2", title: "Can I get into game development with this degree?" },
-  { id: "chat-3", title: "How do I check my prerequisites?" },
-];
+function getStoredChats(): Chat[] {
+  const raw = localStorage.getItem(STORAGE_KEYS.chats);
+  if (!raw) return [];
+
+  try {
+    const chats = JSON.parse(raw) as Array<{ id?: unknown; title?: unknown }>;
+    if (!Array.isArray(chats)) return [];
+    return chats.flatMap((chat) =>
+      typeof chat.id === "string" && typeof chat.title === "string"
+        ? [{ id: chat.id, title: chat.title }]
+        : []
+    );
+  } catch {
+    return [];
+  }
+}
 
 const ELECTIVE_INTERESTS = [
   "Machine Learning",
@@ -245,6 +258,9 @@ export function SettingsPage() {
   const [showHandbook, setShowHandbook] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarChats] = useState<Chat[]>(getStoredChats);
+  const [serviceHealth, setServiceHealthState] =
+    useState<CourseoServiceHealth>(getServiceHealth);
   const [profile, setProfile] = useState(getStoredProfile);
   const [degree, setDegree] = useState("Bachelor of Computer Science");
   const [major, setMajor] = useState("Artificial Intelligence and Big Data");
@@ -279,6 +295,16 @@ export function SettingsPage() {
     });
   }, [profile.email, profile.username]);
 
+  useEffect(() => {
+    const updateHealth = () => setServiceHealthState(getServiceHealth());
+    window.addEventListener("courseo:service-health", updateHealth);
+    window.addEventListener("storage", updateHealth);
+    return () => {
+      window.removeEventListener("courseo:service-health", updateHealth);
+      window.removeEventListener("storage", updateHealth);
+    };
+  }, []);
+
   const setProfileField = (key: keyof typeof profile, value: string) => {
     setProfile((current) => ({ ...current, [key]: value }));
   };
@@ -310,10 +336,9 @@ export function SettingsPage() {
       <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
         <div className="hidden h-full md:block">
           <CourseoSidebar
-            chats={SIDEBAR_CHATS}
-            activeChatId="settings"
+            chats={sidebarChats}
             onNewChat={goToChat}
-            onSelectChat={goToChat}
+            onSelectChat={(id) => navigate("/chat", { state: { chatId: id } })}
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed((value) => !value)}
             showHandbook={true}
@@ -551,6 +576,16 @@ export function SettingsPage() {
                       options={["2026 (current)", "2025", "2024"]}
                     />
                   </SettingRow>
+                  <SettingRow label="Service status" sub={serviceHealth.message}>
+                    <Badge tone={serviceHealth.chatApi === "operational" ? "cyan" : "red"}>
+                      {serviceHealth.chatApi === "operational" ? (
+                        <Check size={12} strokeWidth={3} />
+                      ) : (
+                        <AlertTriangle size={12} strokeWidth={3} />
+                      )}
+                      {serviceHealth.chatApi === "operational" ? "Online" : "Unavailable"}
+                    </Badge>
+                  </SettingRow>
                 </Panel>
               </div>
             )}
@@ -611,10 +646,18 @@ export function SettingsPage() {
                 >
                   {["Planning Agent", "Validation Engine", "Data Sanitisation Engine"].map(
                     (service) => (
-                      <SettingRow key={service} label={service}>
-                        <Badge>
-                          <Check size={12} strokeWidth={3} />
-                          Online
+                      <SettingRow
+                        key={service}
+                        label={service}
+                        sub={serviceHealth.chatApi === "unavailable" ? serviceHealth.message : undefined}
+                      >
+                        <Badge tone={serviceHealth.chatApi === "operational" ? "cyan" : "red"}>
+                          {serviceHealth.chatApi === "operational" ? (
+                            <Check size={12} strokeWidth={3} />
+                          ) : (
+                            <AlertTriangle size={12} strokeWidth={3} />
+                          )}
+                          {serviceHealth.chatApi === "operational" ? "Online" : "Unavailable"}
                         </Badge>
                       </SettingRow>
                     )
@@ -657,7 +700,7 @@ export function SettingsPage() {
 
       <AnimatePresence>
         {showAccount && (
-          <AccountManagement onClose={() => setShowAccount(false)} />
+          <AccountAccessPopup onClose={() => setShowAccount(false)} />
         )}
       </AnimatePresence>
 

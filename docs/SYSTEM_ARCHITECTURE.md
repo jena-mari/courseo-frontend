@@ -117,7 +117,8 @@ There is currently no route guard, nested layout route, 404 route, or error boun
 | `StudyPlan` | Renders year/session/subject hierarchy from structured plan data |
 | `SubjectCard` | Renders one subject summary |
 | `MessageRenderer` | Renders a limited markdown-like subset: bold, bullets, numbering, quotes |
-| `HelpSlider` | Swiper-driven tutorial modal |
+| `HelpSlider` | React-owned image tutorial carousel with accessible navigation |
+| `AccountAccessPopup` | Opens login/register for guests or profile management for authenticated users |
 | `AccountManagement` | Validates and updates username/email in the current local auth session |
 | `HandbookModal` | Static handbook/policy presentation |
 | `CourseoBackground` | Reusable background wrapper; currently not consumed by pages |
@@ -167,6 +168,7 @@ The shared request helper applies JSON headers, parses successful JSON, and conv
 | `courseoBootstrapChat` | local | StartPage | ChatPage | Removed after chat hydration/persistence |
 | `courseoChats` | local | ChatPage | ChatPage | Working history across reloads |
 | `courseoPendingPrompt` | local | No active producer in repository | ChatPage | Removed after attempted dispatch |
+| `courseoServiceHealth` | local | Chat API adapter | Settings status panels | Updated after each API success or failure |
 
 “Remember me” selects `localStorage`; otherwise auth uses `sessionStorage`. The adapter removes an older session from the other storage location. Logout clears only Courseo-owned keys rather than all data for the web origin.
 

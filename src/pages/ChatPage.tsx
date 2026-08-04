@@ -12,7 +12,7 @@ import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
 import { clearAuthSession } from "../lib/authSession";
 import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
-import { AccountManagement } from "../components/AccountManagementPopup";
+import { AccountAccessPopup } from "../components/AccountAccessPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
@@ -228,7 +228,9 @@ export function ChatPage() {
   const location = useLocation();
   const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
   const initialChats = useMemo(loadInitialChats, []);
-  const initialActiveChat = initialChats[0];
+  const requestedChatId = (location.state as { chatId?: unknown } | null)?.chatId;
+  const initialActiveChat =
+    initialChats.find((chat) => chat.id === requestedChatId) ?? initialChats[0];
 
   const [chats, setChats] = useState<ChatSession[]>(initialChats);
   const [activeChatId, setActiveChatId] = useState<string>(
@@ -873,7 +875,7 @@ export function ChatPage() {
 
       <AnimatePresence>
         {showAccount && (
-          <AccountManagement onClose={() => setShowAccount(false)} />
+          <AccountAccessPopup onClose={() => setShowAccount(false)} />
         )}
       </AnimatePresence>
 
