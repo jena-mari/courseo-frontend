@@ -20,7 +20,7 @@ function SubjectCard({code, title, cp, color, year}:FieldProps) {
 
   return (
       <button className='max-w-72 flex-1 justify-center items-stretch w-full'
-              onClick={() => openInNewTab(`https://courses.uow.edu.au/subjects/${year}/${code}`)}>
+              onClick={() => openInNewTab(`https://courses.uow.edu.au/subjects/2026/${code}`)}>
         <div style={{backgroundColor: color}}
         className='rounded-3xl h-full'>             
             <div className="rounded-3xl p-2 flex flex-col justify-center items-center text-center text-[#000181]">
