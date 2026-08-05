@@ -742,17 +742,17 @@ export function ChatPage() {
 
             {/*button to download study plan*/}
             {studyPlanData && (
-              <div className="flex ml-[75%] px-4 pb-3">
+              <div className="flex justify-end gap-2 px-1 py-3 w-full max-w-3xl mx-auto">
                   <PDFDownloadLink 
                     document={<MyDocument studyPlan={studyPlanData} />} 
                     fileName="myStudyPlan.pdf"
-                    className="bg-[rgba(232,160,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-5 gap-2 overflow-hidden hover:bg-[rgba(232,160,255,0.9)] transition-colors group cursor-pointer"
+                    className="bg-[rgba(232,160,255,0.5)] rounded-[15px] h-9 flex max-w-[125px] justify-right px-5 gap-2 overflow-hidden hover:bg-[rgba(232,160,255,0.9)] transition-colors group cursor-pointer"
                   >
                     {({ loading }) => (
                       <div className="flex items-center gap-2">
                         <FileDown size={14} className="text-[#000181] shrink-0" />
                         <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
-                          {loading ? "Preparing PDF..." : "StudyPlan"}
+                          StudyPlan
                         </span>
                       </div>
                     )}
