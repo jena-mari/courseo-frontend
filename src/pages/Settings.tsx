@@ -17,7 +17,7 @@ import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
-import { getAuthSession, updateAuthSessionUser } from "../lib/authSession";
+import { useAuth } from "../auth/AuthContext";
 
 type SettingsTab = "profile" | "ai" | "notifications" | "system";
 
@@ -52,8 +52,7 @@ const MAJORS = [
   "Software Engineering",
 ];
 
-function getStoredProfile() {
-  const user = getAuthSession()?.user;
+function getStoredProfile(user: { email: string; username: string } | null | undefined) {
   return {
     email: user?.email ?? "",
     username: user?.username ?? "",
@@ -240,12 +239,13 @@ function DangerButton({ children }: { children: ReactNode }) {
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [showAccount, setShowAccount] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [profile, setProfile] = useState(getStoredProfile);
+  const [profile, setProfile] = useState(() => getStoredProfile(user));
   const [degree, setDegree] = useState("Bachelor of Computer Science");
   const [major, setMajor] = useState("Artificial Intelligence and Big Data");
   const [planningModel, setPlanningModel] = useState("Balanced (default)");
@@ -270,13 +270,15 @@ export function SettingsPage() {
   };
 
   useEffect(() => {
-    const current = getAuthSession()?.user;
-    if (!current) return;
-    updateAuthSessionUser({
-      ...current,
+    if (!user) return;
+    updateUser({
+      ...user,
       email: profile.email,
       username: profile.username,
+      displayName: profile.username.trim() || user.displayName,
     });
+    // Sync local form edits into the UI cache; cookie remains source of auth.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to form field edits
   }, [profile.email, profile.username]);
 
   const setProfileField = (key: keyof typeof profile, value: string) => {

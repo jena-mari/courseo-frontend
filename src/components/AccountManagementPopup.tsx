@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Mail, User, X } from "lucide-react";
-import { getAuthSession, updateAuthSessionUser } from "../lib/authSession";
+import { useAuth } from "../auth/AuthContext";
 
 export function AccountManagement({ onClose }: { onClose: () => void }) {
-  const sessionUser = getAuthSession()?.user;
-  const [username, setUsername] = useState(sessionUser?.username ?? "");
-  const [email, setEmail] = useState(sessionUser?.email ?? "");
+  const { user, updateUser } = useAuth();
+  const [username, setUsername] = useState(user?.username ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -23,19 +23,20 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const updated = updateAuthSessionUser({
-      ...(sessionUser ?? { username: username.trim() }),
-      username: username.trim(),
-      email: email.trim(),
-    });
-
-    if (!updated) {
+    if (!user) {
       setMessage("Log in before updating your account.");
       return;
     }
 
+    updateUser({
+      ...user,
+      username: username.trim(),
+      email: email.trim(),
+      displayName: username.trim(),
+    });
+
     setIsSuccess(true);
-    setMessage("Account updated.");
+    setMessage("Account updated locally. Server profile sync is not available yet.");
   };
 
   return (
@@ -76,7 +77,7 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
               Your account
             </h2>
             <p className="mt-1 text-[13px] font-semibold text-[rgba(0,1,129,0.6)]">
-              Update the profile stored in your current session.
+              Update the profile shown in this browser session.
             </p>
           </div>
         </div>

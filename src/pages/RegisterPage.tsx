@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, User, Lock, Mail, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { useAuth } from "../auth/AuthContext";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
-import { createAuthSession } from "../lib/authSession";
 
 const AUTH_SIDEBAR_CHATS: Chat[] = [
   { id: "chat-1", title: "Study plan - Autumn 2026" },
@@ -16,17 +16,18 @@ const AUTH_SIDEBAR_CHATS: Chat[] = [
 interface RegisterCardProps {
   onClose?: () => void;
   onLogin?: () => void;
+  onSuccess?: () => void;
 }
 
-export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
+export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps = {}) {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,17 +39,17 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
       return setError("Please enter a valid email address.");
     }
-    if (password.length < 6) return setError("Password must be at least 6 characters.");
+    if (password.length < 8) return setError("Password must be at least 8 characters.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
     if (!agreePrivacy) return setError("Please agree to the Privacy Policy.");
 
     setLoading(true);
     try {
-      createAuthSession(
-        { username: username.trim(), email: email.trim() },
-        rememberMe
-      );
-      navigate("/chat");
+      await register(email.trim(), password, username.trim());
+      if (onSuccess) onSuccess();
+      else navigate("/chat");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to register.");
     } finally {
       setLoading(false);
     }
@@ -171,16 +172,6 @@ export function RegisterCard({ onClose, onLogin }: RegisterCardProps = {}) {
             </button>
           </div>
         </div>
-
-        <label className="flex items-center gap-2.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="w-4 h-4 border-2 border-[#000181] rounded accent-[#000181]"
-          />
-          <span className="font-bold text-[13px] text-[#000181]">Remember Me</span>
-        </label>
 
         <label className="flex items-center gap-2.5 cursor-pointer">
           <input
