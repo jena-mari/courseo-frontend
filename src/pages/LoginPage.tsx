@@ -91,6 +91,7 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
           </div>
         </div>
 
+
         <div>
           <label htmlFor="login-password" className="font-extrabold text-[13px] text-[#000181] block mb-2">
             Password
