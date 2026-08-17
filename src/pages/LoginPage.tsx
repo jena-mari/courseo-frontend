@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, X } from "lucide-react"; //backend uses emails instead of usernames so Mail icon is used instead of User icon
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
