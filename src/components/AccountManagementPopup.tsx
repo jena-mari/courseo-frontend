@@ -1,14 +1,32 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, User, X } from "lucide-react";
+import { LogOut, Mail, User, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { clearCourseoStorage } from "../lib/storageKeys";
 
 export function AccountManagement({ onClose }: { onClose: () => void }) {
-  const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
+  const { user, updateUser, logout } = useAuth();
   const [username, setUsername] = useState(user?.username ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      clearCourseoStorage();
+      navigate("/login");
+    } catch {
+      setIsLoggingOut(false);
+      setIsSuccess(false);
+      setMessage("Unable to log out. Please try again.");
+    }
+  };
 
   const handleAccountChange = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -144,6 +162,18 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
             </motion.button>
           </div>
         </form>
+
+        <div className="mt-6 border-t border-[rgba(0,1,129,0.12)] pt-5">
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-extrabold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <LogOut size={16} strokeWidth={2.25} />
+            {isLoggingOut ? "Logging out…" : "Log out"}
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );

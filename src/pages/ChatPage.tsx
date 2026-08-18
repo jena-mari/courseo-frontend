@@ -8,9 +8,8 @@ import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
-import { useAuth } from "../auth/AuthContext";
 import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
-import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
@@ -226,7 +225,6 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 
 export function ChatPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
   const location = useLocation();
   const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
   const initialChats = useMemo(loadInitialChats, []);
@@ -612,16 +610,6 @@ export function ChatPage() {
                       {
                         label: enrollment ? "Update Enrolment" : "Add Enrolment",
                         action: () => navigate("/"),
-                      },
-                      {
-                        label: "Log Out",
-                        action: () => {
-                          void (async () => {
-                            await logout();
-                            clearCourseoStorage();
-                            navigate("/login");
-                          })();
-                        },
                       },
                     ].map((item) => (
                       <button
