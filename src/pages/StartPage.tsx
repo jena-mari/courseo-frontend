@@ -1,8 +1,9 @@
-import { useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { startChat } from "../lib/chatApi";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, LogIn, UserPlus, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, KeyRound, LogIn, UserPlus, X } from "lucide-react";
+import { Copilot } from "@lobehub/icons";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
@@ -11,8 +12,11 @@ import { RegisterCard } from "./RegisterPage";
 import { HelpSlider } from "../components/help-carousel";
 import { STORAGE_KEYS } from "../lib/storageKeys";
 import textBounce from "../functions/textBounce";
+import { buildCopilotStudyPlanPrompt, parseEnrolmentSummary } from "../lib/enrolment";
 
-type StartMode = "start" | "login" | "register" | "tutorial";
+type StartMode = "start" | "confirm" | "provider" | "login" | "register" | "tutorial";
+
+const COPILOT_AGENT_URL = import.meta.env.VITE_COPILOT_AGENT_URL ?? "https://copilot.microsoft.com/";
 
 export function StartPage() {
   const navigate = useNavigate();
@@ -22,6 +26,8 @@ export function StartPage() {
   const [enrollment, setEnrollment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [copilotCopied, setCopilotCopied] = useState(false);
+  const enrolmentSummary = useMemo(() => parseEnrolmentSummary(enrollment), [enrollment]);
 
   const requireAuth = () => {
     if (status === "loading") {
@@ -93,10 +99,35 @@ export function StartPage() {
     }
   };
 
+  const handleReview = () => {
+    if (!enrollment.trim()) return;
+    setSubmitError("");
+    setMode("confirm");
+  };
+
+  const handleConfirmedEnrolment = () => {
+    setMode("provider");
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
-      void handleSubmit();
+      handleReview();
+    }
+  };
+
+  const handleCopilot = async () => {
+    const record = enrollment.trim();
+    if (!record) return;
+    const copilotPrompt = buildCopilotStudyPlanPrompt(record, enrolmentSummary);
+
+    try {
+      await navigator.clipboard.writeText(copilotPrompt);
+      setCopilotCopied(true);
+      window.open(COPILOT_AGENT_URL, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => setCopilotCopied(false), 4000);
+    } catch {
+      setSubmitError("Your browser blocked clipboard access. Copy the enrolment record manually, then open Copilot.");
     }
   };
 
@@ -189,7 +220,7 @@ export function StartPage() {
                       <motion.button
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => void handleSubmit()}
+                        onClick={handleReview}
                         disabled={!enrollment.trim() || isSubmitting}
                         className="w-9 h-9 rounded-full bg-[#000181] flex items-center justify-center shrink-0 disabled:opacity-35"
                         aria-label="Continue"
@@ -210,7 +241,7 @@ export function StartPage() {
                   <motion.button
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={() => void handleSubmit()}
+                    onClick={handleReview}
                     disabled={!enrollment.trim() || isSubmitting}
                     className="mt-4 w-full h-[54px] rounded-[18px] bg-[#000181] text-white font-extrabold text-[15px] disabled:opacity-35 transition-opacity"
                   >
@@ -252,6 +283,85 @@ export function StartPage() {
                     Continue without an enrolment record
                   </button>
                 </div>
+              </motion.div>
+            )}
+
+            {mode === "confirm" && (
+              <motion.div
+                key="confirm"
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                className="relative w-full max-w-[620px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-10 sm:py-9"
+              >
+                <button type="button" onClick={() => setMode("start")} className="mb-5 flex items-center gap-1.5 text-[12px] font-extrabold text-[rgba(0,1,129,0.62)] hover:text-[#000181]">
+                  <ArrowLeft size={15} /> Edit enrolment
+                </button>
+                <h2 className="text-[28px] font-black tracking-tight text-[#000181]">Is this enrolment correct?</h2>
+                <p className="mt-2 text-[13px] font-semibold text-[rgba(0,1,129,0.6)]">
+                  Confirm these subjects before Courseo sends anything to the AI provider.
+                </p>
+
+                {enrolmentSummary.current.length + enrolmentSummary.completed.length > 0 ? (
+                  <div className="mt-5 grid max-h-[45vh] gap-4 overflow-y-auto sm:grid-cols-2">
+                    {(["current", "completed"] as const).map((group) => (
+                      <section key={group} className="rounded-[16px] bg-[rgba(131,231,255,0.12)] p-4">
+                        <h3 className="text-[12px] font-extrabold uppercase tracking-wide text-[#000181]">
+                          {group === "current" ? "Currently enrolled" : "Completed subjects"} ({enrolmentSummary[group].length})
+                        </h3>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {enrolmentSummary[group].length ? enrolmentSummary[group].map((subject, index) => (
+                            <span key={`${subject.code}-${index}`} className="rounded-full bg-white px-2.5 py-1 text-[10px] font-extrabold text-[#000181] shadow-sm" title={`${subject.year} ${subject.session} · ${subject.status}`}>
+                              {subject.code}
+                            </span>
+                          )) : <span className="text-[11px] font-semibold text-[rgba(0,1,129,0.5)]">None found</span>}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-[16px] border border-amber-200 bg-amber-50 p-4 text-[12px] font-semibold leading-relaxed text-amber-900">
+                    Courseo could not identify the subject table. Go back and paste the complete SOLS table, including the Subject Code and Status headings.
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleConfirmedEnrolment}
+                  disabled={enrolmentSummary.current.length + enrolmentSummary.completed.length === 0 || isSubmitting}
+                  className="mt-6 h-[52px] w-full rounded-[16px] bg-[#000181] text-[14px] font-extrabold text-white disabled:opacity-35"
+                >
+                  Yes, this is correct
+                </button>
+              </motion.div>
+            )}
+
+            {mode === "provider" && (
+              <motion.div
+                key="provider"
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                className="w-full max-w-[560px] rounded-[28px] border border-white/70 bg-white px-6 py-8 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-10"
+              >
+                <h2 className="text-center text-[28px] font-black tracking-tight text-[#000181]">How would you like to continue?</h2>
+                <p className="mx-auto mt-2 max-w-md text-center text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.6)]">
+                  Generate your study plan with Courseo or use the free Microsoft Copilot agent.
+                </p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={() => void handleCopilot()} className="rounded-[18px] border border-[rgba(0,1,129,0.16)] bg-[rgba(131,231,255,0.12)] p-5 text-left transition-transform hover:-translate-y-0.5">
+                    <Copilot.Color size={30} />
+                    <span className="mt-3 block text-[14px] font-extrabold text-[#000181]">{copilotCopied ? "Copied — paste in Copilot" : "Use Copilot"}</span>
+                    <span className="mt-1 block text-[11px] font-semibold leading-relaxed text-[rgba(0,1,129,0.55)]">Free with your Microsoft account. Copies a concise, agent-ready record.</span>
+                  </button>
+                  <button type="button" onClick={() => void handleSubmit()} disabled={isSubmitting} className="rounded-[18px] border border-[rgba(0,1,129,0.16)] bg-[rgba(232,160,255,0.10)] p-5 text-left transition-transform hover:-translate-y-0.5 disabled:opacity-50">
+                    <KeyRound size={30} className="text-[#000181]" />
+                    <span className="mt-3 block text-[14px] font-extrabold text-[#000181]">{isSubmitting ? "Creating study plan…" : "Use Courseo"}</span>
+                    <span className="mt-1 block text-[11px] font-semibold leading-relaxed text-[rgba(0,1,129,0.55)]">Create a Courseo chat and generate your study plan now.</span>
+                  </button>
+                </div>
+                {submitError && <p role="alert" className="mt-3 text-center text-[12px] font-semibold text-red-600">{submitError}</p>}
+                <button type="button" onClick={() => setMode("confirm")} className="mt-5 w-full text-center text-[12px] font-extrabold text-[rgba(0,1,129,0.55)] underline underline-offset-2">Back to confirmation</button>
               </motion.div>
             )}
 
