@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, PanelLeftClose, PanelLeftOpen, MessageSquare } from "lucide-react";
+import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
 import imgLogo from "../assets/courseo-logo.png";
 import { motion } from "framer-motion";
 
@@ -13,6 +13,7 @@ interface CourseoSidebarProps {
   activeChatId?: string;
   onNewChat: () => void;
   onSelectChat: (id: string) => void;
+  onDeleteChat?: (id: string) => void;
   collapsed?: boolean;
   onToggle?: () => void;
   showHandbook?: boolean;
@@ -29,6 +30,7 @@ export function CourseoSidebar({
   activeChatId,
   onNewChat,
   onSelectChat,
+  onDeleteChat,
   collapsed = false,
   onToggle,
   showHandbook = true,
@@ -132,23 +134,22 @@ export function CourseoSidebar({
 
       <div className="mx-4 border-t border-[#000181] my-3" />
 
-      <div className="flex-1 overflow-y-auto px-4 min-h-0">
+      <div className="max-h-[38%] shrink-0 overflow-y-auto px-4">
         {!collapsed && (
           <p className="text-[11px] font-black text-[#000181] mb-2 tracking-tight">
             Previous Chats
           </p>
         )}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.5">
           {filteredChats.map((chat, index) => (
-            <motion.button
+            <motion.div
               key={chat.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.04 }}
-              onClick={() => onSelectChat(chat.id)}
               className={`
-                w-full text-left rounded-[20px] px-3 py-1.5 text-[10px] font-semibold text-[#000181]
-                transition-colors overflow-hidden whitespace-nowrap text-ellipsis
+                group/chat flex h-7 max-h-7 w-full items-center rounded-[10px] text-[9px] font-semibold text-[#000181]
+                transition-colors overflow-hidden
                 ${activeChatId === chat.id
                   ? "bg-[rgba(232,160,255,0.5)]"
                   : "hover:bg-[rgba(131,231,255,0.3)]"
@@ -156,15 +157,34 @@ export function CourseoSidebar({
               `}
               title={chat.title}
             >
-              {collapsed ? (
-                <MessageSquare size={16} className="text-[#000181]" />
-              ) : (
-                chat.title
+              <button
+                type="button"
+                onClick={() => onSelectChat(chat.id)}
+                className={`h-7 min-w-0 flex-1 overflow-hidden px-2.5 text-left leading-7 whitespace-nowrap ${collapsed ? "flex items-center justify-center" : "text-ellipsis"}`}
+                aria-label={`Open chat: ${chat.title}`}
+              >
+                {collapsed ? <MessageSquare size={16} className="text-[#000181]" /> : chat.title}
+              </button>
+              {!collapsed && onDeleteChat && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeleteChat(chat.id);
+                  }}
+                  className="mr-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[rgba(0,1,129,0.42)] opacity-0 transition-all hover:bg-white/70 hover:text-red-600 focus:opacity-100 group-hover/chat:opacity-100"
+                  aria-label={`Delete chat: ${chat.title}`}
+                  title="Delete chat"
+                >
+                  <Trash2 size={10} />
+                </button>
               )}
-            </motion.button>
+            </motion.div>
           ))}
         </div>
       </div>
+
+      <div className="min-h-3 flex-1" />
 
       <div className="mx-4 border-t border-[#000181] my-3" />
 

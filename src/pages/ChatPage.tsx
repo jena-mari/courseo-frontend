@@ -53,7 +53,11 @@ function buildChatTitle(session: ChatSession) {
     .find((message) => message.role === "user");
 
   const content = lastUserMessage?.content ?? session.messages[0]?.content ?? "New Chat";
-  const normalized = content.replace(/\s+/g, " ").trim();
+  const normalized = content
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[`*_#>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return normalized.length > 38 ? `${normalized.slice(0, 38)}…` : normalized;
 }
 
@@ -524,6 +528,20 @@ export function ChatPage() {
     setChatError("");
   };
 
+  const handleDeleteChat = (id: string) => {
+    const remainingChats = chats.filter((chat) => chat.id !== id);
+    setChats(remainingChats);
+
+    if (id === activeChatId) {
+      const nextChat = remainingChats[0];
+      setActiveChatId(nextChat?.id ?? "new");
+      setActiveMessages(nextChat?.messages ?? []);
+      setStudyPlanData(nextChat?.studyPlanData ?? null);
+    }
+
+    setChatError("");
+  };
+
   const isEmptyChat = activeMessages.length === 0;
 
   const sidebarChats: Chat[] = chats.map((c) => ({
@@ -551,6 +569,7 @@ export function ChatPage() {
           activeChatId={activeChatId}
           onNewChat={handleNewChat}
           onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((v) => !v)}
           showHandbook={true}
@@ -844,6 +863,7 @@ export function ChatPage() {
                   handleSelectChat(id);
                   setMobileSidebarOpen(false);
                 }}
+                onDeleteChat={handleDeleteChat}
                 onToggle={() => setMobileSidebarOpen(false)}
                 expandedWidth="min(86vw, 320px)"
                 showHandbook

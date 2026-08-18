@@ -54,3 +54,13 @@ export function getChatHistory(sessionId: string) {
     messages: BackendMessage[];
   }>(`/api/v1/chat/${sessionId}`);
 }
+
+export function saveGeminiApiKey(apiKey: string) {
+  return request<{ saved: boolean; restart_required: boolean }>(
+    "/api/local/gemini-key",
+    {
+      method: "PUT",
+      body: JSON.stringify({ apiKey }),
+    }
+  );
+}
