@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, User, Lock, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, X } from "lucide-react"; //backend uses emails instead of usernames so Mail icon is used instead of User icon
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { useAuth } from "../auth/AuthContext";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
-import { createAuthSession } from "../lib/authSession";
 
 const AUTH_SIDEBAR_CHATS: Chat[] = [
   { id: "chat-1", title: "Study plan - Autumn 2026" },
@@ -16,28 +16,32 @@ const AUTH_SIDEBAR_CHATS: Chat[] = [
 interface LoginCardProps {
   onClose?: () => void;
   onRegister?: () => void;
+  onSuccess?: () => void;
 }
 
-export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
+export function LoginCard({ onClose, onRegister, onSuccess }: LoginCardProps = {}) {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (!username.trim() || !password.trim()) {
-      setError("Please enter your username and password.");
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter your email and password.");
       return;
     }
     setLoading(true);
     try {
-      createAuthSession({ username: username.trim() }, rememberMe);
-      navigate("/chat");
+      await login(email.trim(), password);
+      if (onSuccess) onSuccess();
+      else navigate("/chat");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to log in.");
     } finally {
       setLoading(false);
     }
@@ -74,18 +78,18 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label htmlFor="login-username" className="font-extrabold text-[13px] text-[#000181] block mb-2">
-            Username
+          <label htmlFor="login-email" className="font-extrabold text-[13px] text-[#000181] block mb-2">
+            Email
           </label>
           <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
-            <User size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
+            <Mail size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
-              type="text"
-              id="login-username"
-              autoComplete="username"
-              placeholder="Enter your username..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="login-email"
+              autoComplete="email"
+              placeholder="Enter your email..."
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
             />
           </div>
@@ -118,16 +122,7 @@ export function LoginCard({ onClose, onRegister }: LoginCardProps = {}) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-5 h-5 border-2 border-[#000181] rounded accent-[#000181]"
-            />
-            <span className="font-bold text-[14px] text-[#000181]">Remember Me</span>
-          </label>
+        <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
             className="font-bold text-[14px] text-[#000181] hover:underline"

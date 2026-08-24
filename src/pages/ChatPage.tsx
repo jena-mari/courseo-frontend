@@ -9,8 +9,7 @@ import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
-import { clearAuthSession } from "../lib/authSession";
-import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
@@ -647,14 +646,6 @@ export function ChatPage() {
                       {
                         label: enrollment ? "Update Enrolment" : "Add Enrolment",
                         action: () => navigate("/"),
-                      },
-                      {
-                        label: "Log Out",
-                        action: () => {
-                          clearAuthSession();
-                          clearCourseoStorage();
-                          navigate("/");
-                        },
                       },
                     ].map((item) => (
                       <button

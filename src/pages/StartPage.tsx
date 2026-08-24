@@ -6,6 +6,7 @@ import { ArrowRight, KeyRound, LogIn, UserPlus, X } from "lucide-react";
 import { Copilot } from "@lobehub/icons";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { useAuth } from "../auth/AuthContext";
 import { LoginCard } from "./LoginPage";
 import { RegisterCard } from "./RegisterPage";
 import { HelpSlider } from "../components/help-carousel";
@@ -19,7 +20,8 @@ const COPILOT_AGENT_URL = import.meta.env.VITE_COPILOT_AGENT_URL ?? "https://cop
 
 export function StartPage() {
   const navigate = useNavigate();
-  const [modalOpen, setModalOpen] = useState(true);
+  const { user, status } = useAuth();
+  const [modalOpen] = useState(true);
   const [mode, setMode] = useState<StartMode>("start");
   const [enrollment, setEnrollment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,12 +29,23 @@ export function StartPage() {
   const [copilotCopied, setCopilotCopied] = useState(false);
   const enrolmentSummary = useMemo(() => parseEnrolmentSummary(enrollment), [enrollment]);
 
+  const requireAuth = () => {
+    if (status === "loading") {
+      setSubmitError("Checking your session…");
+      return false;
+    }
+    if (!user) {
+      setSubmitError("Please log in or create an account first.");
+      setMode("login");
+      return false;
+    }
+    return true;
+  };
 
   const handleSkip = async () => {
-    let record = enrollment.trim();
+    if (!requireAuth()) return;
 
-    if (!record) {record = " "};
-
+    const record = enrollment.trim() || " ";
     if (isSubmitting) return;
 
     setIsSubmitting(true);
@@ -40,7 +53,6 @@ export function StartPage() {
 
     try {
       localStorage.setItem(STORAGE_KEYS.enrolment, record);
-
       navigate("/chat");
     } catch (error) {
       setSubmitError(
@@ -54,10 +66,9 @@ export function StartPage() {
   };
 
   const handleSubmit = async () => {
-    let record = enrollment.trim();
+    if (!requireAuth()) return;
 
-    if (!record) {record = " "};
-
+    const record = enrollment.trim() || " ";
     if (isSubmitting) return;
 
     setIsSubmitting(true);
@@ -115,6 +126,12 @@ export function StartPage() {
       setSubmitError("Your browser blocked clipboard access. Copy the enrolment record manually, then open Copilot.");
     }
   };
+
+  const afterAuthSuccess = () => {
+    setSubmitError("");
+    setMode("start");
+  };
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-['Montserrat',sans-serif]">
       <img
@@ -154,7 +171,6 @@ export function StartPage() {
 
                 <button
                   onClick={() => void handleSkip()}
-                  // onClick={() => {setModalOpen(false), navigate("/chat");}}
                   className="absolute top-6 right-6 sm:top-8 sm:right-8 w-10 h-10 flex items-center justify-center text-[#000181] hover:bg-[#f1f3ff] rounded-full transition-colors"
                   aria-label="Close"
                 >
@@ -176,6 +192,11 @@ export function StartPage() {
                         Need help?
                       </button>
                     </p>
+                    {user && (
+                      <p className="mt-3 text-[13px] font-bold text-[#000181]">
+                        Signed in as {user.username}
+                      </p>
+                    )}
                   </div>
 
                   <div className="w-full">
@@ -253,7 +274,6 @@ export function StartPage() {
                   <button
                     type="button"
                     onClick={() => void handleSkip()}
-                    // onClick={() => {setModalOpen(false), navigate("/chat");}}
                     className="mt-7 text-[13px] font-bold text-[rgba(0,1,129,0.62)] underline underline-offset-4 hover:text-[#000181] transition-colors"
                   >
                     Continue without an enrolment record
@@ -295,6 +315,7 @@ export function StartPage() {
               <LoginCard
                 onClose={() => setMode("start")}
                 onRegister={() => setMode("register")}
+                onSuccess={afterAuthSuccess}
               />
             )}
 
@@ -302,6 +323,7 @@ export function StartPage() {
               <RegisterCard
                 onClose={() => setMode("start")}
                 onLogin={() => setMode("login")}
+                onSuccess={afterAuthSuccess}
               />
             )}
 
