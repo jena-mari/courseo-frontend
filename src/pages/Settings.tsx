@@ -9,6 +9,7 @@ import {
   ExternalLink,
   GraduationCap,
   KeyRound,
+  LoaderCircle,
   Server,
   UserCircle,
 } from "lucide-react";
@@ -579,11 +580,34 @@ export function SettingsPage() {
                           type="button"
                           onClick={() => void handleSaveGeminiKey()}
                           disabled={!geminiKey.trim() || keyStatus === "saving"}
-                          className="h-11 rounded-[14px] bg-[#000181] px-5 text-[12px] font-extrabold text-white disabled:opacity-40"
+                          className="flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-[14px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-[0_5px_14px_rgba(0,1,129,0.18)] transition-all disabled:cursor-wait disabled:opacity-75"
                         >
-                          {keyStatus === "saving" ? "Saving…" : "Save key"}
+                          {keyStatus === "saving" ? <><LoaderCircle size={15} className="animate-spin" /> Connecting…</> : "Save key"}
                         </button>
                       </div>
+                      <AnimatePresence>
+                        {keyStatus === "saving" && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            role="status"
+                            aria-live="polite"
+                            className="mt-3 overflow-hidden rounded-[14px] border border-[rgba(131,231,255,0.65)] bg-[rgba(131,231,255,0.12)] p-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#000181] shadow-sm"><KeyRound size={15} /></span>
+                              <div>
+                                <p className="text-[12px] font-extrabold text-[#000181]">Connecting Gemini</p>
+                                <p className="mt-0.5 text-[10px] font-semibold text-[rgba(0,1,129,0.55)]">Encrypting and validating your API key…</p>
+                              </div>
+                            </div>
+                            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/80">
+                              <motion.div className="h-full w-1/3 rounded-full bg-[#000181]" animate={{ x: ["-100%", "300%"] }} transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }} />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       {keyMessage && <p role="status" className={`mt-2 text-[12px] font-semibold ${keyStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{keyMessage}</p>}
                       <p className="mt-2 text-[11px] font-semibold text-[rgba(0,1,129,0.52)]">
                         The key is written directly to <code>intelli-study-planner-brain/.env</code> and is never stored in the browser.

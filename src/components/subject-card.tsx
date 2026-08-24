@@ -1,7 +1,3 @@
-import {
-  SquarePen 
-} from "lucide-react";
-
 type FieldProps = {
   code: string;
   title: string;
@@ -19,22 +15,16 @@ function SubjectCard({code, title, cp, color, year}:FieldProps) {
   }
 
   return (
-      <button className='max-w-72 flex-1 justify-center items-stretch w-full'
+      <button className="w-full text-left transition-transform hover:-translate-y-0.5"
               onClick={() => openInNewTab(`https://courses.uow.edu.au/subjects/2026/${code}`)}>
         <div style={{backgroundColor: color}}
-        className='rounded-3xl h-full'>             
-            <div className="rounded-3xl p-2 flex flex-col justify-center items-center text-center text-[#000181]">
-                <p className='text-1xl font-extrabold text-center'>{code}</p>
-                
-                <div className='pt-1 pb-2 w-full'>
-                    <div className='h-1 border-b-2 border-[#000181] w-full'></div>
+        className="h-full rounded-[16px] border border-white/70 shadow-[0_2px_8px_rgba(0,1,129,0.06)]">
+            <div className="flex min-h-[78px] flex-col rounded-[16px] p-3 text-[#000181]">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[13px] font-extrabold tracking-tight">{code}</p>
+                  <p className="shrink-0 rounded-full bg-white/65 px-2 py-0.5 text-[9px] font-extrabold">{cp} cp</p>
                 </div>
-
-                <div className='flex items-center justify-between ext-1xl font-semibold text-xs gap-1'>
-                    <p>{title}</p>
-                </div>
-
-                <p className='text-xs py-1'>{cp} cp</p>
+                <p className="mt-1.5 line-clamp-2 text-[10px] font-semibold leading-snug text-[rgba(0,1,129,0.68)]">{title}</p>
 
                 {/* <button className='bg-white rounded-3xl py-1 px-4 flex gap-2 text-xs justify-center items-center'>
                     <span><SquarePen size={12} className="text-[#000181]" /></span>

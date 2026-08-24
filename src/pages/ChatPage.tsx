@@ -8,7 +8,7 @@ import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
-import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
+import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
 import { clearAuthSession } from "../lib/authSession";
 import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { HelpSlider } from "../components/help-carousel";
@@ -48,17 +48,15 @@ const SUGGESTED_PROMPTS = [
 ];
 
 function buildChatTitle(session: ChatSession) {
-  const lastUserMessage = [...session.messages]
-    .reverse()
-    .find((message) => message.role === "user");
+  const firstUserMessage = session.messages.find((message) => message.role === "user");
 
-  const content = lastUserMessage?.content ?? session.messages[0]?.content ?? "New Chat";
+  const content = firstUserMessage?.content ?? session.messages[0]?.content ?? "New chat";
   const normalized = content
     .replace(/<[^>]*>/g, " ")
     .replace(/[`*_#>|]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return normalized.length > 38 ? `${normalized.slice(0, 38)}…` : normalized;
+  return normalized.length > 42 ? `${normalized.slice(0, 42)}…` : normalized;
 }
 
 function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
@@ -261,6 +259,17 @@ export function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
+
+  const setSmartTitle = useCallback((chatId: string, userText: string, assistantText: string) => {
+    void generateChatTitle(userText, assistantText)
+      .then((title) => {
+        if (!title) return;
+        setChats((current) => current.map((chat) => chat.id === chatId ? { ...chat, title } : chat));
+      })
+      .catch(() => {
+        // The readable local title remains in place if Gemini is unavailable.
+      });
+  }, []);
   useEffect(() => {
     if (activeChatId === "new") {
       setActiveMessages([]);
@@ -315,7 +324,7 @@ export function ChatPage() {
           chat.id === activeChat.id
             ? {
                 ...chat,
-                title: buildChatTitle({ ...chat, messages: newMessages }),
+                title: chat.title,
                 messages: newMessages,
               }
             : chat
@@ -345,10 +354,7 @@ export function ChatPage() {
             chat.id === activeChat.id
               ? {
                   ...chat,
-                  title: buildChatTitle({
-                    ...chat,
-                    messages: finalMessages,
-                  }),
+                  title: chat.title,
                   messages: finalMessages,
                   studyPlanData:
                     content.studyPlanData ?? chat.studyPlanData,
@@ -356,6 +362,9 @@ export function ChatPage() {
               : chat
           )
         );
+        if (["New study plan", "My study plan", "New chat"].includes(activeChat.title)) {
+          setSmartTitle(activeChat.id, trimmed, content.cleanText);
+        }
       } catch (error) {
         const errorText =
           error instanceof Error
@@ -382,7 +391,7 @@ export function ChatPage() {
         setIsTyping(false);
       }
     },
-    [activeMessages, activeChatId, chats, enrollment, isTyping]
+    [activeMessages, activeChatId, chats, enrollment, isTyping, setSmartTitle]
   );
 
   useEffect(() => {
@@ -449,7 +458,13 @@ export function ChatPage() {
       const newChat: ChatSession = {
         id: result.session_id,
         backendSessionId: result.session_id,
-        title: "New study plan",
+        title: buildChatTitle({
+          id: result.session_id,
+          backendSessionId: result.session_id,
+          title: "New chat",
+          messages: chatMessages,
+          studyPlanData: parsedReply.studyPlanData,
+        }),
         messages: chatMessages,
         // messages: [toFrontendMessage(result.reply)],
         studyPlanData: parsedReply.studyPlanData,
@@ -461,6 +476,7 @@ export function ChatPage() {
       setStudyPlanData(newChat.studyPlanData);
       // setInputText("");
       setChatError("");
+      setSmartTitle(newChat.id, trimmed, parsedReply.cleanText);
 
     } catch (error) {
       setChatError(
@@ -508,6 +524,7 @@ export function ChatPage() {
       setStudyPlanData(newChat.studyPlanData);
       setInputText("");
       setChatError("");
+      setSmartTitle(newChat.id, enrollment, parsedReply.cleanText);
 
     } catch (error) {
       setChatError(
@@ -546,7 +563,7 @@ export function ChatPage() {
 
   const sidebarChats: Chat[] = chats.map((c) => ({
     id: c.id,
-    title: buildChatTitle(c),
+    title: c.title || buildChatTitle(c),
   }));
 
 
