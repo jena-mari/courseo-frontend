@@ -42,3 +42,44 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
 
   return response.json() as Promise<T>;
 }
+
+export interface BackendHealth {
+  state: "online" | "unauthorized" | "unavailable";
+  latencyMs: number;
+  checkedAt: Date;
+  statusCode?: number;
+}
+
+/**
+ * Probes an authenticated endpoint that depends on the running FastAPI app and
+ * its startup-initialised database services. A 401 still proves the API is
+ * reachable, but reports that the browser session is no longer authorised.
+ */
+export async function checkBackendHealth(): Promise<BackendHealth> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 5000);
+  const startedAt = performance.now();
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    const latencyMs = Math.round(performance.now() - startedAt);
+    return {
+      state: response.ok ? "online" : response.status === 401 ? "unauthorized" : "unavailable",
+      latencyMs,
+      checkedAt: new Date(),
+      statusCode: response.status,
+    };
+  } catch {
+    return {
+      state: "unavailable",
+      latencyMs: Math.round(performance.now() - startedAt),
+      checkedAt: new Date(),
+    };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}

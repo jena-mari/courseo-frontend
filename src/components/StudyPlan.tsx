@@ -37,8 +37,8 @@ export function StudyPlan({
                 <BookOpen size={18} strokeWidth={2.3} />
               </span>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0 text-left">
-                <span className="block whitespace-nowrap text-[19px] font-extrabold tracking-[-0.5px] text-[#000181]">Study Plan</span>
-                <span className="block text-[10px] font-bold text-[rgba(0,1,129,0.45)]">Your course roadmap</span>
+                <span className="block whitespace-nowrap text-[22px] font-extrabold tracking-[-0.6px] text-[#000181]">Study Plan</span>
+                <span className="block text-[11px] font-bold text-[rgba(0,1,129,0.45)]">Your course roadmap</span>
               </motion.div>
             </>
           )}
@@ -60,22 +60,27 @@ export function StudyPlan({
         <div className="flex-1 overflow-y-auto min-h-0 px-4 pb-4">
           {studyPlanInput ? ( studyPlanInput.plan.map((years) => (
               <section key={years.year} className="mb-6">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-[22px] font-extrabold tracking-[-0.7px] text-[#000181]">{years.year}</span>
+              <div className="mb-3 flex items-center justify-center gap-3">
+                <span className="h-px flex-1 bg-[rgba(0,1,129,0.10)]" />
+                <span className="text-[28px] font-extrabold tracking-[-0.9px] text-[#000181]">{years.year}</span>
                 <span className="h-px flex-1 bg-[rgba(0,1,129,0.10)]" />
               </div>
               <div className="space-y-3">
                 {years.sessions.map((sessions) => (
-                  <div key={`${years.year}-${sessions.session}`} className="rounded-[20px] border border-[rgba(0,1,129,0.08)] bg-[#f8f9ff] p-3 shadow-[0_2px_10px_rgba(0,1,129,0.05)]">
-                      <div className="mb-3 flex items-center gap-2 px-1">
-                        <CalendarDays size={14} className={sessions.session === "Autumn" ? "text-[#1ca8c6]" : "text-[#b14bd3]"} />
-                        <p className="text-[13px] font-extrabold text-[#000181]">{sessions.session}</p>
-                        <span className={`ml-auto h-2 w-2 rounded-full ${sessions.session === "Autumn" ? "bg-[#83e7ff]" : "bg-[#e8a0ff]"}`} />
+                  <div key={`${years.year}-${sessions.session}`} className={`rounded-[20px] border-2 bg-[#f8f9ff] p-3 shadow-[0_2px_10px_rgba(0,1,129,0.05)] ${sessions.session === "Autumn" ? "border-[rgba(76,205,235,0.55)]" : "border-[rgba(205,105,235,0.52)]"}`}>
+                      <div className="relative mb-3 flex items-center justify-center gap-2 px-1">
+                        <CalendarDays size={14} className={sessions.session === "Autumn" ? "text-[#087c98]" : "text-[#7f269d]"} />
+                        <p className="text-[17px] font-extrabold text-[#000181]">{sessions.session}</p>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
                         {sessions.subjects.map((subject, index) => (
                           <div key={index}>
-                            <SubjectCard code={subject.code} title={subject.name} cp={subject.cp} color={`${sessions.session === "Autumn" ? "rgba(131,231,255,0.65)" : "rgba(232,160,255,0.65)"}`} year={years.year} />
+                            <SubjectCard
+                              code={subject.code}
+                              title={subject.name}
+                              cp={subject.cp}
+                              color={sessions.session === "Autumn" ? "rgba(131,231,255,0.65)" : "rgba(232,160,255,0.65)"}
+                            />
                           </div>
                         ))}
                       </div>

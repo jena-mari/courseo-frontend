@@ -4,13 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
-  Bell,
   Check,
   ExternalLink,
   GraduationCap,
   KeyRound,
   LoaderCircle,
+  RefreshCw,
   Server,
+  XCircle,
   UserCircle,
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
@@ -21,12 +22,12 @@ import { HandbookModal } from "../components/HandbookModalPopup";
 import { useAuth } from "../auth/AuthContext";
 import { saveGeminiApiKey } from "../lib/chatApi";
 import { STORAGE_KEYS } from "../lib/storageKeys";
+import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
-type SettingsTab = "profile" | "notifications" | "system";
+type SettingsTab = "profile" | "system";
 
 const TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "profile", label: "Profile & Degree" },
-  { id: "notifications", label: "Notifications" },
   { id: "system", label: "System" },
 ];
 
@@ -131,35 +132,6 @@ function SettingRow({
   );
 }
 
-function Toggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-[24px] w-[44px] shrink-0 rounded-full transition-colors ${
-        checked ? "bg-[#000181]" : "bg-[rgba(0,1,129,0.22)]"
-      }`}
-    >
-      <span
-        className={`absolute left-0 top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform ${
-          checked ? "translate-x-[23px]" : "translate-x-[3px]"
-        }`}
-      />
-    </button>
-  );
-}
-
 function Select({
   label,
   value,
@@ -259,21 +231,12 @@ export function SettingsPage() {
   const [geminiKey, setGeminiKey] = useState("");
   const [keyStatus, setKeyStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [keyMessage, setKeyMessage] = useState("");
-  const [notificationChannel, setNotificationChannel] = useState("In-app only");
+  const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
+  const [checkingBackend, setCheckingBackend] = useState(false);
   const [customInterest, setCustomInterest] = useState("");
   const [selectedInterests, setSelectedInterests] = useState(
     () => new Set(["Machine Learning", "Cybersecurity", "Cloud Computing"])
   );
-  const [toggles, setToggles] = useState({
-    deadlineReminders: true,
-    planUpdates: true,
-    electiveSuggestions: false,
-  });
-
-  const setToggle = (key: keyof typeof toggles, value: boolean) => {
-    setToggles((current) => ({ ...current, [key]: value }));
-  };
-
   useEffect(() => {
     if (!user) return;
     updateUser({
@@ -285,6 +248,21 @@ export function SettingsPage() {
     // Sync local form edits into the UI cache; cookie remains source of auth.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to form field edits
   }, [profile.email, profile.username]);
+
+  const refreshBackendHealth = async () => {
+    setCheckingBackend(true);
+    try {
+      setBackendHealth(await checkBackendHealth());
+    } finally {
+      setCheckingBackend(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "system" && !backendHealth && !checkingBackend) {
+      void refreshBackendHealth();
+    }
+  }, [activeTab, backendHealth, checkingBackend]);
 
   const setProfileField = (key: keyof typeof profile, value: string) => {
     setProfile((current) => ({ ...current, [key]: value }));
@@ -378,7 +356,7 @@ export function SettingsPage() {
                   Settings
                 </h1>
                 <p className="mt-2 text-[13px] font-semibold text-[rgba(0,1,129,0.55)]">
-                  Manage your profile, integrations, and notifications.
+                  Manage your profile and integrations.
                 </p>
               </div>
             </div>
@@ -509,53 +487,6 @@ export function SettingsPage() {
               </div>
             )}
 
-            {activeTab === "notifications" && (
-              <Panel
-                icon={<Bell size={20} strokeWidth={2.5} />}
-                title="Notification preferences"
-                description="When and how Courseo contacts you"
-              >
-                <SettingRow
-                  label="Enrolment deadline reminders"
-                  sub="Alert 2 weeks before each enrolment window opens"
-                >
-                  <Toggle
-                    checked={toggles.deadlineReminders}
-                    onChange={(value) => setToggle("deadlineReminders", value)}
-                    label="Enrolment deadline reminders"
-                  />
-                </SettingRow>
-                <SettingRow
-                  label="Study plan updates"
-                  sub="Notify when handbook changes affect saved plans"
-                >
-                  <Toggle
-                    checked={toggles.planUpdates}
-                    onChange={(value) => setToggle("planUpdates", value)}
-                    label="Study plan updates"
-                  />
-                </SettingRow>
-                <SettingRow
-                  label="New elective suggestions"
-                  sub="Weekly digest of newly matched electives for your interests"
-                >
-                  <Toggle
-                    checked={toggles.electiveSuggestions}
-                    onChange={(value) => setToggle("electiveSuggestions", value)}
-                    label="New elective suggestions"
-                  />
-                </SettingRow>
-                <SettingRow label="Notification channel">
-                  <Select
-                    label="Notification channel"
-                    value={notificationChannel}
-                    onChange={setNotificationChannel}
-                    options={["In-app only", "Email", "Email + In-app"]}
-                  />
-                </SettingRow>
-              </Panel>
-            )}
-
             {activeTab === "system" && (
               <div className="grid gap-5">
                 <Panel
@@ -631,21 +562,39 @@ export function SettingsPage() {
 
                 <Panel
                   icon={<Server size={20} strokeWidth={2.5} />}
-                  title="Microservice status"
-                  description="Independently deployable service health"
+                  title="Backend status"
+                  description="Live health of the Courseo FastAPI service"
                 >
-                  {["Planning Agent", "Validation Engine", "Data Sanitisation Engine"].map(
-                    (service) => (
-                      <SettingRow key={service} label={service}>
-                        <Badge>
-                          <Check size={12} strokeWidth={3} />
-                          Online
-                        </Badge>
-                      </SettingRow>
-                    )
-                  )}
-                  <SettingRow label="Handbook Sync">
-                    <Badge tone="amber">Syncing</Badge>
+                  <SettingRow
+                    label="Courseo API"
+                    sub="FastAPI, PostgreSQL, and LangGraph checkpointer"
+                  >
+                    {checkingBackend ? (
+                      <Badge tone="amber"><LoaderCircle size={12} className="animate-spin" /> Checking</Badge>
+                    ) : backendHealth?.state === "online" ? (
+                      <Badge><Check size={12} strokeWidth={3} /> Online</Badge>
+                    ) : backendHealth?.state === "unauthorized" ? (
+                      <Badge tone="amber">Session expired</Badge>
+                    ) : (
+                      <Badge tone="red"><XCircle size={12} /> Unavailable</Badge>
+                    )}
+                  </SettingRow>
+                  <SettingRow
+                    label="Response time"
+                    sub={backendHealth ? `${backendHealth.latencyMs} ms${backendHealth.statusCode ? ` · HTTP ${backendHealth.statusCode}` : ""}` : "Waiting for first check"}
+                  />
+                  <SettingRow
+                    label="Last checked"
+                    sub={backendHealth ? backendHealth.checkedAt.toLocaleTimeString() : "Not checked yet"}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void refreshBackendHealth()}
+                      disabled={checkingBackend}
+                      className="flex h-9 items-center gap-2 rounded-[12px] border border-[rgba(0,1,129,0.16)] px-3 !text-[11px] font-extrabold text-[#000181] transition-colors hover:bg-[rgba(131,231,255,0.18)] disabled:opacity-50"
+                    >
+                      <RefreshCw size={12} className={checkingBackend ? "animate-spin" : ""} /> Refresh
+                    </button>
                   </SettingRow>
                 </Panel>
 
