@@ -2,7 +2,7 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import { startChat } from "../lib/chatApi";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, KeyRound, LogIn, UserPlus, X } from "lucide-react";
+import { ArrowRight, KeyRound, LogIn, UserPlus, X } from "lucide-react";
 import { Copilot } from "@lobehub/icons";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
@@ -14,7 +14,7 @@ import { STORAGE_KEYS } from "../lib/storageKeys";
 import textBounce from "../functions/textBounce";
 import { buildCopilotStudyPlanPrompt, parseEnrolmentSummary } from "../lib/enrolment";
 
-type StartMode = "start" | "confirm" | "provider" | "login" | "register" | "tutorial";
+type StartMode = "start" | "provider" | "login" | "register" | "tutorial";
 
 const COPILOT_AGENT_URL = import.meta.env.VITE_COPILOT_AGENT_URL ?? "https://copilot.microsoft.com/";
 
@@ -102,10 +102,6 @@ export function StartPage() {
   const handleReview = () => {
     if (!enrollment.trim()) return;
     setSubmitError("");
-    setMode("confirm");
-  };
-
-  const handleConfirmedEnrolment = () => {
     setMode("provider");
   };
 
@@ -286,56 +282,6 @@ export function StartPage() {
               </motion.div>
             )}
 
-            {mode === "confirm" && (
-              <motion.div
-                key="confirm"
-                initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 16 }}
-                className="relative w-full max-w-[620px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-10 sm:py-9"
-              >
-                <button type="button" onClick={() => setMode("start")} className="mb-5 flex items-center gap-1.5 text-[12px] font-extrabold text-[rgba(0,1,129,0.62)] hover:text-[#000181]">
-                  <ArrowLeft size={15} /> Edit enrolment
-                </button>
-                <h2 className="text-[28px] font-black tracking-tight text-[#000181]">Is this enrolment correct?</h2>
-                <p className="mt-2 text-[13px] font-semibold text-[rgba(0,1,129,0.6)]">
-                  Confirm these subjects before Courseo sends anything to the AI provider.
-                </p>
-
-                {enrolmentSummary.current.length + enrolmentSummary.completed.length > 0 ? (
-                  <div className="mt-5 grid max-h-[45vh] gap-4 overflow-y-auto sm:grid-cols-2">
-                    {(["current", "completed"] as const).map((group) => (
-                      <section key={group} className="rounded-[16px] bg-[rgba(131,231,255,0.12)] p-4">
-                        <h3 className="text-[12px] font-extrabold uppercase tracking-wide text-[#000181]">
-                          {group === "current" ? "Currently enrolled" : "Completed subjects"} ({enrolmentSummary[group].length})
-                        </h3>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {enrolmentSummary[group].length ? enrolmentSummary[group].map((subject, index) => (
-                            <span key={`${subject.code}-${index}`} className="rounded-full bg-white px-2.5 py-1 text-[10px] font-extrabold text-[#000181] shadow-sm" title={`${subject.year} ${subject.session} · ${subject.status}`}>
-                              {subject.code}
-                            </span>
-                          )) : <span className="text-[11px] font-semibold text-[rgba(0,1,129,0.5)]">None found</span>}
-                        </div>
-                      </section>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-5 rounded-[16px] border border-amber-200 bg-amber-50 p-4 text-[12px] font-semibold leading-relaxed text-amber-900">
-                    Courseo could not identify the subject table. Go back and paste the complete SOLS table, including the Subject Code and Status headings.
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleConfirmedEnrolment}
-                  disabled={enrolmentSummary.current.length + enrolmentSummary.completed.length === 0 || isSubmitting}
-                  className="mt-6 h-[52px] w-full rounded-[16px] bg-[#000181] text-[14px] font-extrabold text-white disabled:opacity-35"
-                >
-                  Yes, this is correct
-                </button>
-              </motion.div>
-            )}
-
             {mode === "provider" && (
               <motion.div
                 key="provider"
@@ -361,7 +307,7 @@ export function StartPage() {
                   </button>
                 </div>
                 {submitError && <p role="alert" className="mt-3 text-center text-[12px] font-semibold text-red-600">{submitError}</p>}
-                <button type="button" onClick={() => setMode("confirm")} className="mt-5 w-full text-center text-[12px] font-extrabold text-[rgba(0,1,129,0.55)] underline underline-offset-2">Back to confirmation</button>
+                <button type="button" onClick={() => setMode("start")} className="mt-5 w-full text-center text-[12px] font-extrabold text-[rgba(0,1,129,0.55)] underline underline-offset-2">Edit enrolment</button>
               </motion.div>
             )}
 

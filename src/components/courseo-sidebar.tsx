@@ -39,7 +39,7 @@ export function CourseoSidebar({
   onAccount,
   onSettings,
   onHelp,
-  expandedWidth = "clamp(216px, 19vw, 244px)",
+  expandedWidth = "clamp(232px, 20vw, 264px)",
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -52,23 +52,23 @@ export function CourseoSidebar({
       initial={false}
       animate={{ width: collapsed ? 64 : expandedWidth }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative bg-white rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] h-full flex flex-col overflow-hidden shrink-0"
+      className="relative flex h-full shrink-0 flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_12px_38px_rgba(0,1,129,0.11)] backdrop-blur-xl"
     >
-      <div className={`flex items-center pt-5 pb-3 shrink-0 ${
-        collapsed ? "justify-center px-2" : "justify-between px-5"
+      <div className={`flex shrink-0 items-center pt-4 pb-3 ${
+        collapsed ? "justify-center px-2" : "justify-between px-4"
       }`}>
         {!collapsed && (
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 items-center gap-2.5">
             <img
               src={imgLogo}
               alt="Courseo"
-              className="w-10 h-10 object-contain shrink-0"
+              className="h-9 w-9 shrink-0 object-contain"
             />
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="font-extrabold text-xl text-[#000181] tracking-tight whitespace-nowrap"
+              className="whitespace-nowrap text-[20px] font-extrabold tracking-[-0.5px] text-[#000181]"
             >
               Courseo
             </motion.span>
@@ -76,7 +76,7 @@ export function CourseoSidebar({
         )}
         <button
           onClick={onToggle}
-          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-[#000181] shrink-0"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[#000181] transition-colors hover:bg-gray-100"
           title={collapsed ? "Expand navigation" : "Collapse navigation"}
           aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
           aria-expanded={!collapsed}
@@ -85,62 +85,62 @@ export function CourseoSidebar({
         </button>
       </div>
 
-      <div className="px-4 flex flex-col gap-2 shrink-0">
-        <div className="border-2 border-[rgba(0,1,129,0.5)] rounded-[15px] h-9 flex items-center px-3 gap-2 overflow-hidden">
-          <Search size={11} className="text-[#000181] opacity-50 shrink-0" />
+      <div className={`flex shrink-0 flex-col gap-2 ${collapsed ? "items-center px-3" : "px-4"}`}>
+        <div className={`flex h-10 items-center overflow-hidden rounded-[13px] border-2 border-[rgba(0,1,129,0.5)] bg-white transition-colors focus-within:border-[#000181] ${collapsed ? "w-10 justify-center px-0" : "w-full gap-2.5 px-3"}`}>
+          <Search size={15} className="shrink-0 text-[#000181] opacity-50" />
           {!collapsed && (
             <input
               type="text"
               placeholder="Search Chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-[11px] font-extrabold text-[rgba(0,1,129,0.5)] placeholder:text-[rgba(0,1,129,0.5)] outline-none w-full"
+              className="w-full bg-transparent text-[12px] font-semibold text-[rgba(0,1,129,0.5)] outline-none placeholder:text-[rgba(0,1,129,0.5)]"
             />
           )}
         </div>
 
         <button
           onClick={onNewChat}
-          className="bg-[rgba(131,231,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-3 gap-2 overflow-hidden hover:bg-[rgba(131,231,255,0.7)] transition-colors group"
+          className={`group flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
         >
-          <div className="flex items-center gap-2">
-            <PenLine size={11} className="text-[#000181] shrink-0" />
+          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
+            <PenLine size={14} className="shrink-0 text-[#000181]" />
             {!collapsed && (
-              <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+              <span className="whitespace-nowrap text-[12px] font-bold text-[#000181]">
                 Create Chat
               </span>
             )}
           </div>
-          {!collapsed && <ChevronRight size={13} className="text-[#000181]" />}
+          {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
         </button>
 
         {showHandbook && (
           <button
             onClick={onHandbook}
-            className="bg-[rgba(131,231,255,0.5)] rounded-[15px] h-9 flex items-center justify-between px-3 gap-2 overflow-hidden hover:bg-[rgba(131,231,255,0.7)] transition-colors"
+            className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
           >
-            <div className="flex items-center gap-2">
-              <BookOpen size={11} className="text-[#000181] shrink-0" />
+            <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
+              <BookOpen size={14} className="shrink-0 text-[#000181]" />
               {!collapsed && (
-                <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
+                <span className="whitespace-nowrap text-[12px] font-bold text-[#000181]">
                   Your Handbook
                 </span>
               )}
             </div>
-            {!collapsed && <ChevronRight size={13} className="text-[#000181]" />}
+            {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
           </button>
         )}
       </div>
 
-      <div className="mx-4 border-t border-[#000181] my-3" />
+      <div className={`${collapsed ? "mx-3" : "mx-4"} my-3 border-t border-[#000181]`} />
 
-      <div className="max-h-[38%] shrink-0 overflow-y-auto px-4">
+      <div className={`min-h-0 flex-1 overflow-y-auto ${collapsed ? "px-3" : "px-4"}`}>
         {!collapsed && (
-          <p className="text-[11px] font-black text-[#000181] mb-2 tracking-tight">
+          <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#000181]">
             Previous Chats
           </p>
         )}
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1">
           {filteredChats.map((chat, index) => (
             <motion.div
               key={chat.id}
@@ -148,11 +148,11 @@ export function CourseoSidebar({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.04 }}
               className={`
-                group/chat flex h-7 max-h-7 w-full items-center rounded-[10px] text-[9px] font-semibold text-[#000181]
+                group/chat flex min-h-8 w-full items-center font-semibold text-[#000181]
                 transition-colors overflow-hidden
                 ${activeChatId === chat.id
-                  ? "bg-[rgba(232,160,255,0.5)]"
-                  : "hover:bg-[rgba(131,231,255,0.3)]"
+                  ? `bg-[rgba(232,160,255,0.5)] ${collapsed ? "rounded-[12px]" : "rounded-[10px]"}`
+                  : `${collapsed ? "rounded-[12px]" : "rounded-[10px]"} hover:bg-[rgba(131,231,255,0.3)]`
                 }
               `}
               title={chat.title}
@@ -160,7 +160,7 @@ export function CourseoSidebar({
               <button
                 type="button"
                 onClick={() => onSelectChat(chat.id)}
-                className={`h-7 min-w-0 flex-1 overflow-hidden px-2.5 text-left leading-7 whitespace-nowrap ${collapsed ? "flex items-center justify-center" : "text-ellipsis"}`}
+                className={`min-w-0 flex-1 overflow-hidden text-left !text-[11px] whitespace-nowrap ${collapsed ? "flex h-10 items-center justify-center px-0 !leading-10" : "h-8 px-2.5 !leading-8 text-ellipsis"}`}
                 aria-label={`Open chat: ${chat.title}`}
               >
                 {collapsed ? <MessageSquare size={16} className="text-[#000181]" /> : chat.title}
@@ -172,11 +172,11 @@ export function CourseoSidebar({
                     event.stopPropagation();
                     onDeleteChat(chat.id);
                   }}
-                  className="mr-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[rgba(0,1,129,0.42)] opacity-0 transition-all hover:bg-white/70 hover:text-red-600 focus:opacity-100 group-hover/chat:opacity-100"
+                  className="mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[rgba(0,1,129,0.42)] opacity-0 transition-all hover:bg-white/70 hover:text-red-600 focus:opacity-100 group-hover/chat:opacity-100"
                   aria-label={`Delete chat: ${chat.title}`}
                   title="Delete chat"
                 >
-                  <Trash2 size={10} />
+                  <Trash2 size={12} />
                 </button>
               )}
             </motion.div>
@@ -184,62 +184,53 @@ export function CourseoSidebar({
         </div>
       </div>
 
-      <div className="min-h-3 flex-1" />
+      <div className={`${collapsed ? "mx-3" : "mx-4"} my-3 border-t border-[#000181]`} />
 
-      <div className="mx-4 border-t border-[#000181] my-3" />
-
-      <div className="px-4 pb-4 shrink-0">
+      <div className={`${collapsed ? "px-3" : "px-4"} pb-4 shrink-0`}>
         {!collapsed && (
-          <p className="text-[11px] font-black text-[#000181] mb-2 tracking-tight">
+          <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#000181]">
             Settings &amp; Help
           </p>
         )}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <button
             onClick={onAccount}
-            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+            className={`flex items-center rounded-[11px] text-[12px] font-semibold text-[#000181] transition-colors ${collapsed ? "h-10 w-10 justify-center px-0" : "h-9 gap-2.5 px-2.5"} ${
               activeUtility === "account"
                 ? "bg-[rgba(232,160,255,0.5)]"
                 : "hover:bg-[rgba(131,231,255,0.2)]"
             }`}
           >
-            <User size={11} className="shrink-0" />
+            <User size={15} className="shrink-0" />
             {!collapsed && <span>Account</span>}
           </button>
           
           <button
             onClick={onSettings}
-            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+            className={`flex items-center rounded-[11px] text-[12px] font-semibold text-[#000181] transition-colors ${collapsed ? "h-10 w-10 justify-center px-0" : "h-9 gap-2.5 px-2.5"} ${
               activeUtility === "settings"
                 ? "bg-[rgba(232,160,255,0.5)]"
                 : "hover:bg-[rgba(131,231,255,0.2)]"
             }`}
           >
-            <Settings size={11} className="shrink-0" />
+            <Settings size={15} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
           </button>
 
           <button
             onClick={onHelp}
-            className={`flex items-center gap-2 text-[10px] font-semibold text-[#000181] rounded-lg px-2 py-1 transition-colors ${
+            className={`flex items-center rounded-[11px] text-[12px] font-semibold text-[#000181] transition-colors ${collapsed ? "h-10 w-10 justify-center px-0" : "h-9 gap-2.5 px-2.5"} ${
               activeUtility === "help"
                 ? "bg-[rgba(232,160,255,0.5)]"
               : "hover:bg-[rgba(131,231,255,0.2)]"
             }`}
           >
-            <HelpCircle size={11} className="shrink-0" />
+            <HelpCircle size={15} className="shrink-0" />
             {!collapsed && <span>Help</span>}
           </button>
         </div>
       </div>
 
-      {!collapsed && (
-        <div className="pb-5 text-center shrink-0">
-          <p className="font-extrabold text-2xl text-[#000181] tracking-[-0.96px]">
-            Courseo
-          </p>
-        </div>
-      )}
     </motion.div>
   );
 }
