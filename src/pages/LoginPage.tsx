@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, type FormEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, X } from "lucide-react"; //backend uses emails instead of usernames so Mail icon is used instead of User icon
 import imgBg from "../assets/courseo-bg.png";
@@ -16,17 +16,32 @@ const AUTH_SIDEBAR_CHATS: Chat[] = [
 interface LoginCardProps {
   onClose?: () => void;
   onRegister?: () => void;
+  onForgotPassword?: () => void;
   onSuccess?: () => void;
 }
 
-export function LoginCard({ onClose, onRegister, onSuccess }: LoginCardProps = {}) {
+export function LoginCard({
+  onClose,
+  onRegister,
+  onForgotPassword,
+  onSuccess,
+}: LoginCardProps = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const message = (location.state as { message?: string } | null)?.message;
+    if (!message) return;
+    setSuccess(message);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -125,11 +140,22 @@ export function LoginCard({ onClose, onRegister, onSuccess }: LoginCardProps = {
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="button"
+            onClick={onForgotPassword ?? (() => navigate("/forgot-password"))}
             className="font-bold text-[14px] text-[#000181] hover:underline"
           >
             Forgot Password?
           </button>
         </div>
+
+        {success && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-emerald-600 text-sm font-semibold text-center"
+          >
+            {success}
+          </motion.p>
+        )}
 
         {error && (
           <motion.p
