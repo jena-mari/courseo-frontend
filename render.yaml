@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: courseo-frontend
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_COPILOT_AGENT_URL
+        value: https://copilot.microsoft.com/
