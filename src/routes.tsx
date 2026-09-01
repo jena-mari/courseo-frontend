@@ -25,6 +25,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
+        path: "/profile",
+        lazy: async () => ({ Component: (await import("./pages/ProfilePage")).ProfilePage }),
+      },
+      {
         path: "/chat",
         lazy: async () => ({ Component: (await import("./pages/ChatPage")).ChatPage }),
       },

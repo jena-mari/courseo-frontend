@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   bootstrapChat: "courseoBootstrapChat",
   pendingPrompt: "courseoPendingPrompt",
   geminiKeyConfigured: "courseoGeminiKeyConfigured",
+  profile: "courseoProfile",
 } as const;
 
 const COURSE_STORAGE_KEYS = Object.values(STORAGE_KEYS);
