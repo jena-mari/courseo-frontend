@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -49,16 +50,24 @@ function applyUser(user: UserOut): CourseoUser {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CourseoUser | null>(() => getCachedAuthUser());
   const [status, setStatus] = useState<AuthStatus>("loading");
+  const authMutationRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const mutationAtStart = authMutationRef.current;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
     try {
-      const current = await fetchCurrentUser();
+      const current = await fetchCurrentUser(controller.signal);
+      if (mutationAtStart !== authMutationRef.current) return;
       setUser(applyUser(current));
       setStatus("authenticated");
     } catch {
+      if (mutationAtStart !== authMutationRef.current) return;
       clearCachedAuthUser();
       setUser(null);
       setStatus("anonymous");
+    } finally {
+      window.clearTimeout(timeout);
     }
   }, []);
 
@@ -68,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const current = await loginUser({ email, password });
+    authMutationRef.current += 1;
     const mapped = applyUser(current);
     setUser(mapped);
     setStatus("authenticated");
@@ -81,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         display_name: displayName?.trim() || null,
       });
+      authMutationRef.current += 1;
       const mapped = applyUser(current);
       setUser(mapped);
       setStatus("authenticated");
@@ -90,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    authMutationRef.current += 1;
     try {
       await logoutUser();
     } finally {

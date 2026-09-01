@@ -29,9 +29,10 @@ export function logoutUser() {
   return api<void>("/api/v1/auth/logout", { method: "POST" });
 }
 
-export function fetchCurrentUser() {
-  return api<UserOut>("/api/v1/auth/me");
+export function fetchCurrentUser(signal?: AbortSignal) {
+  return api<UserOut>("/api/v1/auth/me", { signal });
 }
+
 
 export function requestPasswordReset(email: string) {
   return api<void>("/api/v1/auth/forgot-password", {

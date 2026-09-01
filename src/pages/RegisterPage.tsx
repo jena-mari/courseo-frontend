@@ -5,13 +5,6 @@ import { Eye, EyeOff, User, Lock, Mail, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
-import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
-
-const AUTH_SIDEBAR_CHATS: Chat[] = [
-  { id: "chat-1", title: "Study plan - Autumn 2026" },
-  { id: "chat-2", title: "Elective recommendations" },
-  { id: "chat-3", title: "Prerequisite check" },
-];
 
 interface RegisterCardProps {
   onClose?: () => void;
@@ -238,42 +231,16 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
 }
 
 export function RegisterPage() {
-  const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const goToChat = () => navigate("/chat");
-
   return (
-    <div className="relative w-full h-screen overflow-hidden font-['Montserrat',sans-serif]">
+    <div className="relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
       <img
         src={imgBg}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         alt=""
         aria-hidden="true"
       />
-      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-      <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-
-      <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
-        <div className="hidden h-full md:block">
-          <CourseoSidebar
-            chats={AUTH_SIDEBAR_CHATS}
-            onNewChat={goToChat}
-            onSelectChat={goToChat}
-            collapsed={sidebarCollapsed}
-            onToggle={() => setSidebarCollapsed((value) => !value)}
-            showHandbook={false}
-            activeUtility="account"
-            onAccount={() => navigate("/login")}
-            onSettings={() => navigate("/settings")}
-            onHelp={() => undefined}
-          />
-        </div>
-
-        <main className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[30px] bg-white/20 px-6 py-8">
-          <RegisterCard />
-        </main>
-      </div>
+      <div className="absolute inset-0 bg-[#050515]/60 backdrop-blur-[3px] pointer-events-none" />
+      <main className="relative z-10 flex w-full items-center justify-center"><RegisterCard /></main>
     </div>
   );
 }

@@ -7,6 +7,14 @@ export const router = createBrowserRouter([
     lazy: async () => ({ Component: (await import("./pages/StartPage")).StartPage }),
   },
   {
+    path: "/forgot-password",
+    lazy: async () => ({ Component: (await import("./pages/PasswordResetPages")).ForgotPasswordPage }),
+  },
+  {
+    path: "/reset-password",
+    lazy: async () => ({ Component: (await import("./pages/PasswordResetPages")).ResetPasswordPage }),
+  },
+  {
     element: <GuestRoute />,
     children: [
       {
@@ -19,18 +27,6 @@ export const router = createBrowserRouter([
           Component: (await import("./pages/RegisterPage")).RegisterPage,
         }),
       },
-      {
-        path: "/forgot-password",
-        lazy: async () => ({
-          Component: (await import("./pages/ForgotPasswordPage")).ForgotPasswordPage,
-        }),
-      },
-      {
-        path: "/reset-password",
-        lazy: async () => ({
-          Component: (await import("./pages/ResetPasswordPage")).ResetPasswordPage,
-        }),
-      },
     ],
   },
   {
@@ -39,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: "/profile",
         lazy: async () => ({ Component: (await import("./pages/ProfilePage")).ProfilePage }),
+      },
+      {
+        path: "/connect-key",
+        lazy: async () => ({ Component: (await import("./pages/ConnectKeyPage")).ConnectKeyPage }),
       },
       {
         path: "/chat",
