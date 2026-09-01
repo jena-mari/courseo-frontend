@@ -47,7 +47,7 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
     try {
       await register(email.trim(), password, username.trim());
       if (onSuccess) onSuccess();
-      else navigate("/chat");
+      else navigate("/profile");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to register.");
     } finally {
