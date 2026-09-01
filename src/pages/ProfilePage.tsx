@@ -20,7 +20,7 @@ export function ProfilePage() {
     const displayName = name.trim();
     if (user && displayName) updateUser({ ...user, displayName, username: displayName });
     localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({ displayName, degree, year }));
-    navigate("/chat");
+    navigate("/connect-key");
   };
   return <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-6 font-['Montserrat',sans-serif]">
     <img src={imgBg} className="absolute inset-0 h-full w-full object-cover" alt="" aria-hidden="true" /><div className="absolute inset-0 bg-[#050515]/65 backdrop-blur-[3px]" />

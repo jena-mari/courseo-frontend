@@ -14,28 +14,28 @@ export interface ChatResponse {
   reply: BackendMessage;
 }
 
-export function startChat(enrolment: string) {
+export function startChat(enrolment: string, model?: string) {
   return api<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message: enrolment }),
+    body: JSON.stringify({ message: enrolment, ...(model ? { model } : {}) }),
   });
 }
 
-export function continueChat(sessionId: string, message: string) {
+export function continueChat(sessionId: string, message: string, model?: string) {
   return api<ChatResponse>(`/api/v1/chat/${sessionId}`, {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, ...(model ? { model } : {}) }),
   });
 }
 
-export async function generateChatTitle(userMessage: string, assistantMessage: string) {
+export async function generateChatTitle(userMessage: string, assistantMessage: string, model?: string) {
   const prompt = [
     "Create a concise, personalised title for this Courseo study-planning chat.",
     "Return only the title: 3 to 7 words, no quotes, no markdown, maximum 48 characters.",
     `Student: ${userMessage.slice(0, 1200)}`,
     `Courseo: ${assistantMessage.slice(0, 1200)}`,
   ].join("\n\n");
-  const result = await startChat(prompt);
+  const result = await startChat(prompt, model);
   return String(result.reply.content)
     .replace(/```[\s\S]*?```/g, "")
     .replace(/^[\s\"'`*_#-]+|[\s\"'`*_#-]+$/g, "")
@@ -50,14 +50,4 @@ export function getChatHistory(sessionId: string) {
     degree_code: string;
     messages: BackendMessage[];
   }>(`/api/v1/chat/${sessionId}`);
-}
-
-export function saveGeminiApiKey(apiKey: string) {
-  return api<{ saved: boolean; restart_required: boolean }>(
-    "/api/local/gemini-key",
-    {
-      method: "PUT",
-      body: JSON.stringify({ apiKey }),
-    }
-  );
 }

@@ -10,6 +10,7 @@ import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
 import { STORAGE_KEYS } from "../lib/storageKeys";
+import { allProviderModels, getKeyProviders, type ProviderModel } from "../lib/keyApi";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
@@ -17,6 +18,7 @@ import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/stu
 import textBounce from "../functions/textBounce";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import MyDocument from "../functions/pdf";
+import { ApiError } from "../lib/api";
 
 type Role = "user" | "assistant";
 
@@ -33,6 +35,7 @@ interface ChatSession {
   title: string;
   messages: Message[];
   studyPlanData: StudyPlanResponse | null;
+  model?: string;
 }
 
 export interface ExtractedAIContent {
@@ -243,6 +246,8 @@ export function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [chatError, setChatError] = useState("");
+  const [availableModels, setAvailableModels] = useState<Array<ProviderModel & { provider: string; providerLabel: string }>>([]);
+  const [selectedModel, setSelectedModel] = useState(localStorage.getItem(STORAGE_KEYS.selectedModel) ?? "");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [studyPlanCollapsed, setStudyPlanCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -259,8 +264,25 @@ export function ChatPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
 
+  useEffect(() => {
+    void getKeyProviders().then((data) => {
+      const models = allProviderModels(data);
+      setAvailableModels(models);
+      setSelectedModel((current) => {
+        const next = models.some((item) => item.name === current) ? current : data.default_model || models[0]?.name || "";
+        if (next) localStorage.setItem(STORAGE_KEYS.selectedModel, next);
+        return next;
+      });
+    }).catch(() => setAvailableModels([]));
+  }, []);
+
+  const changeModel = (model: string) => {
+    setSelectedModel(model);
+    localStorage.setItem(STORAGE_KEYS.selectedModel, model);
+  };
+
   const setSmartTitle = useCallback((chatId: string, userText: string, assistantText: string) => {
-    void generateChatTitle(userText, assistantText)
+    void generateChatTitle(userText, assistantText, selectedModel)
       .then((title) => {
         if (!title) return;
         setChats((current) => current.map((chat) => chat.id === chatId ? { ...chat, title } : chat));
@@ -268,7 +290,7 @@ export function ChatPage() {
       .catch(() => {
         // The readable local title remains in place if Gemini is unavailable.
       });
-  }, []);
+  }, [selectedModel]);
   useEffect(() => {
     if (activeChatId === "new") {
       setActiveMessages([]);
@@ -331,7 +353,7 @@ export function ChatPage() {
       );
 
       try {
-        const data = await continueChat(activeChat.backendSessionId, trimmed);
+        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined);
         const content = parseAIResponse(data.reply.content);
 
         if (content.studyPlanData) {
@@ -365,6 +387,10 @@ export function ChatPage() {
           setSmartTitle(activeChat.id, trimmed, content.cleanText);
         }
       } catch (error) {
+        if (error instanceof ApiError && error.status === 409) {
+          navigate("/connect-key");
+          return;
+        }
         const errorText =
           error instanceof Error
             ? error.message
@@ -390,7 +416,7 @@ export function ChatPage() {
         setIsTyping(false);
       }
     },
-    [activeMessages, activeChatId, chats, enrollment, isTyping, setSmartTitle]
+    [activeMessages, activeChatId, chats, enrollment, isTyping, selectedModel, setSmartTitle]
   );
 
   useEffect(() => {
@@ -442,7 +468,7 @@ export function ChatPage() {
     setIsTyping(true);
 
     try {
-      const result = await startChat(prompt);
+      const result = await startChat(prompt, selectedModel || undefined);
       const parsedReply = parseAIResponse(result.reply.content);
 
       const aiMsg: Message = {
@@ -467,6 +493,7 @@ export function ChatPage() {
         messages: chatMessages,
         // messages: [toFrontendMessage(result.reply)],
         studyPlanData: parsedReply.studyPlanData,
+        model: selectedModel || undefined,
       };
 
       setChats((existingChats) => [newChat, ...existingChats]);
@@ -478,6 +505,10 @@ export function ChatPage() {
       setSmartTitle(newChat.id, trimmed, parsedReply.cleanText);
 
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        navigate("/connect-key");
+        return;
+      }
       setChatError(
         error instanceof Error
           ? error.message
@@ -507,7 +538,7 @@ export function ChatPage() {
       // if (enrollment != " ") {
         
       // }
-      const result = await startChat(enrollment);
+      const result = await startChat(enrollment, selectedModel || undefined);
       const parsedReply = parseAIResponse(result.reply.content);
       const newChat: ChatSession = {
         id: result.session_id,
@@ -515,6 +546,7 @@ export function ChatPage() {
         title: "New study plan",
         messages: [toFrontendMessage(result.reply)],
         studyPlanData: parsedReply.studyPlanData,
+        model: selectedModel || undefined,
       };
 
       setChats((existingChats) => [newChat, ...existingChats]);
@@ -526,6 +558,10 @@ export function ChatPage() {
       setSmartTitle(newChat.id, enrollment, parsedReply.cleanText);
 
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        navigate("/connect-key");
+        return;
+      }
       setChatError(
         error instanceof Error
           ? error.message
@@ -598,7 +634,7 @@ export function ChatPage() {
 
         <main className="flex-1 bg-white rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
           <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 shrink-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(true)}
@@ -610,6 +646,16 @@ export function ChatPage() {
               <p className="font-extrabold text-xl sm:text-2xl text-[#000181] tracking-[-0.96px]">
                 Courseo
               </p>
+              {availableModels.length > 0 && (
+                <select
+                  aria-label="AI model"
+                  value={selectedModel}
+                  onChange={(event) => changeModel(event.target.value)}
+                  className="ml-2 hidden h-9 max-w-[220px] rounded-[11px] border border-[rgba(0,1,129,0.16)] bg-[#f7f8ff] px-3 text-[11px] font-extrabold text-[#000181] outline-none sm:block"
+                >
+                  {availableModels.map((model) => <option key={model.name} value={model.name}>{model.label} · {model.providerLabel}</option>)}
+                </select>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button

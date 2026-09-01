@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Check,
-  ExternalLink,
   GraduationCap,
   KeyRound,
   LoaderCircle,
@@ -20,7 +19,7 @@ import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
 import { useAuth } from "../auth/AuthContext";
-import { saveGeminiApiKey } from "../lib/chatApi";
+import { ApiKeysPanel } from "../components/ApiKeysPanel";
 import { STORAGE_KEYS } from "../lib/storageKeys";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
@@ -228,9 +227,6 @@ export function SettingsPage() {
   const [profile, setProfile] = useState(() => getStoredProfile(user));
   const [degree, setDegree] = useState("Bachelor of Computer Science");
   const [major, setMajor] = useState("Artificial Intelligence and Big Data");
-  const [geminiKey, setGeminiKey] = useState("");
-  const [keyStatus, setKeyStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [keyMessage, setKeyMessage] = useState("");
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
   const [customInterest, setCustomInterest] = useState("");
@@ -293,22 +289,6 @@ export function SettingsPage() {
       }
       return next;
     });
-  };
-
-  const handleSaveGeminiKey = async () => {
-    if (!geminiKey.trim()) return;
-    setKeyStatus("saving");
-    setKeyMessage("");
-    try {
-      await saveGeminiApiKey(geminiKey.trim());
-      localStorage.setItem(STORAGE_KEYS.geminiKeyConfigured, "true");
-      setGeminiKey("");
-      setKeyStatus("saved");
-      setKeyMessage("Key saved securely. New chats will use it immediately.");
-    } catch (error) {
-      setKeyStatus("error");
-      setKeyMessage(error instanceof Error ? error.message : "Could not save the Gemini API key.");
-    }
   };
 
   return (
@@ -491,73 +471,10 @@ export function SettingsPage() {
               <div className="grid gap-5">
                 <Panel
                   icon={<KeyRound size={20} strokeWidth={2.5} />}
-                  title="Google Gemini API key"
-                  description="Connect Courseo to Gemini using your own key (currently supported provider)"
+                  title="AI provider keys"
+                  description="Connect and manage your personal provider credentials"
                 >
-                  <div className="space-y-4 px-5 py-5">
-                    <div>
-                      <label htmlFor="gemini-api-key" className="mb-2 block text-[13px] font-extrabold text-[#000181]">
-                        API key
-                      </label>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <input
-                          id="gemini-api-key"
-                          type="password"
-                          autoComplete="off"
-                          value={geminiKey}
-                          onChange={(event) => { setGeminiKey(event.target.value); setKeyStatus("idle"); }}
-                          placeholder="Paste your Gemini API key"
-                          className="h-11 min-w-0 flex-1 rounded-[14px] border border-[rgba(0,1,129,0.2)] bg-[rgba(131,231,255,0.1)] px-4 text-[13px] font-bold text-[#000181] outline-none focus:border-[#000181]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => void handleSaveGeminiKey()}
-                          disabled={!geminiKey.trim() || keyStatus === "saving"}
-                          className="flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-[14px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-[0_5px_14px_rgba(0,1,129,0.18)] transition-all disabled:cursor-wait disabled:opacity-75"
-                        >
-                          {keyStatus === "saving" ? <><LoaderCircle size={15} className="animate-spin" /> Connecting…</> : "Save key"}
-                        </button>
-                      </div>
-                      <AnimatePresence>
-                        {keyStatus === "saving" && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            role="status"
-                            aria-live="polite"
-                            className="mt-3 overflow-hidden rounded-[14px] border border-[rgba(131,231,255,0.65)] bg-[rgba(131,231,255,0.12)] p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#000181] shadow-sm"><KeyRound size={15} /></span>
-                              <div>
-                                <p className="text-[12px] font-extrabold text-[#000181]">Connecting Gemini</p>
-                                <p className="mt-0.5 text-[10px] font-semibold text-[rgba(0,1,129,0.55)]">Encrypting and validating your API key…</p>
-                              </div>
-                            </div>
-                            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/80">
-                              <motion.div className="h-full w-1/3 rounded-full bg-[#000181]" animate={{ x: ["-100%", "300%"] }} transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }} />
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      {keyMessage && <p role="status" className={`mt-2 text-[12px] font-semibold ${keyStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{keyMessage}</p>}
-                      <p className="mt-2 text-[11px] font-semibold text-[rgba(0,1,129,0.52)]">
-                        The key is written directly to <code>intelli-study-planner-brain/.env</code> and is never stored in the browser.
-                      </p>
-                    </div>
-
-                    <div className="rounded-[16px] bg-[rgba(131,231,255,0.12)] p-4 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.72)]">
-                      <p className="mb-2 font-extrabold text-[#000181]">Step-by-step instructions</p>
-                      <ol className="list-decimal space-y-2 pl-5">
-                        <li><a className="font-extrabold text-[#000181] underline" href="https://aistudio.google.com/" target="_blank" rel="noreferrer">Sign in to Google AI Studio <ExternalLink className="inline" size={11} /></a> with your Google account and accept the developer terms if prompted.</li>
-                        <li>Choose <strong>Get API key</strong> in the left sidebar.</li>
-                        <li>Click the blue <strong>Create API key</strong> button in the top-right corner.</li>
-                        <li>Choose a new project for the easiest setup, or select an existing Google Cloud project.</li>
-                        <li>Copy the generated API key and keep a backup in a password manager.</li>
-                      </ol>
-                    </div>
-                  </div>
+                  <ApiKeysPanel />
                 </Panel>
 
                 <Panel

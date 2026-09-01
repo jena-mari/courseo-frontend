@@ -39,7 +39,7 @@ export function LoginCard({ onClose, onRegister, onSuccess }: LoginCardProps = {
     try {
       await login(email.trim(), password);
       if (onSuccess) onSuccess();
-      else navigate("/chat");
+      else navigate("/connect-key");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to log in.");
     } finally {

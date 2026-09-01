@@ -29,6 +29,10 @@ export const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import("./pages/ProfilePage")).ProfilePage }),
       },
       {
+        path: "/connect-key",
+        lazy: async () => ({ Component: (await import("./pages/ConnectKeyPage")).ConnectKeyPage }),
+      },
+      {
         path: "/chat",
         lazy: async () => ({ Component: (await import("./pages/ChatPage")).ChatPage }),
       },

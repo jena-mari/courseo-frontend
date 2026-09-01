@@ -17,6 +17,13 @@ function errorMessage(detail: unknown, status: number): string {
   return `Request failed: ${status}`;
 }
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 /**
  * Shared fetch wrapper for the Courseo API.
  * Always sends cookies (`credentials: "include"`) so HttpOnly session auth works.
@@ -33,7 +40,7 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(errorMessage(error?.detail, response.status));
+    throw new ApiError(errorMessage(error?.detail, response.status), response.status);
   }
 
   if (response.status === 204) {

@@ -23,6 +23,6 @@ export function GuestRoute() {
   const { user, status } = useAuth();
 
   if (status === "loading") return <AuthLoading />;
-  if (user) return <Navigate to="/chat" replace />;
+  if (user) return <Navigate to="/connect-key" replace />;
   return <Outlet />;
 }

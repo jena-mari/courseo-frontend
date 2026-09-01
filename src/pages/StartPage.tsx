@@ -45,7 +45,7 @@ export function StartPage() {
   const [degree, setDegree] = useState("");
   const [campus, setCampus] = useState<Campus | "">("");
   const [copilotError, setCopilotError] = useState("");
-  const chooseCourseo = () => { if (status === "loading") return; user ? navigate("/chat") : setMode("account"); };
+  const chooseCourseo = () => { if (status === "loading") return; user ? navigate("/connect-key") : setMode("account"); };
   const openCopilot = async () => {
     if (!commencementYear || !degree || !campus) {
       setCopilotError("Please select your commencement year, degree, and campus.");
@@ -74,7 +74,7 @@ export function StartPage() {
       <button onClick={() => void openCopilot()} className="mt-6 flex h-[58px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white">Open my Copilot agent <ExternalLink size={18} /></button>
       <p className="mt-3 text-center text-[11px] font-semibold leading-relaxed text-[rgba(0,1,129,0.5)]">Your details are copied as a starter message. Paste them into Copilot when it opens.</p>
     </FlowCard>}
-    {mode === "login" && <LoginCard key="login" onClose={() => setMode("account")} onRegister={() => setMode("register")} onSuccess={() => navigate("/chat")} />}
+    {mode === "login" && <LoginCard key="login" onClose={() => setMode("account")} onRegister={() => setMode("register")} onSuccess={() => navigate("/connect-key")} />}
     {mode === "register" && <RegisterCard key="register" onClose={() => setMode("account")} onLogin={() => setMode("login")} onSuccess={() => navigate("/profile")} />}
   </AnimatePresence></Shell>;
 }
