@@ -8,14 +8,11 @@ import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
 import { LoginCard } from "./LoginPage";
 import { RegisterCard } from "./RegisterPage";
+import copilotLink from "../functions/copilotLink";
 
 type StartMode = "choice" | "account" | "login" | "register" | "copilot-details";
 type Campus = "Wollongong" | "Liverpool";
-const COPILOT_AGENT_URLS: Record<Campus, string> = {
-  Wollongong: "https://m365.cloud.microsoft/chat/?titleId=T_5c978020-5344-cdcd-55b3-3e9f458833f6&source=embedded-builder",
-  Liverpool: "https://m365.cloud.microsoft/chat/?titleId=T_0ac4b7b8-0eef-7376-66e5-5ade932e22f2&source=embedded-builder",
-};
-const COMMENCEMENT_YEARS = Array.from({ length: 11 }, (_, index) => String(2027 - index));
+const COMMENCEMENT_YEARS = Array.from({ length: 1 }, (_, index) => String(2026 - index));
 const DEGREES = [{ value: "1807", label: "1807 — Bachelor of Computer Science" }];
 
 function Shell({ children }: { children: ReactNode }) {
@@ -53,7 +50,7 @@ export function StartPage() {
     }
     const prompt = `My commencement year is ${commencementYear}. My degree is ${degree} — Bachelor of Computer Science, and my campus is ${campus}. Please use these details to help me plan my course.`;
     try { await navigator.clipboard.writeText(prompt); } catch { /* The agent still opens without clipboard access. */ }
-    window.open(COPILOT_AGENT_URLS[campus], "_blank", "noopener,noreferrer");
+    window.open(copilotLink({year: commencementYear, degree: degree, campus: campus}), "_blank", "noopener,noreferrer"); 
   };
 
   return <Shell><AnimatePresence mode="wait">
