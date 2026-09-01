@@ -1,11 +1,11 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, type FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, X } from "lucide-react"; //backend uses emails instead of usernames so Mail icon is used instead of User icon
+import { Eye, EyeOff, Lock, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
-import { useAuth } from "../auth/AuthContext";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
+import { resetPassword } from "../lib/authApi";
 
 const AUTH_SIDEBAR_CHATS: Chat[] = [
   { id: "chat-1", title: "Study plan - Autumn 2026" },
@@ -13,54 +13,83 @@ const AUTH_SIDEBAR_CHATS: Chat[] = [
   { id: "chat-3", title: "Prerequisite check" },
 ];
 
-interface LoginCardProps {
+interface ResetPasswordCardProps {
   onClose?: () => void;
-  onRegister?: () => void;
-  onForgotPassword?: () => void;
-  onSuccess?: () => void;
 }
 
-export function LoginCard({
-  onClose,
-  onRegister,
-  onForgotPassword,
-  onSuccess,
-}: LoginCardProps = {}) {
+export function ResetPasswordCard({ onClose }: ResetPasswordCardProps = {}) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token")?.trim() ?? "";
+
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const message = (location.state as { message?: string } | null)?.message;
-    if (!message) return;
-    setSuccess(message);
-    navigate(location.pathname, { replace: true, state: {} });
-  }, [location.pathname, location.state, navigate]);
-
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    if (!email.trim() || !password.trim()) {
-      setError("Please enter your email and password.");
+    if (!token) {
+      setError("This reset link is invalid or missing.");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      if (onSuccess) onSuccess();
-      else navigate("/chat");
+      await resetPassword(token, password);
+      navigate("/login", {
+        replace: true,
+        state: { message: "Password updated. Log in with your new password." },
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to log in.");
+      setError(err instanceof Error ? err.message : "Unable to reset password.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (!token) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_28px_80px_rgba(0,0,0,0.32)] border border-white/70 w-full max-w-[590px] px-6 py-7 sm:px-12 sm:py-10 relative"
+      >
+        <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
+          <img src={imgLogo} alt="Courseo" className="w-10 h-10 object-contain" />
+        </div>
+
+        <div className="text-center pt-14 sm:pt-12 space-y-4">
+          <h1 className="font-extrabold text-[clamp(28px,6vw,40px)] text-[#000181] tracking-[-1.5px] leading-[1.05]">
+            Invalid reset link
+          </h1>
+          <p className="text-[14px] font-semibold text-[rgba(0,1,129,0.68)]">
+            This link is missing or has expired. Request a new reset email to continue.
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="w-full h-[54px] rounded-[18px] bg-[#000181] text-white font-extrabold text-[15px]"
+          >
+            Request new link
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -75,7 +104,7 @@ export function LoginCard({
       </div>
 
       <button
-        onClick={onClose ?? (() => navigate("/"))}
+        onClick={onClose ?? (() => navigate("/login"))}
         className="absolute top-6 right-6 sm:top-8 sm:right-8 w-10 h-10 flex items-center justify-center text-[#000181] hover:bg-[#f1f3ff] rounded-full transition-colors"
         aria-label="Close"
       >
@@ -84,44 +113,28 @@ export function LoginCard({
 
       <div className="text-center pt-14 sm:pt-12 mb-7">
         <h1 className="font-extrabold text-[clamp(32px,7vw,46px)] text-[#000181] tracking-[-1.5px] leading-[1.05]">
-          Welcome back
+          Set new password
         </h1>
         <p className="mt-3 text-[14px] sm:text-[15px] font-semibold text-[rgba(0,1,129,0.68)]">
-          Log in to continue with Courseo.
+          Choose a new password for your Courseo account.
         </p>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="login-email" className="font-extrabold text-[13px] text-[#000181] block mb-2">
-            Email
-          </label>
-          <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
-            <Mail size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
-            <input
-              type="email"
-              id="login-email"
-              autoComplete="email"
-              placeholder="Enter your email..."
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
-            />
-          </div>
-        </div>
-
-
-        <div>
-          <label htmlFor="login-password" className="font-extrabold text-[13px] text-[#000181] block mb-2">
-            Password
+          <label
+            htmlFor="reset-password"
+            className="font-extrabold text-[13px] text-[#000181] block mb-2"
+          >
+            New password
           </label>
           <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
             <Lock size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
             <input
               type={showPassword ? "text" : "password"}
-              id="login-password"
-              autoComplete="current-password"
-              placeholder="Enter your password..."
+              id="reset-password"
+              autoComplete="new-password"
+              placeholder="Enter your new password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
@@ -137,25 +150,34 @@ export function LoginCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={onForgotPassword ?? (() => navigate("/forgot-password"))}
-            className="font-bold text-[14px] text-[#000181] hover:underline"
+        <div>
+          <label
+            htmlFor="reset-confirm-password"
+            className="font-extrabold text-[13px] text-[#000181] block mb-2"
           >
-            Forgot Password?
-          </button>
+            Confirm password
+          </label>
+          <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[52px] shadow-[0_4px_14px_rgba(0,1,129,0.06)] flex items-center px-4 gap-3 transition-colors">
+            <Lock size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
+            <input
+              type={showConfirm ? "text" : "password"}
+              id="reset-confirm-password"
+              autoComplete="new-password"
+              placeholder="Confirm your new password..."
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="flex-1 text-[14px] font-semibold text-[#000181] placeholder:text-[rgba(0,1,129,0.38)] outline-none bg-transparent min-w-0"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="text-[rgba(0,1,129,0.5)] hover:text-[#000181] transition-colors shrink-0"
+              aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
+            >
+              {showConfirm ? <Eye size={16} /> : <EyeOff size={16} />}
+            </button>
+          </div>
         </div>
-
-        {success && (
-          <motion.p
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-emerald-600 text-sm font-semibold text-center"
-          >
-            {success}
-          </motion.p>
-        )}
 
         {error && (
           <motion.p
@@ -181,29 +203,18 @@ export function LoginCard({
                 transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
                 className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
               />
-              Logging in...
+              Updating...
             </>
           ) : (
-            "Log in"
+            "Update password"
           )}
         </motion.button>
-
-        <p className="text-center text-[14px] text-[#000181]">
-          <span className="font-normal">Don't have an account? </span>
-          <button
-            type="button"
-            onClick={onRegister ?? (() => navigate("/register"))}
-            className="font-bold hover:underline"
-          >
-            Register an account.
-          </button>
-        </p>
       </form>
     </motion.div>
   );
 }
 
-export function LoginPage() {
+export function ResetPasswordPage() {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -237,7 +248,7 @@ export function LoginPage() {
         </div>
 
         <main className="flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[30px] bg-white/20 px-6 py-8">
-          <LoginCard />
+          <ResetPasswordCard />
         </main>
       </div>
     </div>
