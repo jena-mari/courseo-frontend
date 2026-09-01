@@ -7,6 +7,14 @@ export const router = createBrowserRouter([
     lazy: async () => ({ Component: (await import("./pages/StartPage")).StartPage }),
   },
   {
+    path: "/forgot-password",
+    lazy: async () => ({ Component: (await import("./pages/PasswordResetPages")).ForgotPasswordPage }),
+  },
+  {
+    path: "/reset-password",
+    lazy: async () => ({ Component: (await import("./pages/PasswordResetPages")).ResetPasswordPage }),
+  },
+  {
     element: <GuestRoute />,
     children: [
       {

@@ -57,10 +57,33 @@ export function StartPage() {
   };
 
   return <Shell><AnimatePresence mode="wait">
-    {mode === "choice" && <FlowCard key="choice" title="How would you like to continue?" description="Choose Microsoft Copilot or use Courseo's dedicated study chat.">
+    {mode === "choice" && <FlowCard key="choice" title="Welcome to Courseo!" description="How would you like to continue? Choose Microsoft Copilot or Courseo's dedicated study chat.">
       <div className="grid gap-4 sm:grid-cols-2">
         <button onClick={() => setMode("copilot-details")} className="group rounded-[22px] border-2 border-[rgba(0,1,129,0.14)] bg-[rgba(131,231,255,0.12)] p-6 text-left transition hover:-translate-y-1 hover:border-[#000181]"><Copilot.Color size={34} /><span className="mt-5 flex items-center justify-between text-[17px] font-black text-[#000181]">Go to Copilot <ArrowRight size={18} /></span><span className="mt-2 block text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.58)]">Free for UOW students. We'll send you to the right course agent.</span></button>
-        <button onClick={chooseCourseo} disabled={status === "loading"} className="group rounded-[22px] border-2 border-[rgba(0,1,129,0.14)] bg-[rgba(232,160,255,0.12)] p-6 text-left transition hover:-translate-y-1 hover:border-[#000181] disabled:opacity-60"><img src={imgLogo} alt="" className="h-[34px] w-[34px] object-contain" /><span className="mt-5 flex items-center justify-between text-[17px] font-black text-[#000181]">Courseo <ArrowRight size={18} /></span><span className="mt-2 block text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.58)]">{status === "loading" ? "Checking your session…" : user ? "You're logged in — continue to Chat." : "Log in or create an account to start chatting."}</span></button>
+        <button
+          onClick={chooseCourseo}
+          disabled={status === "loading"}
+          aria-busy={status === "loading"}
+          className="group relative overflow-hidden rounded-[22px] border-2 border-[rgba(0,1,129,0.14)] bg-[rgba(232,160,255,0.12)] p-6 text-left transition hover:-translate-y-1 hover:border-[#000181] disabled:cursor-wait"
+        >
+          <img src={imgLogo} alt="" className="h-[34px] w-[34px] object-contain" />
+          <span className="mt-5 flex items-center justify-between text-[17px] font-black text-[#000181]">
+            Courseo
+            {status === "loading" ? (
+              <svg className="h-7 w-7" viewBox="0 0 28 28" aria-hidden="true">
+                <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(0,1,129,0.16)" strokeWidth="3" />
+                <path d="M14 3a11 11 0 0 1 11 11" fill="none" stroke="#000181" strokeWidth="3" strokeLinecap="round">
+                  <animateTransform attributeName="transform" type="rotate" from="0 14 14" to="360 14 14" dur="0.7s" repeatCount="indefinite" />
+                </path>
+              </svg>
+            ) : <ArrowRight size={18} />}
+          </span>
+          <span className="mt-2 flex min-h-[36px] items-center gap-2 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.58)]">
+            {status === "loading" && <span className="inline-flex gap-1" aria-hidden="true">{[0, 1, 2].map((dot) => <svg key={dot} width="6" height="18" viewBox="0 0 6 18"><circle cx="3" cy="9" r="3" fill="#000181"><animate attributeName="cy" values="9;4;9" dur="0.75s" begin={`${dot * 0.12}s`} repeatCount="indefinite" /></circle></svg>)}</span>}
+            {status === "loading" ? "Checking your session…" : user ? "You're logged in — continue to Chat." : "Log in or create an account to start chatting."}
+          </span>
+          {status === "loading" && <svg className="absolute inset-x-0 bottom-0 h-1.5 w-full" viewBox="0 0 300 6" preserveAspectRatio="none" aria-hidden="true"><rect width="300" height="6" fill="rgba(0,1,129,0.08)" /><rect width="85" height="6" rx="3" fill="#000181"><animate attributeName="x" values="-85;300" dur="1s" repeatCount="indefinite" /></rect></svg>}
+        </button>
       </div>
     </FlowCard>}
     {mode === "account" && <FlowCard key="account" title="Do you have an account?" description="Log in to an existing Courseo account, or register a new one." onBack={() => setMode("choice")}><div className="grid gap-3 sm:grid-cols-2"><button onClick={() => setMode("login")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white"><LogIn size={18} /> Yes, log in</button><button onClick={() => setMode("register")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] border-2 border-[rgba(0,1,129,0.25)] text-[14px] font-extrabold text-[#000181]"><UserPlus size={18} /> No, register</button></div></FlowCard>}

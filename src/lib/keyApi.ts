@@ -37,6 +37,10 @@ export const verifyApiKey = (id: string) =>
   api<{ id: string; status: string; verified: boolean; detail: string }>(`/api/v1/keys/${id}/verify`, { method: "POST" });
 export const deleteApiKey = (id: string) => api<void>(`/api/v1/keys/${id}`, { method: "DELETE" });
 
-export function allProviderModels(data: ProvidersResponse | null) {
-  return data?.providers.flatMap((provider) => provider.models.map((model) => ({ ...model, provider: provider.provider, providerLabel: provider.label }))) ?? [];
+/** Models the current user can actually run with a personal key or Gemini fallback. */
+export function usableProviderModels(data: ProvidersResponse | null) {
+  if (!data) return [];
+  return data.providers
+    .filter((provider) => provider.has_usable_key || (provider.provider === "gemini" && data.system_fallback_enabled))
+    .flatMap((provider) => provider.models.map((model) => ({ ...model, provider: provider.provider, providerLabel: provider.label })));
 }

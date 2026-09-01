@@ -7,6 +7,10 @@ export interface BackendMessage {
   created_at: string;
   provider?: string | null;
   model?: string | null;
+  tokens_in?: number | null;
+  tokens_out?: number | null;
+  cached_tokens?: number | null;
+  cost_usd?: number | null;
 }
 
 export interface ChatResponse {
@@ -48,6 +52,7 @@ export function getChatHistory(sessionId: string) {
   return api<{
     session_id: string;
     degree_code: string;
+    model: string | null;
     messages: BackendMessage[];
   }>(`/api/v1/chat/${sessionId}`);
 }

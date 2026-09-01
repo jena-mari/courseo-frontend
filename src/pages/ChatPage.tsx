@@ -10,7 +10,7 @@ import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
 import { STORAGE_KEYS } from "../lib/storageKeys";
-import { allProviderModels, getKeyProviders, type ProviderModel } from "../lib/keyApi";
+import { getKeyProviders, usableProviderModels, type ProviderModel } from "../lib/keyApi";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { HandbookModal } from "../components/HandbookModalPopup";
@@ -19,6 +19,7 @@ import textBounce from "../functions/textBounce";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import MyDocument from "../functions/pdf";
 import { ApiError } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 
 type Role = "user" | "assistant";
 
@@ -230,6 +231,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 
 export function ChatPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const location = useLocation();
   const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
   const initialChats = useMemo(loadInitialChats, []);
@@ -256,6 +258,7 @@ export function ChatPage() {
   const [showAccount, setShowAccount] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
     initialActiveChat?.studyPlanData ?? null
   );
@@ -266,7 +269,7 @@ export function ChatPage() {
 
   useEffect(() => {
     void getKeyProviders().then((data) => {
-      const models = allProviderModels(data);
+      const models = usableProviderModels(data);
       setAvailableModels(models);
       setSelectedModel((current) => {
         const next = models.some((item) => item.name === current) ? current : data.default_model || models[0]?.name || "";
@@ -388,7 +391,7 @@ export function ChatPage() {
         }
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {
-          navigate("/connect-key");
+          navigate("/connect-key", { state: { detail: error.message } });
           return;
         }
         const errorText =
@@ -506,7 +509,7 @@ export function ChatPage() {
 
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
-        navigate("/connect-key");
+        navigate("/connect-key", { state: { detail: error.message } });
         return;
       }
       setChatError(
@@ -559,7 +562,7 @@ export function ChatPage() {
 
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
-        navigate("/connect-key");
+        navigate("/connect-key", { state: { detail: error.message } });
         return;
       }
       setChatError(
@@ -594,12 +597,35 @@ export function ChatPage() {
     setChatError("");
   };
 
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    setShowMenu(false);
+    try { await logout(); } finally { navigate("/"); setIsLoggingOut(false); }
+  };
+
   const isEmptyChat = activeMessages.length === 0;
 
   const sidebarChats: Chat[] = chats.map((c) => ({
     id: c.id,
     title: c.title || buildChatTitle(c),
   }));
+
+  if (isLoggingOut) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#f7f8ff] font-['Montserrat',sans-serif] text-[#000181]" role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-4">
+          <svg className="h-10 w-10" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="16" fill="none" stroke="#dfe1f5" strokeWidth="4" />
+            <path d="M20 4a16 16 0 0 1 16 16" fill="none" stroke="#000181" strokeWidth="4" strokeLinecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.75s" repeatCount="indefinite" />
+            </path>
+          </svg>
+          <p className="text-[13px] font-extrabold">Logging out securely…</p>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -702,6 +728,8 @@ export function ChatPage() {
                         {item.label}
                       </button>
                     ))}
+                    <div className="my-1 border-t border-gray-100" />
+                    <button type="button" onClick={() => void handleLogout()} disabled={isLoggingOut} className="w-full px-4 py-2 text-left text-[13px] font-bold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50">{isLoggingOut ? "Logging out…" : "Log out"}</button>
                   </motion.div>
                 )}
               </AnimatePresence>
