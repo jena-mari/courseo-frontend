@@ -33,6 +33,7 @@ export function fetchCurrentUser(signal?: AbortSignal) {
   return api<UserOut>("/api/v1/auth/me", { signal });
 }
 
+
 export function requestPasswordReset(email: string) {
   return api<void>("/api/v1/auth/forgot-password", {
     method: "POST",
