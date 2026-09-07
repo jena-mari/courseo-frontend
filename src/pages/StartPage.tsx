@@ -13,7 +13,7 @@ import copilotLink from "../functions/copilotLink";
 type StartMode = "choice" | "account" | "login" | "register" | "copilot-details";
 type Campus = "Wollongong" | "Liverpool";
 const COMMENCEMENT_YEARS = Array.from({ length: 1 }, (_, index) => String(2026 - index));
-const DEGREES = [{ value: "1807", label: "1807 — Bachelor of Computer Science" }];
+const DEGREES = [{ value: "1807", label: "1807 — Bachelor of Information Technology" }, { value: "766", label: "766 — Bachelor of Computer Science" }];
 
 function Shell({ children }: { children: ReactNode }) {
   return <div className="relative min-h-[100dvh] w-full overflow-hidden font-['Montserrat',sans-serif]">

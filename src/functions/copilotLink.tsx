@@ -11,6 +11,9 @@ const nestedLinkMap: Record<string, Partial<Record<string, Partial<Record<string
         1807: {
             Wollongong: 'https://m365.cloud.microsoft/chat/?titleId=T_5c978020-5344-cdcd-55b3-3e9f458833f6&source=embedded-builder',
             Liverpool: 'https://m365.cloud.microsoft/chat/?titleId=T_0ac4b7b8-0eef-7376-66e5-5ade932e22f2&source=embedded-builder',
+        },
+        766: {
+            Wollongong: 'https://m365.cloud.microsoft/chat/?titleId=T_7c0ceb6d-2a21-8d0b-2977-f7cd41e8d184&source=embedded-builder',
         }
     }
 }
