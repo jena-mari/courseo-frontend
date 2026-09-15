@@ -32,15 +32,25 @@ export function continueChat(sessionId: string, message: string, model?: string)
   });
 }
 
-export async function generateChatTitle(userMessage: string, assistantMessage: string, model?: string) {
-  const prompt = [
-    "Create a concise, personalised title for this Courseo study-planning chat.",
-    "Return only the title: 3 to 7 words, no quotes, no markdown, maximum 48 characters.",
-    `Student: ${userMessage.slice(0, 1200)}`,
-    `Courseo: ${assistantMessage.slice(0, 1200)}`,
-  ].join("\n\n");
-  const result = await startChat(prompt, model);
-  return String(result.reply.content)
+export async function generateChatTitle(
+  sessionId: string,
+  model?: string
+): Promise<string> {
+  const response = await fetch(`/api/v1/chat/${sessionId}/title`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ model }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate title: ${response.statusText}`);
+  }
+
+  const data: { title: string } = await response.json();
+
+  return data.title
     .replace(/```[\s\S]*?```/g, "")
     .replace(/^[\s\"'`*_#-]+|[\s\"'`*_#-]+$/g, "")
     .replace(/\s+/g, " ")

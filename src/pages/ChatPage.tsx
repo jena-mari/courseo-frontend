@@ -284,8 +284,8 @@ export function ChatPage() {
     localStorage.setItem(STORAGE_KEYS.selectedModel, model);
   };
 
-  const setSmartTitle = useCallback((chatId: string, userText: string, assistantText: string) => {
-    void generateChatTitle(userText, assistantText, selectedModel)
+  const setSmartTitle = useCallback((chatId: string) => {
+    void generateChatTitle(chatId, selectedModel)
       .then((title) => {
         if (!title) return;
         setChats((current) => current.map((chat) => chat.id === chatId ? { ...chat, title } : chat));
@@ -386,8 +386,8 @@ export function ChatPage() {
               : chat
           )
         );
-        if (["New study plan", "My study plan", "New chat"].includes(activeChat.title)) {
-          setSmartTitle(activeChat.id, trimmed, content.cleanText);
+        if (["New study plan", "My study plan", "New chat", "UOW Course Planning and Study Guide"].includes(activeChat.title)) {
+          setSmartTitle(activeChat.backendSessionId);
         }
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {
@@ -420,6 +420,8 @@ export function ChatPage() {
       }
     },
     [activeMessages, activeChatId, chats, enrollment, isTyping, selectedModel, setSmartTitle]
+    // [activeMessages, activeChatId, chats, enrollment, isTyping, selectedModel]
+
   );
 
   useEffect(() => {
@@ -505,7 +507,7 @@ export function ChatPage() {
       setStudyPlanData(newChat.studyPlanData);
       // setInputText("");
       setChatError("");
-      setSmartTitle(newChat.id, trimmed, parsedReply.cleanText);
+      setSmartTitle(newChat.id);
 
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
@@ -558,7 +560,7 @@ export function ChatPage() {
       setStudyPlanData(newChat.studyPlanData);
       setInputText("");
       setChatError("");
-      setSmartTitle(newChat.id, enrollment, parsedReply.cleanText);
+      setSmartTitle(newChat.id);
 
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
