@@ -13,6 +13,8 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updateCurrentUser,
+  type ProfileUpdate,
   type UserOut,
 } from "../lib/authApi";
 import {
@@ -36,6 +38,7 @@ interface AuthContextValue {
   ) => Promise<CourseoUser>;
   logout: () => Promise<void>;
   updateUser: (user: CourseoUser) => void;
+  updateProfile: (profile: ProfileUpdate) => Promise<CourseoUser>;
   refresh: () => Promise<void>;
 }
 
@@ -116,6 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(next);
   }, []);
 
+  const updateProfile = useCallback(async (profile: ProfileUpdate) => {
+    const current = await updateCurrentUser(profile);
+    const mapped = applyUser(current);
+    setUser(mapped);
+    setStatus("authenticated");
+    return mapped;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -124,9 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       updateUser,
+      updateProfile,
       refresh,
     }),
-    [user, status, login, register, logout, updateUser, refresh]
+    [user, status, login, register, logout, updateUser, updateProfile, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

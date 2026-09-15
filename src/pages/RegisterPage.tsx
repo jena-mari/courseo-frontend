@@ -54,7 +54,7 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_28px_80px_rgba(0,0,0,0.32)] border border-white/70 w-full max-w-[590px] max-h-[calc(100dvh-32px)] overflow-y-auto px-6 py-7 sm:px-12 sm:py-10 relative"
+      className="relative w-full max-w-[590px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:px-12 sm:py-10"
     >
       <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
         <img src={imgLogo} alt="Courseo" className="w-10 h-10 object-contain" />
@@ -80,7 +80,7 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
       <form onSubmit={handleRegister} className="space-y-3">
         <div>
           <label htmlFor="register-username" className="font-extrabold text-[13px] text-[#000181] block mb-1.5">
-            Username
+            Preferred name
           </label>
           <div className="border-2 border-[rgba(0,1,129,0.35)] focus-within:border-[#000181] rounded-[18px] h-[48px] flex items-center px-4 gap-3 transition-colors">
             <User size={16} className="text-[rgba(0,1,129,0.5)] shrink-0" />
@@ -88,7 +88,7 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
               type="text"
               id="register-username"
               autoComplete="username"
-              placeholder="Enter your username..."
+              placeholder="How should Courseo address you?"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="flex-1 text-[14px] font-normal text-[rgba(0,1,129,0.5)] placeholder:text-[rgba(0,1,129,0.5)] outline-none bg-transparent min-w-0"
@@ -232,7 +232,7 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
 
 export function RegisterPage() {
   return (
-    <div className="relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
+    <div className="relative flex min-h-[100dvh] w-full items-start justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif] sm:items-center">
       <img
         src={imgBg}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"

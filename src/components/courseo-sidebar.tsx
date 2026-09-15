@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
+import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, KeyRound, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
 import imgLogo from "../assets/courseo-logo.png";
 import { motion } from "framer-motion";
+import { useAuth } from "../auth/AuthContext";
 
 export interface Chat {
   id: string;
@@ -16,10 +17,9 @@ interface CourseoSidebarProps {
   onDeleteChat?: (id: string) => void;
   collapsed?: boolean;
   onToggle?: () => void;
-  showHandbook?: boolean;
-  onHandbook?: () => void;
-  activeUtility?: "account" | "settings" | "help";
+  activeUtility?: "account" | "apiKeys" | "settings" | "help";
   onAccount?: () => void;
+  onApiKeys?: () => void;
   onSettings?: () => void;
   onHelp?: () => void;
   expandedWidth?: number | string;
@@ -33,15 +33,18 @@ export function CourseoSidebar({
   onDeleteChat,
   collapsed = false,
   onToggle,
-  showHandbook = true,
-  onHandbook,
   activeUtility,
   onAccount,
+  onApiKeys,
   onSettings,
   onHelp,
   expandedWidth = "clamp(232px, 20vw, 264px)",
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
+  const handbookYear = user?.commencementYear ?? new Date().getFullYear();
+  const handbookHref = `https://courses.uow.edu.au/courses/${handbookYear}/${user?.degreeCode ?? "766"}`;
+  const handbookContext = [user?.major, String(handbookYear)].filter(Boolean).join(", ");
 
   const filteredChats = chats.filter((c) =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -114,22 +117,23 @@ export function CourseoSidebar({
           {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
         </button>
 
-        {showHandbook && (
-          <button
-            onClick={onHandbook}
+          <a
+            href={handbookHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Open the ${user?.degreeCode ?? "766"} handbook${handbookContext ? ` (${handbookContext})` : ""}`}
             className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
           >
             <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
               <BookOpen size={14} className="shrink-0 text-[#000181]" />
               {!collapsed && (
                 <span className="whitespace-nowrap text-[12px] font-bold text-[#000181]">
-                  Your Handbook
+                  Handbook <span aria-hidden="true">→</span>
                 </span>
               )}
             </div>
             {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
-          </button>
-        )}
+          </a>
       </div>
 
       <div className={`${collapsed ? "mx-3" : "mx-4"} my-3 border-t border-[#000181]`} />
@@ -215,6 +219,18 @@ export function CourseoSidebar({
           >
             <Settings size={15} className="shrink-0" />
             {!collapsed && <span>Settings</span>}
+          </button>
+
+          <button
+            onClick={onApiKeys}
+            className={`flex items-center rounded-[11px] text-[12px] font-semibold text-[#000181] transition-colors ${collapsed ? "h-10 w-10 justify-center px-0" : "h-9 gap-2.5 px-2.5"} ${
+              activeUtility === "apiKeys"
+                ? "bg-[rgba(232,160,255,0.5)]"
+                : "hover:bg-[rgba(131,231,255,0.2)]"
+            }`}
+          >
+            <KeyRound size={15} className="shrink-0" />
+            {!collapsed && <span>API Keys</span>}
           </button>
 
           <button

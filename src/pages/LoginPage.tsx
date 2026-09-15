@@ -10,7 +10,7 @@ interface LoginCardProps {
   onClose?: () => void;
   onRegister?: () => void;
   onForgotPassword?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (nextPath: "/profile" | "/chat") => void;
 }
 
 export function LoginCard({
@@ -45,9 +45,10 @@ export function LoginCard({
     }
     setLoading(true);
     try {
-      await login(email.trim(), password);
-      if (onSuccess) onSuccess();
-      else navigate("/connect-key");
+      const current = await login(email.trim(), password);
+      const nextPath = current.commencementYear && current.campus ? "/chat" : "/profile";
+      if (onSuccess) onSuccess(nextPath);
+      else navigate(nextPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to log in.");
     } finally {
@@ -61,7 +62,7 @@ export function LoginCard({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_28px_80px_rgba(0,0,0,0.32)] border border-white/70 w-full max-w-[590px] max-h-[calc(100dvh-32px)] overflow-y-auto px-6 py-7 sm:px-12 sm:py-10 relative"
+      className="relative w-full max-w-[590px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:px-12 sm:py-10"
     >
       <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
         <img src={imgLogo} alt="Courseo" className="w-10 h-10 object-contain" />
@@ -198,7 +199,7 @@ export function LoginCard({
 
 export function LoginPage() {
   return (
-    <div className="relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
+    <div className="relative flex min-h-[100dvh] w-full items-start justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif] sm:items-center">
       <img
         src={imgBg}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
