@@ -121,6 +121,30 @@ VITE_API_BASE_URL=https://your-backend.example.com
 
 Do not include a trailing slash. Rebuild the frontend after changing this value.
 
+## Deployment (Render)
+
+The frontend is deployed to Render as a static site. Every merge to `main` runs
+`.github/workflows/deploy.yml`, which type-checks and builds the app, then triggers a
+Render deploy. Pull requests run the build check only.
+
+### One-time setup
+
+1. In Render, choose **New → Blueprint**, point it at this repository, and apply
+   `render.yaml`. This creates the `courseo-frontend` static site.
+2. In the Render service settings, add the build-time environment variables:
+   `VITE_API_BASE_URL` (the public backend URL, no trailing slash) and, if needed,
+   `VITE_COPILOT_AGENT_URL`. These live in Render because `.env.local` is not committed
+   and Render runs the real production build.
+3. In Render, open **Settings → Deploy Hook** and copy the hook URL.
+4. In GitHub, under **Settings → Secrets and variables → Actions**, add the repository
+   secret `RENDER_DEPLOY_HOOK_URL` with that value. This is the only GitHub secret the
+   pipeline needs — the CI build is a compile check and both Vite variables have safe
+   fallbacks.
+
+`autoDeploy` is disabled in `render.yaml` so a deploy happens only after the GitHub Actions
+build succeeds. A deploy can also be started manually from the **Actions** tab using the
+workflow's **Run workflow** button.
+
 ## Frontend commands
 
 ```bash
