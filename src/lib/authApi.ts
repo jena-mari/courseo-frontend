@@ -4,7 +4,23 @@ export interface UserOut {
   id: string;
   email: string;
   display_name: string | null;
+  degree_code: "766";
+  commencement_year: number | null;
+  campus: "Wollongong" | "Liverpool" | null;
+  major: string | null;
+  elective_interests: string[];
   created_at: string;
+}
+
+export interface ProfileUpdate {
+  email: string;
+  display_name: string;
+  degree_code: "766";
+  commencement_year: number;
+  campus: "Wollongong" | "Liverpool";
+  major: string | null;
+  elective_interests: string[];
+  current_password?: string;
 }
 
 export function registerUser(input: {
@@ -33,6 +49,19 @@ export function fetchCurrentUser(signal?: AbortSignal) {
   return api<UserOut>("/api/v1/auth/me", { signal });
 }
 
+export function updateCurrentUser(input: ProfileUpdate) {
+  return api<UserOut>("/api/v1/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return api<void>("/api/v1/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
 
 export function requestPasswordReset(email: string) {
   return api<void>("/api/v1/auth/forgot-password", {

@@ -1,15 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
   Check,
-  GraduationCap,
   KeyRound,
   LoaderCircle,
   RefreshCw,
   Server,
+  Sparkles,
   XCircle,
   UserCircle,
 } from "lucide-react";
@@ -17,16 +17,16 @@ import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
-import { HandbookModal } from "../components/HandbookModalPopup";
 import { useAuth } from "../auth/AuthContext";
 import { ApiKeysPanel } from "../components/ApiKeysPanel";
+import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/ElectiveInterestsField";
 import { STORAGE_KEYS } from "../lib/storageKeys";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
 type SettingsTab = "profile" | "system";
 
 const TABS: Array<{ id: SettingsTab; label: string }> = [
-  { id: "profile", label: "Profile & Degree" },
+  { id: "profile", label: "Profile & Electives" },
   { id: "system", label: "System" },
 ];
 
@@ -41,34 +41,16 @@ function getStoredChats(): Chat[] {
   }
 }
 
-const ELECTIVE_INTERESTS = [
-  "Machine Learning",
-  "Cybersecurity",
-  "Human-Computer Interaction",
-  "Data Engineering",
-  "Cloud Computing",
-  "Entrepreneurship",
-  "Embedded Systems",
-];
-
-const MAJORS = [
-  "Artificial Intelligence and Big Data",
-  "Cybersecurity",
-  "Digital Systems Security",
-  "Game and Mobile Development",
-  "Software Engineering",
-];
-
-function getStoredProfile(user: { email: string; username: string } | null | undefined) {
-  let saved: { displayName?: string; email?: string; degree?: string; major?: string; interests?: string[] } = {};
+function getStoredProfile(user: { email: string; username: string; commencementYear?: number | null; campus?: "Wollongong" | "Liverpool" | null; major?: string | null; electiveInterests?: string[] } | null | undefined) {
+  let saved: { displayName?: string; email?: string; commencementYear?: number; campus?: "Wollongong" | "Liverpool"; major?: string; interests?: string[] } = {};
   try { saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.profile) ?? "{}"); } catch { /* Use account defaults. */ }
   return {
-    email: saved.email ?? user?.email ?? "",
-    username: saved.displayName ?? user?.username ?? "",
-    password: "",
-    degree: saved.degree ?? "Bachelor of Computer Science",
-    major: saved.major ?? "Artificial Intelligence and Big Data",
-    interests: saved.interests ?? ["Machine Learning", "Cybersecurity", "Cloud Computing"],
+    email: user?.email ?? saved.email ?? "",
+    username: user?.username ?? saved.displayName ?? "",
+    commencementYear: user?.commencementYear ?? saved.commencementYear ?? new Date().getFullYear(),
+    campus: user?.campus ?? saved.campus ?? "Wollongong",
+    major: user?.major ?? saved.major ?? "No major",
+    interests: user?.electiveInterests ?? saved.interests ?? [],
   };
 }
 
@@ -136,31 +118,6 @@ function SettingRow({
   );
 }
 
-function Select({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-9 rounded-[12px] border border-[rgba(0,1,129,0.2)] bg-[rgba(131,231,255,0.12)] px-3 text-[12px] font-bold text-[#000181] outline-none transition-colors hover:bg-[rgba(131,231,255,0.22)]"
-    >
-      {options.map((option) => (
-        <option key={option}>{option}</option>
-      ))}
-    </select>
-  );
-}
-
 function TextInput({
   label,
   type = "text",
@@ -209,10 +166,11 @@ function Badge({
   );
 }
 
-function DangerButton({ children }: { children: ReactNode }) {
+function DangerButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="rounded-[12px] border border-[#f2b8b8] bg-[#fcebeb] px-4 py-2 text-[12px] font-extrabold text-[#a32d2d] transition-colors hover:bg-[#f7d4d4]"
     >
       {children}
@@ -222,25 +180,24 @@ function DangerButton({ children }: { children: ReactNode }) {
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const location = useLocation();
+  const { user, updateProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(window.location.search).get("tab") === "system" ? "system" : "profile");
   const [showAccount, setShowAccount] = useState(false);
-  const [showHandbook, setShowHandbook] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarChats, setSidebarChats] = useState<Chat[]>(getStoredChats);
   const [storedProfile] = useState(() => getStoredProfile(user));
-  const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username, password: "" }));
-  const [degree, setDegree] = useState(storedProfile.degree);
-  const [major, setMajor] = useState(storedProfile.major);
+  const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username }));
   const [saveStatus, setSaveStatus] = useState<"idle" | "dirty" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
-  const [customInterest, setCustomInterest] = useState("");
-  const [selectedInterests, setSelectedInterests] = useState(
-    () => new Set(storedProfile.interests)
-  );
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(storedProfile.interests);
+  const [electiveMode, setElectiveMode] = useState<ElectiveRecommendationMode>(() => inferElectiveMode(storedProfile.interests));
+  const [confirmation, setConfirmation] = useState<"plans" | null>(null);
+  const [dangerBusy, setDangerBusy] = useState(false);
+  const [dangerMessage, setDangerMessage] = useState("");
 
   const refreshBackendHealth = async () => {
     setCheckingBackend(true);
@@ -257,46 +214,94 @@ export function SettingsPage() {
     }
   }, [activeTab, backendHealth, checkingBackend]);
 
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(location.search).get("tab");
+    setActiveTab(requestedTab === "system" ? "system" : "profile");
+    if (location.hash === "#api-keys") {
+      window.requestAnimationFrame(() => document.getElementById("api-keys")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [location.hash, location.search]);
+
   const setProfileField = (key: keyof typeof profile, value: string) => {
     setProfile((current) => ({ ...current, [key]: value }));
     setSaveStatus("dirty");
     setSaveMessage("");
   };
 
-  const toggleInterest = (interest: string) => {
-    setSelectedInterests((current) => {
-      const next = new Set(current);
-      if (next.has(interest)) {
-        next.delete(interest);
-      } else {
-        next.add(interest);
-      }
-      setSaveStatus("dirty");
-      setSaveMessage("");
-      return next;
-    });
-  };
-
   const goToChat = () => navigate("/chat");
 
-  const saveChanges = () => {
+  const markProfileDirty = () => {
+    setSaveStatus("dirty");
+    setSaveMessage("");
+  };
+
+  const saveChanges = async () => {
     if (!profile.username.trim() || !/^\S+@\S+\.\S+$/.test(profile.email.trim())) {
       setSaveStatus("error");
       setSaveMessage("Enter a valid name and email address.");
       return;
     }
+    if (electiveMode === "interest" && selectedInterests.length === 0) {
+      setSaveStatus("error");
+      setSaveMessage("Add at least one elective interest or choose degree-based recommendations.");
+      return;
+    }
     const displayName = profile.username.trim();
-    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
-      displayName,
-      email: profile.email.trim(),
-      degree,
-      major,
-      interests: [...selectedInterests],
-    }));
-    if (user) updateUser({ ...user, email: profile.email.trim(), username: displayName, displayName });
-    setProfile((current) => ({ ...current, password: "" }));
-    setSaveStatus("saved");
-    setSaveMessage("Changes saved.");
+    if (!user) return;
+    try {
+      const saved = await updateProfile({
+        email: user.email,
+        display_name: displayName,
+        degree_code: "766",
+        commencement_year: storedProfile.commencementYear,
+        campus: storedProfile.campus,
+        major: storedProfile.major === "No major" ? null : storedProfile.major,
+        elective_interests: electiveMode === "interest" ? selectedInterests : [],
+      });
+      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
+        displayName: saved.displayName,
+        email: saved.email,
+        degreeCode: saved.degreeCode,
+        degree: "Bachelor of Computer Science",
+        commencementYear: saved.commencementYear,
+        campus: saved.campus,
+        major: saved.major,
+        interests: saved.electiveInterests,
+      }));
+      setProfile((current) => ({ ...current, email: saved.email }));
+      setSaveStatus("saved");
+      setSaveMessage("Profile saved to your account.");
+    } catch (cause) {
+      setSaveStatus("error");
+      setSaveMessage(cause instanceof Error ? cause.message : "Could not save your profile.");
+    }
+  };
+
+  const confirmDangerAction = async () => {
+    if (!confirmation || dangerBusy) return;
+    setDangerBusy(true);
+    setDangerMessage("");
+    try {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
+      const storedChats = JSON.parse(localStorage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<Record<string, unknown>>;
+      const chatsWithoutPlans = storedChats.map((chat) => ({ ...chat, studyPlanData: null }));
+      localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(chatsWithoutPlans));
+      localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+      setDangerMessage("Your saved study plans were cleared. Your conversations are still available.");
+      setConfirmation(null);
+    } catch {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.chats);
+        localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+        setSidebarChats([]);
+        setDangerMessage("Your saved study plans were cleared. Unreadable saved conversations were also removed.");
+        setConfirmation(null);
+      } catch {
+        setDangerMessage("Courseo could not clear your saved study plans. Please try again.");
+      }
+    } finally {
+      setDangerBusy(false);
+    }
   };
 
   const deleteSidebarChat = (id: string) => {
@@ -313,7 +318,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden font-['Montserrat',sans-serif]">
+    <div className="relative h-[100dvh] w-full overflow-hidden font-['Montserrat',sans-serif]">
       <img
         src={imgBg}
         className="absolute inset-0 h-full w-full object-cover"
@@ -322,7 +327,7 @@ export function SettingsPage() {
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 flex h-screen items-stretch gap-4 p-5">
+      <div className="relative z-10 flex h-[100dvh] items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
         <div className="hidden h-full md:block">
           <CourseoSidebar
             chats={sidebarChats}
@@ -332,17 +337,16 @@ export function SettingsPage() {
             onDeleteChat={deleteSidebarChat}
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed((value) => !value)}
-            showHandbook={true}
-            onHandbook={() => setShowHandbook(true)}
             onAccount={() => setShowAccount(true)}
             onHelp={() => setShowHelp(true)}
             onSettings={() => navigate("/settings")}
-            activeUtility="settings"
+            onApiKeys={() => navigate("/settings?tab=system#api-keys")}
+            activeUtility={location.hash === "#api-keys" ? "apiKeys" : "settings"}
           />
         </div>
 
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
-          <div className="shrink-0 px-7 pt-6">
+          <div className="shrink-0 px-4 pt-5 sm:px-7 sm:pt-6">
             <button
               type="button"
               onClick={goToChat}
@@ -360,12 +364,12 @@ export function SettingsPage() {
                   Manage your profile and integrations.
                 </p>
               </div>
-              {activeTab === "profile" && <div className="flex items-center gap-3"><span className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={saveChanges} disabled={saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]"><Check size={14} /> {saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
+              {activeTab === "profile" && <div className="flex items-center gap-3"><span className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={() => void saveChanges()} disabled={saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]"><Check size={14} /> {saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
             </div>
           </div>
 
           <div
-            className="mt-5 flex shrink-0 gap-1 border-b border-[rgba(0,1,129,0.16)] px-7"
+            className="mt-5 flex shrink-0 gap-1 overflow-x-auto border-b border-[rgba(0,1,129,0.16)] px-4 sm:px-7"
             role="tablist"
           >
             {TABS.map((tab) => {
@@ -376,7 +380,10 @@ export function SettingsPage() {
                   type="button"
                   role="tab"
                   aria-selected={selected}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    navigate(`/settings?tab=${tab.id}`, { replace: true });
+                  }}
                   className={`rounded-t-[12px] border-b-2 px-4 py-3 text-[12px] font-extrabold transition-colors ${
                     selected
                       ? "border-[#000181] text-[#000181]"
@@ -389,7 +396,7 @@ export function SettingsPage() {
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-7 py-6">
+          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
             {activeTab === "profile" && (
               <div className="grid gap-5">
                 <Panel
@@ -397,92 +404,30 @@ export function SettingsPage() {
                   title="Student profile"
                   description="Academic identity used for personalised planning"
                 >
-                  <SettingRow label="Email">
-                    <TextInput
-                      label="Email"
-                      type="email"
-                      value={profile.email}
-                      placeholder="Enter your email"
-                      onChange={(value) => setProfileField("email", value)}
-                    />
+                  <SettingRow label="Account email" sub={profile.email}>
+                    <button type="button" onClick={() => setShowAccount(true)} className="rounded-[12px] border border-[rgba(0,1,129,0.2)] px-4 py-2 text-[11px] font-extrabold text-[#000181] hover:bg-[#eef0ff]">Manage account</button>
                   </SettingRow>
-                  <SettingRow label="Username">
+                  <SettingRow label="Preferred name" sub="Used when Courseo addresses you">
                     <TextInput
-                      label="Username"
+                      label="Preferred name"
                       value={profile.username}
-                      placeholder="Enter your username"
+                      placeholder="Enter your preferred name"
                       onChange={(value) => setProfileField("username", value)}
-                    />
-                  </SettingRow>
-                  <SettingRow label="Password">
-                    <TextInput
-                      label="Password"
-                      type="password"
-                      value={profile.password}
-                      placeholder="Enter a new password"
-                      onChange={(value) => setProfileField("password", value)}
                     />
                   </SettingRow>
                 </Panel>
 
                 <Panel
-                  icon={<GraduationCap size={20} strokeWidth={2.5} />}
+                  icon={<Sparkles size={20} strokeWidth={2.5} />}
                   title="Degree & faculty"
-                  description="Drives handbook grounding and curriculum validation"
+                  description="Personalise your elective recommendations"
                 >
-                  <SettingRow
-                    label="Current degree"
-                    sub="Used to select the correct handbook ruleset"
-                  >
-                    <Select
-                      label="Degree selection"
-                      value={degree}
-                      onChange={(value) => { setDegree(value); setSaveStatus("dirty"); setSaveMessage(""); }}
-                      options={["Bachelor of Computer Science"]}
-                    />
-                  </SettingRow>
-                  <SettingRow
-                    label="Current major"
-                    sub="Used to tune plan validation and elective recommendations"
-                  >
-                    <Select
-                      label="Major selection"
-                      value={major}
-                      onChange={(value) => { setMajor(value); setSaveStatus("dirty"); setSaveMessage(""); }}
-                      options={MAJORS}
-                    />
-                  </SettingRow>
-                  <SettingRow
-                    label="Elective interests"
-                    sub="Select areas for personalised elective suggestions"
-                  />
-                  <div className="flex flex-wrap gap-2 px-5 pb-5 pt-1" role="group" aria-label="Elective interests">
-                    {ELECTIVE_INTERESTS.map((interest) => {
-                      const selected = selectedInterests.has(interest);
-                      return (
-                        <button
-                          key={interest}
-                          type="button"
-                          onClick={() => toggleInterest(interest)}
-                          className={`rounded-full border px-4 py-2 text-[12px] font-extrabold transition-colors ${
-                            selected
-                              ? "border-[#000181] bg-[rgba(232,160,255,0.45)] text-[#000181]"
-                              : "border-[rgba(0,1,129,0.18)] bg-[rgba(131,231,255,0.1)] text-[rgba(0,1,129,0.58)] hover:border-[#000181] hover:text-[#000181]"
-                          }`}
-                        >
-                          {interest}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="px-5 pb-5">
-                    <input
-                      aria-label="Additional elective interests"
-                      type="text"
-                      value={customInterest}
-                      onChange={(event) => { setCustomInterest(event.target.value); setSaveStatus("dirty"); setSaveMessage(""); }}
-                      placeholder="Add another interest..."
-                      className="h-10 w-full rounded-[14px] border border-[rgba(0,1,129,0.2)] bg-[rgba(131,231,255,0.1)] px-4 text-[13px] font-bold text-[#000181] outline-none placeholder:text-[rgba(0,1,129,0.38)] focus:border-[#000181]"
+                  <div className="p-5">
+                    <ElectiveInterestsField
+                      mode={electiveMode}
+                      interests={selectedInterests}
+                      onModeChange={(mode) => { setElectiveMode(mode); markProfileDirty(); }}
+                      onInterestsChange={(interests) => { setSelectedInterests(interests); markProfileDirty(); }}
                     />
                   </div>
                 </Panel>
@@ -491,22 +436,24 @@ export function SettingsPage() {
 
             {activeTab === "system" && (
               <div className="grid gap-5">
-                <Panel
-                  icon={<KeyRound size={20} strokeWidth={2.5} />}
-                  title="AI provider keys"
-                  description="Connect and manage your personal provider credentials"
-                >
-                  <ApiKeysPanel />
-                </Panel>
+                <div id="api-keys" className="scroll-mt-5">
+                  <Panel
+                    icon={<KeyRound size={20} strokeWidth={2.5} />}
+                    title="AI provider keys"
+                    description="Connect and manage your personal provider credentials"
+                  >
+                    <ApiKeysPanel />
+                  </Panel>
+                </div>
 
                 <Panel
                   icon={<Server size={20} strokeWidth={2.5} />}
                   title="Backend status"
-                  description="Live health of the Courseo FastAPI service"
+                  description="Live connection to Courseo services"
                 >
                   <SettingRow
                     label="Courseo API"
-                    sub="FastAPI, PostgreSQL, and LangGraph checkpointer"
+                    sub="Checks whether Courseo can respond from this browser"
                   >
                     {checkingBackend ? (
                       <Badge tone="amber"><LoaderCircle size={12} className="animate-spin" /> Checking</Badge>
@@ -520,7 +467,7 @@ export function SettingsPage() {
                   </SettingRow>
                   <SettingRow
                     label="Response time"
-                    sub={backendHealth ? `${backendHealth.latencyMs} ms${backendHealth.statusCode ? ` · HTTP ${backendHealth.statusCode}` : ""}` : "Waiting for first check"}
+                    sub={backendHealth ? `${backendHealth.latencyMs} ms` : "Waiting for first check"}
                   />
                   <SettingRow
                     label="Last checked"
@@ -545,28 +492,23 @@ export function SettingsPage() {
                 >
                   <SettingRow
                     label="Clear saved study plans"
-                    sub="Permanently delete all generated and saved plans"
+                    sub="Permanently remove generated plans while keeping your conversations"
                   >
-                    <DangerButton>Clear plans</DangerButton>
+                    <DangerButton onClick={() => { setConfirmation("plans"); setDangerMessage(""); }}>Clear plans</DangerButton>
                   </SettingRow>
                   <SettingRow
                     label="Delete account"
-                    sub="Remove your profile, enrolment record, and all data"
+                    sub="Backend support is required before this action can be enabled"
                   >
-                    <DangerButton>Delete account</DangerButton>
+                    <Badge tone="amber">Backend required</Badge>
                   </SettingRow>
                 </Panel>
+                {dangerMessage && <p role="status" className={`rounded-[14px] px-4 py-3 text-[12px] font-semibold ${dangerMessage.includes("cleared") ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{dangerMessage}</p>}
               </div>
             )}
           </div>
         </main>
       </div>
-
-      <AnimatePresence>
-        {showHandbook && (
-          <HandbookModal onClose={() => setShowHandbook(false)} />
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showAccount && (
@@ -577,6 +519,17 @@ export function SettingsPage() {
       <AnimatePresence>
         {showHelp && (
           <HelpSlider onClose={() => setShowHelp(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {confirmation && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex flex-col overflow-y-auto overscroll-contain bg-black/45 p-4 touch-pan-y [-webkit-overflow-scrolling:touch]" onClick={() => !dangerBusy && setConfirmation(null)} role="presentation">
+            <motion.div initial={{ scale: 0.94, y: 14 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 14 }} className="mx-auto my-auto w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()} role="alertdialog" aria-modal="true" aria-labelledby="danger-confirmation-title">
+              <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-700"><AlertTriangle size={21} /></span><div><h2 id="danger-confirmation-title" className="text-[18px] font-black text-[#000181]">Clear all saved study plans?</h2><p className="mt-2 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.62)]">Every generated study plan saved in this browser will be permanently removed. Your conversations, profile, enrolment record, and API keys will stay.</p></div></div>
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setConfirmation(null)} disabled={dangerBusy} className="h-12 flex-1 rounded-[15px] border border-[rgba(0,1,129,0.2)] text-[12px] font-extrabold text-[#000181]">Cancel</button><button type="button" onClick={() => void confirmDangerAction()} disabled={dangerBusy} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-wait disabled:opacity-50">{dangerBusy && <LoaderCircle size={15} className="animate-spin" />}{dangerBusy ? "Clearing plans…" : "Clear saved plans"}</button></div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

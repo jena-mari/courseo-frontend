@@ -284,7 +284,7 @@ Would you like:
   }
 
   // DEFAULT
-  return `Hi ${firstName}! I’m your AI academic planning assistant for the Bachelor of Computer Science at UOW.
+  return `Hi ${firstName}! I’m Courseo, your UOW course-planning assistant for the Bachelor of Computer Science.
 
 ## 🎓 Your Academic Snapshot
 • Degree: Bachelor of Computer Science  
