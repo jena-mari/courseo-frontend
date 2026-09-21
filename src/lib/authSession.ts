@@ -24,11 +24,11 @@ export function toCourseoUser(user: UserOut): CourseoUser {
     email: user.email,
     displayName,
     username: displayName || user.email.split("@")[0] || user.email,
-    degreeCode: user.degree_code,
-    commencementYear: user.commencement_year,
-    campus: user.campus,
-    major: user.major,
-    electiveInterests: user.elective_interests,
+    degreeCode: user.degree_code ?? "766",
+    commencementYear: user.commencement_year ?? null,
+    campus: user.campus ?? null,
+    major: user.major ?? null,
+    electiveInterests: user.elective_interests ?? [],
   };
 }
 

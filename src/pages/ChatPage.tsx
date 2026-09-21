@@ -729,7 +729,7 @@ export function ChatPage() {
 
   return (
     <div
-      className="relative w-full h-[100dvh] overflow-hidden font-['Montserrat',sans-serif]"
+      className="relative w-full min-h-[100dvh] overflow-x-clip font-['Montserrat',sans-serif]"
     >
       <img
         src={imgBg}
@@ -739,7 +739,7 @@ export function ChatPage() {
       />
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 h-[100dvh]">
+      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 h-[100dvh] min-h-[480px]">
         <div className="hidden md:block h-full">
           <CourseoSidebar
           chats={sidebarChats}
@@ -845,7 +845,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-50px mx-auto"
+                  className="flex flex-col items-center justify-center min-h-full py-6 max-w-50px mx-auto"
                 >
                   {textBounce("Creating new chat...", "font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4", -15)}
                 </motion.div>
@@ -855,7 +855,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center h-full min-h-[200px] max-w-3xl mx-auto"
+                  className="flex flex-col items-center justify-center min-h-full py-6 max-w-3xl mx-auto"
                 >
                   <motion.h1
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -863,8 +863,9 @@ export function ChatPage() {
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="font-extrabold text-[clamp(38px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4"
                   >
-                    How can I help?
+                    Let’s plan your studies
                   </motion.h1>
+                  {!enrollment && <p className="max-w-md text-center text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.6)]">Tell me about your course or paste your enrolment record. We’ll confirm your degree, campus, commencement year, and major together.</p>}
                   {enrollment && (
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -961,7 +962,7 @@ export function ChatPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={keyStatus !== "ready"}
-                className="flex-1 resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-hidden w-full"
+                className="flex-1 resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-y-auto w-full"
                 style={{ minHeight: "1.6em", maxHeight: "8em" }}
                 onInput={(e) => {
                   const el = e.currentTarget;

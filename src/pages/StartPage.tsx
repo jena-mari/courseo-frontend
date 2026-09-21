@@ -26,12 +26,14 @@ function Shell({ children }: { children: ReactNode }) {
     shellRef.current?.style.setProperty("--courseo-pointer-y", `${event.clientY - bounds.top}px`);
   };
 
-  return <div ref={shellRef} onPointerMove={moveLight} className="courseo-start-shell relative min-h-[100dvh] w-full overflow-x-hidden font-['Montserrat',sans-serif] text-[#000181]" style={{ "--courseo-pointer-x": "72%", "--courseo-pointer-y": "36%" } as CSSProperties}>
-    <img src={imgBg} className="absolute inset-0 h-full w-full object-cover" alt="" aria-hidden="true" />
-    <div className="absolute inset-0 bg-white/10" />
-    <div className="courseo-pointer-light absolute inset-0" aria-hidden="true" />
-    <div className="courseo-ambient courseo-ambient-one" aria-hidden="true" />
-    <div className="courseo-ambient courseo-ambient-two" aria-hidden="true" />
+  return <div ref={shellRef} onPointerMove={moveLight} className="courseo-start-shell relative min-h-[100dvh] w-full overflow-x-clip font-['Montserrat',sans-serif] text-[#000181]" style={{ "--courseo-pointer-x": "72%", "--courseo-pointer-y": "36%" } as CSSProperties}>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <img src={imgBg} className="absolute inset-0 h-full w-full object-cover" alt="" />
+      <div className="absolute inset-0 bg-white/10" />
+      <div className="courseo-pointer-light absolute inset-0" />
+      <div className="courseo-ambient courseo-ambient-one" />
+      <div className="courseo-ambient courseo-ambient-two" />
+    </div>
 
     <header className="relative z-20 mx-auto flex w-full max-w-[1240px] items-center justify-between px-5 py-5 sm:px-8 sm:py-7">
     </header>
@@ -53,7 +55,7 @@ function FlowCard({ title, description, onBack, children }: { title: string; des
 }
 
 function ChoiceHero({ onCopilot, onCourseo, onMoreInformation, user, loading }: { onCopilot: () => void; onCourseo: () => void; onMoreInformation: () => void; user: boolean; loading: boolean }) {
-  return <motion.section initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }} className="relative mx-auto grid w-[calc(100vw-2rem)] min-w-0 max-w-[1240px] items-center gap-x-10 gap-y-3 sm:w-[calc(100vw-3.5rem)] lg:w-full lg:grid-cols-[1.08fr_0.92fr]">
+  return <motion.section initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }} className="relative mx-auto grid w-full min-w-0 max-w-[1240px] items-center gap-x-10 gap-y-3 lg:w-full lg:grid-cols-[1.08fr_0.92fr]">
     <div className="relative z-10 min-w-0 pt-2 text-center lg:pt-0 lg:text-left">
       <div className="overflow-hidden">
         <motion.p variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } }} transition={{ duration: 0.55, ease: "easeOut" }} className="text-[clamp(18px,2.6vw,28px)] font-bold tracking-[-0.5px] text-[rgba(0,1,129,0.58)]">Welcome to</motion.p>
@@ -64,7 +66,7 @@ function ChoiceHero({ onCopilot, onCourseo, onMoreInformation, user, loading }: 
     </div>
 
     <motion.div variants={{ hidden: { opacity: 0, scale: 0.82, rotate: -5 }, show: { opacity: 1, scale: 1, rotate: 0 } }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="relative mx-auto flex w-full min-w-0 max-w-[600px] items-center justify-center lg:-translate-y-2 lg:translate-x-5">
-      <img src={imgLogo} alt="Courseo" className="courseo-hero-icon relative z-10 w-[min(72vw,470px)] select-none object-contain" />
+      <img src={imgLogo} alt="Courseo" className="courseo-hero-icon relative z-10 w-[min(48vw,260px)] lg:w-[min(38vw,470px)] select-none object-contain" />
     </motion.div>
 
     <motion.div variants={{ hidden: { opacity: 0, y: 26 }, show: { opacity: 1, y: 0 } }} transition={{ duration: 0.55 }} className="relative z-20 mt-7 grid min-w-0 gap-4 lg:col-span-2 lg:mt-9 lg:grid-cols-[1.35fr_0.85fr]">
@@ -98,7 +100,7 @@ export function StartPage() {
       setMode("account");
       return;
     }
-    if (!user.commencementYear || !user.campus) {
+    if (!user.displayName) {
       navigate("/profile");
       return;
     }

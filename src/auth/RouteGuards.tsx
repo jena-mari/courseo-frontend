@@ -71,6 +71,6 @@ export function GuestRoute() {
   // Login and registration are public. Render them immediately while the
   // background cookie check runs instead of making guests wait for /me.
   if (status === "loading") return <Outlet />;
-  if (user) return <Navigate to={user.commencementYear && user.campus ? "/chat" : "/profile"} replace />;
+  if (user) return <Navigate to={user.displayName ? "/chat" : "/profile"} replace />;
   return <Outlet />;
 }

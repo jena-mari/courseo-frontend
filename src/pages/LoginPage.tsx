@@ -46,7 +46,7 @@ export function LoginCard({
     setLoading(true);
     try {
       const current = await login(email.trim(), password);
-      const nextPath = current.commencementYear && current.campus ? "/chat" : "/profile";
+      const nextPath = current.displayName ? "/chat" : "/profile";
       if (onSuccess) onSuccess(nextPath);
       else navigate(nextPath);
     } catch (err) {

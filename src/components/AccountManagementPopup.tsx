@@ -40,6 +40,7 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
 
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
     if (!user || !name.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
       showMessage("Enter a valid preferred name and email address.");
       return;
@@ -54,10 +55,6 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
       const saved = await updateProfile({
         email: email.trim(),
         display_name: name.trim(),
-        degree_code: "766",
-        commencement_year: user.commencementYear ?? new Date().getFullYear(),
-        campus: user.campus ?? "Wollongong",
-        major: user.major,
         elective_interests: user.electiveInterests ?? [],
         ...(emailChanged ? { current_password: profilePassword } : {}),
       });
@@ -71,11 +68,13 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
         major: saved.major,
         interests: saved.electiveInterests,
       }));
-      setProfilePassword("");
+      setName(saved.displayName ?? "");
+      setEmail(saved.email);
       showMessage("Account details updated.", true);
     } catch (cause) {
       showMessage(cause instanceof Error ? cause.message : "Could not update your account.");
     } finally {
+      setProfilePassword("");
       setBusy("");
     }
   };
