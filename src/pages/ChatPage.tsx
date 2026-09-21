@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
+import { lazy, Suspense, useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen, FileDown
+  Plus, ArrowRight, MoreVertical, Sparkles, PanelLeftOpen, PanelRightOpen, BookOpen
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
@@ -10,16 +10,17 @@ import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
 import { STORAGE_KEYS } from "../lib/storageKeys";
-import { getKeyProviders, usableProviderModels, type ProviderModel } from "../lib/keyApi";
+import { getKeyProviders, personalKeyState, usableProviderModels, type ProviderModel } from "../lib/keyApi";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
-import { HandbookModal } from "../components/HandbookModalPopup";
+import { LlmPrivacyDisclosure } from "../components/LlmPrivacyDisclosure";
+import { ApiKeyStatusNotice } from "../components/ApiKeyStatusNotice";
 import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
-import MyDocument from "../functions/pdf";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+
+const StudyPlanDownload = lazy(() => import("../components/StudyPlanDownload"));
 
 type Role = "user" | "assistant";
 
@@ -44,11 +45,18 @@ export interface ExtractedAIContent {
   studyPlanData: StudyPlanResponse | null;
 }
 
+const STUDY_PLAN_STARTER = "Create a study plan for me.";
 const SUGGESTED_PROMPTS = [
-  '"What subjects should I take in the Autumn session this year?"',
-  '"What should I study if I want to study game development?"',
-  '"Am I allowed to take five subjects this semester?"',
+  { text: STUDY_PLAN_STARTER, primary: true },
+  { text: "What subjects should I take in the Autumn session this year?" },
+  { text: "What should I study if I want to study game development?" },
+  { text: "Am I allowed to take five subjects this semester?" },
 ];
+
+function isProviderKeyError(error: unknown): error is ApiError {
+  if (!(error instanceof ApiError)) return false;
+  return [403, 409, 429].includes(error.status) || /api key|quota|rate limit|usage limit|billing|provider rejected/i.test(error.message);
+}
 
 function buildChatTitle(session: ChatSession) {
   const firstUserMessage = session.messages.find((message) => message.role === "user");
@@ -63,11 +71,11 @@ function buildChatTitle(session: ChatSession) {
 }
 
 function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
-  const fallbackResult: ExtractedAIContent = {
+  const emptyResult: ExtractedAIContent = {
     cleanText: "",
     studyPlanData: null,
   };
-  if (!aiResponseText) return fallbackResult;
+  if (!aiResponseText) return emptyResult;
 
   let originalText = "";
 
@@ -78,11 +86,11 @@ function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
     if (typeof obj.text === "string") {
       originalText = obj.text;
     } else {
-      return fallbackResult;
+      return emptyResult;
     }
   }
 
-  if (!originalText) return fallbackResult;
+  if (!originalText) return emptyResult;
 
   const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
   const jsonMatch = originalText.match(jsonRegex);
@@ -231,7 +239,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 
 export function ChatPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const location = useLocation();
   const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
   const initialChats = useMemo(loadInitialChats, []);
@@ -250,11 +258,13 @@ export function ChatPage() {
   const [chatError, setChatError] = useState("");
   const [availableModels, setAvailableModels] = useState<Array<ProviderModel & { provider: string; providerLabel: string }>>([]);
   const [selectedModel, setSelectedModel] = useState(localStorage.getItem(STORAGE_KEYS.selectedModel) ?? "");
+  const [keyStatus, setKeyStatus] = useState<"checking" | "ready" | "invalid" | "missing" | "error">("checking");
+  const [showKeyNotice, setShowKeyNotice] = useState(false);
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(() => Boolean(user?.id && localStorage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [studyPlanCollapsed, setStudyPlanCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileStudyPlanOpen, setMobileStudyPlanOpen] = useState(false);
-  const [showHandbook, setShowHandbook] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -266,18 +276,91 @@ export function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
+  const handbookHref = `https://courses.uow.edu.au/courses/${user?.commencementYear ?? new Date().getFullYear()}/${user?.degreeCode ?? "766"}`;
 
   useEffect(() => {
+    setPrivacyAcknowledged(Boolean(user?.id && localStorage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
+  }, [user?.id]);
+
+  useEffect(() => {
+    setKeyStatus("checking");
     void getKeyProviders().then((data) => {
       const models = usableProviderModels(data);
       setAvailableModels(models);
+      const state = personalKeyState(data);
+      if (state === "missing") {
+        setKeyStatus("missing");
+        navigate("/connect-key", {
+          replace: true,
+          state: { detail: "Connect and verify a personal API key before starting a Courseo chat." },
+        });
+        return;
+      }
+      if (state === "invalid") {
+        setKeyStatus("invalid");
+        setShowKeyNotice(true);
+        return;
+      }
+      setKeyStatus("ready");
       setSelectedModel((current) => {
-        const next = models.some((item) => item.name === current) ? current : data.default_model || models[0]?.name || "";
+        const next = models.some((item) => item.name === current)
+          ? current
+          : models.find((item) => item.name === data.default_model)?.name ?? models[0]?.name ?? "";
         if (next) localStorage.setItem(STORAGE_KEYS.selectedModel, next);
         return next;
       });
-    }).catch(() => setAvailableModels([]));
-  }, []);
+    }).catch(() => {
+      setAvailableModels([]);
+      setKeyStatus("error");
+      setChatError("Courseo could not confirm your API key. Open API Keys and try again.");
+    });
+  }, [navigate]);
+
+  const requireChatAccess = useCallback(() => {
+    if (!privacyAcknowledged) return false;
+    if (keyStatus === "ready") return true;
+    if (keyStatus === "invalid") {
+      setShowKeyNotice(true);
+      return false;
+    }
+    if (keyStatus === "missing") {
+      navigate("/connect-key", { state: { detail: "Connect and verify a personal API key before starting a Courseo chat." } });
+      return false;
+    }
+    setChatError(keyStatus === "checking" ? "Courseo is checking your API key…" : "Courseo could not confirm your API key. Open API Keys and try again.");
+    return false;
+  }, [keyStatus, navigate, privacyAcknowledged]);
+
+  const handleUnavailableKey = useCallback(async (detail: string) => {
+    try {
+      const data = await getKeyProviders();
+      const state = personalKeyState(data);
+      if (state === "missing") {
+        setKeyStatus("missing");
+        navigate("/connect-key", { state: { detail: "Connect and verify a personal API key before starting a Courseo chat." } });
+        return;
+      }
+      if (state === "invalid") {
+        setKeyStatus("invalid");
+        setShowKeyNotice(true);
+        setChatError("");
+        return;
+      }
+      setAvailableModels(usableProviderModels(data));
+      setKeyStatus("invalid");
+      setShowKeyNotice(true);
+      setChatError("");
+    } catch {
+      setKeyStatus("error");
+      setChatError(detail || "Courseo could not verify your API key.");
+    }
+  }, [navigate]);
+
+  const acknowledgePrivacy = () => {
+    if (!user?.id) return;
+    localStorage.setItem(STORAGE_KEYS.llmPrivacyAcknowledged, user.id);
+    setPrivacyAcknowledged(true);
+  };
 
   const changeModel = (model: string) => {
     setSelectedModel(model);
@@ -318,7 +401,7 @@ export function ChatPage() {
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || isTyping) return;
+      if (!trimmed || isTyping || !requireChatAccess()) return;
 
       const activeChat = chats.find((chat) => chat.id === activeChatId);
       if (!activeChat?.backendSessionId) {
@@ -390,8 +473,8 @@ export function ChatPage() {
           setSmartTitle(activeChat.backendSessionId);
         }
       } catch (error) {
-        if (error instanceof ApiError && error.status === 409) {
-          navigate("/connect-key", { state: { detail: error.message } });
+        if (isProviderKeyError(error)) {
+          await handleUnavailableKey(error.message);
           return;
         }
         const errorText =
@@ -419,16 +502,15 @@ export function ChatPage() {
         setIsTyping(false);
       }
     },
-    [activeMessages, activeChatId, chats, enrollment, isTyping, selectedModel, setSmartTitle]
-    // [activeMessages, activeChatId, chats, enrollment, isTyping, selectedModel]
-
+    [activeMessages, activeChatId, chats, enrollment, handleUnavailableKey, isTyping, requireChatAccess, selectedModel, setSmartTitle]
   );
 
   useEffect(() => {
     if (
       location.pathname !== "/chat" ||
       pendingPromptSentRef.current ||
-      isTyping
+      isTyping ||
+      !privacyAcknowledged
     ) {
       return;
     }
@@ -437,7 +519,7 @@ export function ChatPage() {
     pendingPromptSentRef.current = true;
     localStorage.removeItem(STORAGE_KEYS.pendingPrompt);
     void sendMessage(pendingPrompt);
-  }, [isTyping, location.pathname, sendMessage]);
+  }, [isTyping, location.pathname, privacyAcknowledged, sendMessage]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -452,7 +534,7 @@ export function ChatPage() {
 
   const handleNewChatNoEnrol = async (prompt : string) => {
     const trimmed = prompt.trim();
-    if (!trimmed || isTyping) return;
+    if (!trimmed || isTyping || !requireChatAccess()) return;
 
     setChatError("");
     setShowMenu(false);
@@ -473,7 +555,10 @@ export function ChatPage() {
     setIsTyping(true);
 
     try {
-      const result = await startChat(prompt, selectedModel || undefined);
+      const requestPrompt = trimmed === STUDY_PLAN_STARTER
+        ? `${trimmed}\n\nBefore creating the plan, ask me to copy and paste my enrolment record from SOLS.`
+        : trimmed;
+      const result = await startChat(requestPrompt, selectedModel || undefined);
       const parsedReply = parseAIResponse(result.reply.content);
 
       const aiMsg: Message = {
@@ -510,8 +595,8 @@ export function ChatPage() {
       setSmartTitle(newChat.id);
 
     } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        navigate("/connect-key", { state: { detail: error.message } });
+      if (isProviderKeyError(error)) {
+        await handleUnavailableKey(error.message);
         return;
       }
       setChatError(
@@ -526,6 +611,7 @@ export function ChatPage() {
   };
 
   const handleNewChat = async () => {
+    if (!requireChatAccess()) return;
     setShowMenu(false);
     setChatError("");
 
@@ -563,8 +649,8 @@ export function ChatPage() {
       setSmartTitle(newChat.id);
 
     } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        navigate("/connect-key", { state: { detail: error.message } });
+      if (isProviderKeyError(error)) {
+        await handleUnavailableKey(error.message);
         return;
       }
       setChatError(
@@ -575,6 +661,17 @@ export function ChatPage() {
     } finally {
       setIsCreatingChat(false);
     }
+  };
+
+  const fillComposer = (prompt: string) => {
+    setInputText(prompt);
+    window.requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const submitComposer = () => {
+    const activeChat = chats.find((chat) => chat.id === activeChatId);
+    if (activeChat?.backendSessionId) void sendMessage(inputText);
+    else void handleNewChatNoEnrol(inputText);
   };
 
   const handleSelectChat = (id: string) => {
@@ -652,11 +749,10 @@ export function ChatPage() {
           onDeleteChat={handleDeleteChat}
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((v) => !v)}
-          showHandbook={true}
-          onHandbook={() => setShowHandbook(true)}
           onAccount={() => setShowAccount(true)}
           onHelp={() => setShowHelp(true)}
           onSettings={() => navigate("/settings")}
+          onApiKeys={() => navigate("/settings?tab=system#api-keys")}
           />
         </div>
 
@@ -715,7 +811,7 @@ export function ChatPage() {
                         label: isCreatingChat ? "Creating Chat…" : "New Chat",
                         action: () => void handleNewChat(),
                       },
-                      { label: "Your Handbook", action: () => { setShowHandbook(true); setShowMenu(false); } },
+                      { label: "Handbook →", action: () => { window.open(handbookHref, "_blank", "noopener,noreferrer"); setShowMenu(false); } },
                       { label: "Settings", action: () => navigate("/settings") },
                       {
                         label: enrollment ? "Update Enrolment" : "Add Enrolment",
@@ -810,23 +906,26 @@ export function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.2 }}
-                className="px-4 sm:px-6 pb-3 flex-col gap-2 shrink-0 hidden max-h-48 overflow-auto md:flex w-full max-w-[816px] mx-auto"
+                className="mx-auto flex max-h-[240px] w-full max-w-[816px] shrink-0 flex-col gap-2 overflow-auto px-4 pb-3 sm:px-6"
               >
+                <div className="mb-1 flex items-center justify-between gap-3 rounded-[14px] border border-[rgba(0,1,129,0.12)] bg-white/80 px-3 py-2.5">
+                  <span className="flex min-w-0 items-center gap-2 text-[11px] font-bold leading-relaxed text-[rgba(0,1,129,0.65)]"><BookOpen size={16} className="shrink-0 text-[#000181]" /> Get your enrolment record from SOLS before Courseo builds your plan.</span>
+                  <button type="button" onClick={() => setShowHelp(true)} className="shrink-0 rounded-[10px] bg-[#eef0ff] px-3 py-2 text-[10px] font-extrabold text-[#000181] transition hover:bg-[#e1e4ff]">View instructions</button>
+                </div>
                 {SUGGESTED_PROMPTS.map((prompt, i) => (
                   <motion.button
-                    key={i}
+                    key={prompt.text}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 + i * 0.08 }}
-                    whileHover={{
-                      scale: 1.01,
-                      backgroundColor: "rgba(131,231,255,0.65)",
-                    }}
+                    whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={() => handleNewChatNoEnrol(prompt.replace(/^"|"$/g, ""))}
-                    className="bg-[rgba(131,231,255,0.5)] rounded-[15px] px-4 py-2.5 text-left text-[13px] font-extrabold text-[rgba(0,1,129,0.7)] transition-colors"
+                    onClick={() => fillComposer(prompt.text)}
+                    className={prompt.primary
+                      ? "rounded-[16px] bg-[#000181] px-4 py-3.5 text-left text-[14px] font-extrabold text-white shadow-[0_8px_22px_rgba(0,1,129,0.2)] transition hover:bg-[#171899]"
+                      : "rounded-[15px] border border-[rgba(0,1,129,0.12)] bg-[#eafaff] px-4 py-2.5 text-left text-[12px] font-extrabold text-[rgba(0,1,129,0.72)] transition-colors hover:bg-[#d8f7ff]"}
                   >
-                    {prompt}
+                    {prompt.text}
                   </motion.button>
                 ))}
               </motion.div>
@@ -846,28 +945,10 @@ export function ChatPage() {
             {/*button to download study plan*/}
             {studyPlanData && (
               <div className="flex justify-end gap-2 px-1 py-3 w-full max-w-3xl mx-auto">
-                  <PDFDownloadLink 
-                    document={<MyDocument studyPlan={studyPlanData} />} 
-                    fileName="myStudyPlan.pdf"
-                    className="bg-[rgba(232,160,255,0.5)] rounded-[15px] h-9 flex max-w-[125px] justify-right px-5 gap-2 overflow-hidden hover:bg-[rgba(232,160,255,0.9)] transition-colors group cursor-pointer"
-                  >
-                    {({ loading }) => (
-                      <div className="flex items-center gap-2">
-                        <FileDown size={14} className="text-[#000181] shrink-0" />
-                        <span className="text-[11px] font-extrabold text-[#000181] whitespace-nowrap">
-                          StudyPlan
-                        </span>
-                      </div>
-                    )}
-                  </PDFDownloadLink>
+                <Suspense fallback={<span className="h-9 rounded-[15px] bg-[#f1e8ff] px-5 text-[11px] font-extrabold leading-9 text-[#000181]">Preparing download…</span>}>
+                  <StudyPlanDownload studyPlan={studyPlanData} />
+                </Suspense>
               </div>
-
-            // code to test the pdf formatting without having to download it every time
-            // <div style={{ width: '100%', height: '100vh' }}>
-            //   <PDFViewer width="100%" height="100%">
-            //     <MyDocument studyPlan={studyPlanData} />
-            //   </PDFViewer>
-            // </div>
             )}
             
             
@@ -879,6 +960,7 @@ export function ChatPage() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
+                disabled={keyStatus !== "ready"}
                 className="flex-1 resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-hidden w-full"
                 style={{ minHeight: "1.6em", maxHeight: "8em" }}
                 onInput={(e) => {
@@ -898,8 +980,8 @@ export function ChatPage() {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => sendMessage(inputText)}
-                  disabled={!inputText.trim() || isTyping}
+                  onClick={submitComposer}
+                  disabled={!inputText.trim() || isTyping || keyStatus !== "ready"}
                   className="w-8 h-8 rounded-full bg-[#000181] flex items-center justify-center disabled:opacity-40 transition-opacity"
                   title="Send"
                 >
@@ -950,11 +1032,6 @@ export function ChatPage() {
                 onDeleteChat={handleDeleteChat}
                 onToggle={() => setMobileSidebarOpen(false)}
                 expandedWidth="min(86vw, 320px)"
-                showHandbook
-                onHandbook={() => {
-                  setMobileSidebarOpen(false);
-                  setShowHandbook(true);
-                }}
                 onAccount={() => {
                   setMobileSidebarOpen(false);
                   setShowAccount(true);
@@ -964,6 +1041,7 @@ export function ChatPage() {
                   setShowHelp(true);
                 }}
                 onSettings={() => navigate("/settings")}
+                onApiKeys={() => navigate("/settings?tab=system#api-keys")}
               />
             </motion.div>
           </motion.div>
@@ -998,12 +1076,6 @@ export function ChatPage() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {showHandbook && (
-          <HandbookModal onClose={() => setShowHandbook(false)} />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {showAccount && (
           <AccountManagement onClose={() => setShowAccount(false)} />
         )}
@@ -1012,6 +1084,22 @@ export function ChatPage() {
       <AnimatePresence>
         {showHelp && (
           <HelpSlider onClose={() => setShowHelp(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {user && !privacyAcknowledged && keyStatus === "ready" && (
+          <LlmPrivacyDisclosure onAcknowledge={acknowledgePrivacy} onLeave={() => navigate("/")} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showKeyNotice && (
+          <ApiKeyStatusNotice
+            message="Your saved key could not be verified or may have reached its limit. Update or re-check it before sending another message."
+            onAction={() => navigate("/settings?tab=system#api-keys")}
+            onDismiss={() => setShowKeyNotice(false)}
+          />
         )}
       </AnimatePresence>
 

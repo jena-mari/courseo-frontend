@@ -2,19 +2,43 @@
 // production deployments. Set VITE_API_BASE_URL only when the API has its own origin.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
-function errorMessage(detail: unknown, status: number): string {
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    const parts = detail
-      .map((item) =>
-        typeof item === "object" && item && "msg" in item
-          ? String((item as { msg: unknown }).msg)
-          : null
-      )
-      .filter(Boolean);
-    if (parts.length) return parts.join(", ");
+function detailText(detail: unknown): string {
+  if (typeof detail === "string") return detail.toLowerCase();
+  if (!Array.isArray(detail)) return "";
+  return detail
+    .map((item) => typeof item === "object" && item && "msg" in item ? String((item as { msg: unknown }).msg) : "")
+    .join(" ")
+    .toLowerCase();
+}
+
+/** Keep server, provider, and validation internals out of user-facing copy. */
+function errorMessage(path: string, detail: unknown, status: number): string {
+  const text = detailText(detail);
+
+  if (status === 401) {
+    if (path.endsWith("/auth/login")) return "Your email or password is incorrect. Check both and try again.";
+    if (/current password|password is incorrect/.test(text)) return "Your current password is incorrect. Check it and try again.";
+    return "Your session has expired. Log in again to continue.";
   }
-  return `Request failed: ${status}`;
+  if (status === 403) return "You don’t have permission to make that change.";
+  if (status === 404) {
+    if (/key|credential|provider/.test(text)) return "That saved API key could not be found. Refresh the page and try again.";
+    return "We couldn’t find what you were looking for.";
+  }
+  if (status === 409) {
+    if (/required|missing|no usable|connect/.test(text) && /key|credential|provider/.test(text)) return "Connect a valid API key to continue.";
+    if (/invalid|reject|revok/.test(text) && /key|credential|provider/.test(text)) return "This API key appears to be invalid. Check it and try again.";
+    if (/email|account|already|exist/.test(text)) return "An account with this email already exists. Try logging in instead.";
+    return "That conflicts with information already saved to your account. Review it and try again.";
+  }
+  if (status === 422) return "Check the information you entered and try again.";
+  if (status === 429) return "Your AI provider is busy or its quota has been reached. Wait a moment or try another key.";
+  if (status >= 500) return "Courseo is temporarily unavailable. Please try again in a few moments.";
+  if (/invalid|expired/.test(text) && /reset|token/.test(text)) return "This password reset link is invalid or has expired. Request a new one.";
+  if (/current password|password is incorrect/.test(text)) return "Your current password is incorrect. Check it and try again.";
+  if (/email/.test(text) && /already|exist|registered/.test(text)) return "An account with this email already exists. Try logging in instead.";
+  if (/api.?key|credential/.test(text) && /invalid|reject|verify/.test(text)) return "This API key appears to be invalid. Check it and try again.";
+  return "We couldn’t complete that request. Check your information and try again.";
 }
 
 export class ApiError extends Error {
@@ -29,18 +53,26 @@ export class ApiError extends Error {
  * Always sends cookies (`credentials: "include"`) so HttpOnly session auth works.
  */
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") {
+      throw new ApiError("Courseo took too long to respond. Please try again.", 0);
+    }
+    throw new ApiError("Courseo can’t reach the server. Check your connection and try again.", 0);
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new ApiError(errorMessage(error?.detail, response.status), response.status);
+    throw new ApiError(errorMessage(path, error?.detail, response.status), response.status);
   }
 
   if (response.status === 204) {

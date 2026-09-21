@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
@@ -57,9 +57,10 @@ function AuthLoading() {
 /** Requires a valid backend session cookie (/me). */
 export function ProtectedRoute() {
   const { user, status } = useAuth();
+  const location = useLocation();
 
   if (status === "loading") return <AuthLoading />;
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/" replace state={{ authRequired: true, returnTo: location.pathname }} />;
   return <Outlet />;
 }
 
@@ -70,6 +71,6 @@ export function GuestRoute() {
   // Login and registration are public. Render them immediately while the
   // background cookie check runs instead of making guests wait for /me.
   if (status === "loading") return <Outlet />;
-  if (user) return <Navigate to="/connect-key" replace />;
+  if (user) return <Navigate to={user.commencementYear && user.campus ? "/chat" : "/profile"} replace />;
   return <Outlet />;
 }

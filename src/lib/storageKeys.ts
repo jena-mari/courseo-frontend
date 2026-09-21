@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   pendingPrompt: "courseoPendingPrompt",
   profile: "courseoProfile",
   selectedModel: "courseoSelectedModel",
+  llmPrivacyAcknowledged: "courseoLlmPrivacyAcknowledgedV1",
 } as const;
 
 const COURSE_STORAGE_KEYS = Object.values(STORAGE_KEYS);

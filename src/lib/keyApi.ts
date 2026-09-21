@@ -13,7 +13,6 @@ export interface KeyProvider {
 export interface ProvidersResponse {
   providers: KeyProvider[];
   default_model: string;
-  system_fallback_enabled: boolean;
 }
 export interface SavedCredential {
   id: string;
@@ -27,6 +26,8 @@ export interface SavedCredential {
   last_verified_at: string | null;
 }
 
+export type PersonalKeyState = "ready" | "invalid" | "missing";
+
 export const getKeyProviders = () => api<ProvidersResponse>("/api/v1/keys/providers");
 export const getSavedKeys = () => api<SavedCredential[]>("/api/v1/keys");
 export const addApiKey = (input: { provider: string; api_key: string; label?: string; make_default?: boolean }) =>
@@ -37,10 +38,15 @@ export const verifyApiKey = (id: string) =>
   api<{ id: string; status: string; verified: boolean; detail: string }>(`/api/v1/keys/${id}/verify`, { method: "POST" });
 export const deleteApiKey = (id: string) => api<void>(`/api/v1/keys/${id}`, { method: "DELETE" });
 
-/** Models the current user can actually run with a personal key or Gemini fallback. */
+/** Models the current user can run with a verified personal key. */
 export function usableProviderModels(data: ProvidersResponse | null) {
   if (!data) return [];
   return data.providers
-    .filter((provider) => provider.has_usable_key || (provider.provider === "gemini" && data.system_fallback_enabled))
+    .filter((provider) => provider.has_usable_key)
     .flatMap((provider) => provider.models.map((model) => ({ ...model, provider: provider.provider, providerLabel: provider.label })));
+}
+
+export function personalKeyState(data: ProvidersResponse): PersonalKeyState {
+  if (usableProviderModels(data).length > 0) return "ready";
+  return data.providers.some((provider) => provider.key_count > 0) ? "invalid" : "missing";
 }

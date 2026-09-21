@@ -18,10 +18,10 @@ export interface ChatResponse {
   reply: BackendMessage;
 }
 
-export function startChat(enrolment: string, model?: string) {
+export function startChat(enrolment: string, model?: string, inputType: "enrolment" | "question" = "question") {
   return api<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message: enrolment, ...(model ? { model } : {}) }),
+    body: JSON.stringify({ message: enrolment, input_type: inputType, ...(model ? { model } : {}) }),
   });
 }
 
