@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { useLocation, useOutlet } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -6,6 +7,7 @@ import { GuestRoute, ProtectedRoute } from "./auth/RouteGuards";
 function AnimatedRouteOutlet() {
   const location = useLocation();
   const outlet = useOutlet();
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
   const reduceMotion = useReducedMotion();
   const transition = reduceMotion ? { duration: 0.01 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 

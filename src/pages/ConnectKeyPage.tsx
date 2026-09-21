@@ -41,7 +41,7 @@ export function ConnectKeyPage() {
   const continueToChat = () => { if (model) localStorage.setItem(STORAGE_KEYS.selectedModel, model); navigate("/chat"); };
   const canContinue = hasUsableKey;
 
-  return <div className="relative h-[100dvh] w-full overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
+  return <div className="relative min-h-[100dvh] w-full px-4 py-6 font-['Montserrat',sans-serif]">
     <img src={imgBg} className="fixed inset-0 h-full w-full object-cover" alt="" aria-hidden="true" /><div className="fixed inset-0 bg-[#050515]/65 backdrop-blur-[3px]" />
     <main className="relative z-10 mx-auto my-auto w-full max-w-[720px] rounded-[30px] bg-white px-6 py-8 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-10">
       <div className="flex items-center justify-between"><img src={imgLogo} alt="Courseo" className="h-10 w-10" /><span className="rounded-full bg-[#eef0ff] px-3 py-1.5 text-[10px] font-extrabold text-[#000181]">Secure setup</span></div>

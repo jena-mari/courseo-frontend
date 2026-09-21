@@ -1,3 +1,4 @@
+import { loadProfile, saveProfile } from "./profileApi";
 import { api } from "./api";
 
 export interface UserOut {
@@ -13,14 +14,14 @@ export interface UserOut {
 }
 
 export interface ProfileUpdate {
-  email: string;
-  display_name: string;
-  degree_code: "766";
-  commencement_year: number;
-  campus: "Wollongong" | "Liverpool";
-  major: string | null;
-  elective_interests: string[];
+  email?: string;
+  display_name?: string;
+  elective_interests?: string[];
   current_password?: string;
+  degree_code?: "766";
+  commencement_year?: number | null;
+  campus?: "Wollongong" | "Liverpool" | null;
+  major?: string | null;
 }
 
 export function registerUser(input: {
@@ -45,16 +46,8 @@ export function logoutUser() {
   return api<void>("/api/v1/auth/logout", { method: "POST" });
 }
 
-export function fetchCurrentUser(signal?: AbortSignal) {
-  return api<UserOut>("/api/v1/auth/me", { signal });
-}
-
-export function updateCurrentUser(input: ProfileUpdate) {
-  return api<UserOut>("/api/v1/auth/me", {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
+export const fetchCurrentUser = loadProfile;
+export const updateCurrentUser = saveProfile;
 
 export function changePassword(currentPassword: string, newPassword: string) {
   return api<void>("/api/v1/auth/change-password", {

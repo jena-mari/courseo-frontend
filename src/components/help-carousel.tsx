@@ -35,9 +35,9 @@ const STEP_SETS: Record<Pathway, HelpStep[]> = {
       icon: <MessageCircle size={30} />,
       number: "02",
       title: "Set up Courseo",
-      description: "Choose Proceed to Courseo, then sign in or create your account and confirm your course details.",
-      detail: "Courseo uses your commencement year, campus, course code, and major to prepare the correct handbook rules before you start chatting.",
-      media: { src: courseoStepTwo, alt: "Opening Courseo, creating an account, and confirming course details" },
+      description: "Choose Proceed to Courseo, then sign in or create your account and choose your preferences.",
+      detail: "Choose your preferred name and elective interests. Courseo will confirm your commencement year, campus, degree, and major in chat.",
+      media: { src: courseoStepTwo, alt: "Opening Courseo, creating an account, and choosing preferences" },
     },
     {
       icon: <KeyRound size={30} />,

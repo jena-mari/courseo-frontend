@@ -42,15 +42,10 @@ function getStoredChats(): Chat[] {
 }
 
 function getStoredProfile(user: { email: string; username: string; commencementYear?: number | null; campus?: "Wollongong" | "Liverpool" | null; major?: string | null; electiveInterests?: string[] } | null | undefined) {
-  let saved: { displayName?: string; email?: string; commencementYear?: number; campus?: "Wollongong" | "Liverpool"; major?: string; interests?: string[] } = {};
-  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.profile) ?? "{}"); } catch { /* Use account defaults. */ }
   return {
-    email: user?.email ?? saved.email ?? "",
-    username: user?.username ?? saved.displayName ?? "",
-    commencementYear: user?.commencementYear ?? saved.commencementYear ?? new Date().getFullYear(),
-    campus: user?.campus ?? saved.campus ?? "Wollongong",
-    major: user?.major ?? saved.major ?? "No major",
-    interests: user?.electiveInterests ?? saved.interests ?? [],
+    email: user?.email ?? "",
+    username: user?.username ?? "",
+    interests: user?.electiveInterests ?? [],
   };
 }
 
@@ -181,7 +176,7 @@ function DangerButton({ children, onClick }: { children: ReactNode; onClick: () 
 export function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, loadProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(window.location.search).get("tab") === "system" ? "system" : "profile");
   const [showAccount, setShowAccount] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -189,7 +184,7 @@ export function SettingsPage() {
   const [sidebarChats, setSidebarChats] = useState<Chat[]>(getStoredChats);
   const [storedProfile] = useState(() => getStoredProfile(user));
   const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username }));
-  const [saveStatus, setSaveStatus] = useState<"idle" | "dirty" | "saved" | "error">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState("");
   const [backendHealth, setBackendHealth] = useState<BackendHealth | null>(null);
   const [checkingBackend, setCheckingBackend] = useState(false);
@@ -198,6 +193,31 @@ export function SettingsPage() {
   const [confirmation, setConfirmation] = useState<"plans" | null>(null);
   const [dangerBusy, setDangerBusy] = useState(false);
   const [dangerMessage, setDangerMessage] = useState("");
+
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    setSaveMessage("Loading your profile…");
+    void loadProfile(controller.signal).then((saved) => {
+      if (controller.signal.aborted) return;
+      setProfile({ email: saved.email, username: saved.displayName ?? "" });
+      setSelectedInterests(saved.electiveInterests);
+      setElectiveMode(inferElectiveMode(saved.electiveInterests));
+      setProfileLoaded(true);
+      setSaveStatus("idle");
+      setSaveMessage("");
+    }).catch((cause) => {
+      if (controller.signal.aborted) return;
+      setSaveStatus("error");
+      setSaveMessage(cause instanceof Error ? cause.message : "Unable to load profile.");
+    });
+    return () => controller.abort();
+  }, [loadProfile, loadAttempt]);
+
+  useEffect(() => {
+    if (user) setProfile((current) => ({ ...current, email: user.email }));
+  }, [user?.email]);
 
   const refreshBackendHealth = async () => {
     setCheckingBackend(true);
@@ -236,6 +256,7 @@ export function SettingsPage() {
   };
 
   const saveChanges = async () => {
+    if (!profileLoaded || saveStatus === "saving") return;
     if (!profile.username.trim() || !/^\S+@\S+\.\S+$/.test(profile.email.trim())) {
       setSaveStatus("error");
       setSaveMessage("Enter a valid name and email address.");
@@ -248,14 +269,15 @@ export function SettingsPage() {
     }
     const displayName = profile.username.trim();
     if (!user) return;
+    setSaveStatus("saving");
+    setSaveMessage("");
     try {
       const saved = await updateProfile({
-        email: user.email,
         display_name: displayName,
         degree_code: "766",
-        commencement_year: storedProfile.commencementYear,
-        campus: storedProfile.campus,
-        major: storedProfile.major === "No major" ? null : storedProfile.major,
+        commencement_year: user.commencementYear ?? null,
+        campus: user.campus ?? null,
+        major: user.major ?? null,
         elective_interests: electiveMode === "interest" ? selectedInterests : [],
       });
       localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
@@ -268,7 +290,9 @@ export function SettingsPage() {
         major: saved.major,
         interests: saved.electiveInterests,
       }));
-      setProfile((current) => ({ ...current, email: saved.email }));
+      setProfile({ username: saved.displayName ?? "", email: saved.email });
+      setSelectedInterests(saved.electiveInterests);
+      setElectiveMode(inferElectiveMode(saved.electiveInterests));
       setSaveStatus("saved");
       setSaveMessage("Profile saved to your account.");
     } catch (cause) {
@@ -318,7 +342,7 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden font-['Montserrat',sans-serif]">
+    <div className="relative min-h-[100dvh] w-full overflow-x-clip font-['Montserrat',sans-serif]">
       <img
         src={imgBg}
         className="absolute inset-0 h-full w-full object-cover"
@@ -327,7 +351,7 @@ export function SettingsPage() {
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 flex h-[100dvh] items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
+      <div className="relative z-10 flex h-[100dvh] min-h-[480px] items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
         <div className="hidden h-full md:block">
           <CourseoSidebar
             chats={sidebarChats}
@@ -364,7 +388,7 @@ export function SettingsPage() {
                   Manage your profile and integrations.
                 </p>
               </div>
-              {activeTab === "profile" && <div className="flex items-center gap-3"><span className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={() => void saveChanges()} disabled={saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]"><Check size={14} /> {saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
+              {activeTab === "profile" && <div className="flex items-center gap-3"><span role={saveStatus === "error" ? "alert" : "status"} className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={() => void saveChanges()} disabled={!profileLoaded || saveStatus === "saving" || saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]"><Check size={14} /> {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
             </div>
           </div>
 
@@ -396,9 +420,10 @@ export function SettingsPage() {
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
+            {activeTab === "profile" && !profileLoaded && saveStatus === "error" && <button type="button" onClick={() => setLoadAttempt((value) => value + 1)} className="mb-4 text-sm font-bold text-[#000181]">Retry loading profile</button>}
             {activeTab === "profile" && (
-              <div className="grid gap-5">
+              <fieldset disabled={!profileLoaded || saveStatus === "saving"} className="grid min-w-0 gap-5 disabled:opacity-60">
                 <Panel
                   icon={<UserCircle size={20} strokeWidth={2.5} />}
                   title="Student profile"
@@ -431,7 +456,7 @@ export function SettingsPage() {
                     />
                   </div>
                 </Panel>
-              </div>
+              </fieldset>
             )}
 
             {activeTab === "system" && (

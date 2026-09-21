@@ -40,6 +40,7 @@ interface AuthContextValue {
   updateUser: (user: CourseoUser) => void;
   updateProfile: (profile: ProfileUpdate) => Promise<CourseoUser>;
   refresh: () => Promise<void>;
+  loadProfile: (signal?: AbortSignal) => Promise<CourseoUser>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -127,6 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return mapped;
   }, []);
 
+  const loadProfile = useCallback(async (signal?: AbortSignal) => {
+    const current = await fetchCurrentUser(signal);
+    const mapped = applyUser(current);
+    setUser(mapped);
+    return mapped;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -137,8 +145,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser,
       updateProfile,
       refresh,
+      loadProfile,
     }),
-    [user, status, login, register, logout, updateUser, updateProfile, refresh]
+    [user, status, login, register, logout, updateUser, updateProfile, refresh, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

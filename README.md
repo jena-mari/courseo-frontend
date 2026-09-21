@@ -88,7 +88,11 @@ npm run dev
 
 Open the URL printed by Vite, normally <http://localhost:5173>.
 
-For local development, leave `VITE_API_BASE_URL` blank. Vite proxies requests from `/api` to the backend at `http://127.0.0.1:7777`.
+For local development, set `VITE_API_URL=http://localhost:7777` in `.env.local` and open the frontend at `http://localhost:5173`. Use `localhost` consistently; do not mix it with `127.0.0.1`.
+
+Set `AUTH_COOKIE_SECURE=false`, `AUTH_COOKIE_SAMESITE=lax`, and `CORS_ORIGINS=http://localhost:5173` in the backend `.env`, then restart it with `make run-dev` and sign in again. If your frontend uses another port, update `CORS_ORIGINS` to that exact origin. Keep production cookies configured for HTTPS (`AUTH_COOKIE_SECURE=true` and the appropriate SameSite setting).
+
+Profile pages load account data from `GET /api/v1/auth/me` and save with `PATCH`. Both requests, and login, include session cookies. `VITE_API_BASE_URL` remains supported for existing deployments; `VITE_API_URL` takes precedence when set.
 
 ## Quick start on later runs
 

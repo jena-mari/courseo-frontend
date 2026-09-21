@@ -1,6 +1,6 @@
 // A relative default uses Vite's /api development proxy and supports same-origin
 // production deployments. Set VITE_API_BASE_URL only when the API has its own origin.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 function detailText(detail: unknown): string {
   if (typeof detail === "string") return detail.toLowerCase();
