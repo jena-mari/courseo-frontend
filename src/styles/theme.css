@@ -301,3 +301,9 @@ select {
   min-height: clamp(220px, 34dvh, 420px);
   padding-block: 40px;
 }
+
+/* Chat uses the available screen for the conversation and its side panels. */
+.courseo-chat-workspace {
+  max-width: none;
+  padding: clamp(12px, 1.5vw, 20px);
+}

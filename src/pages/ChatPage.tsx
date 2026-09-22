@@ -740,7 +740,7 @@ export function ChatPage() {
       />
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 courseo-workspace">
+      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 courseo-workspace courseo-chat-workspace">
         <div className="hidden lg:block h-full">
           <CourseoSidebar
           chats={sidebarChats}
