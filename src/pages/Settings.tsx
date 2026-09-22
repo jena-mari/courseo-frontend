@@ -353,7 +353,7 @@ export function SettingsPage() {
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 courseo-workspace flex items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
+      <div className="relative z-10 courseo-workspace flex items-stretch">
         <div className="hidden h-full lg:block">
           <CourseoSidebar
             chats={sidebarChats}
@@ -371,7 +371,7 @@ export function SettingsPage() {
           />
         </div>
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
           <div className="shrink-0 px-4 pt-5 sm:px-7 sm:pt-6">
             <button
               type="button"

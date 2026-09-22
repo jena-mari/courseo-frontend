@@ -227,9 +227,10 @@
   height: 100dvh;
   min-height: 28rem;
   width: 100%;
-  max-width: 1680px;
+  max-width: none;
   margin-inline: auto;
-  padding: clamp(18px, 3vw, 48px);
+  padding: clamp(12px, 1.5vw, 20px);
+  gap: 18px;
 }
 
 .courseo-scroll {
@@ -288,10 +289,8 @@ select {
   .courseo-workspace {
     zoom: 0.9;
     width: 100%;
-    max-width: calc(1680px / 0.9);
     height: calc(100vh / 0.9);
     height: calc(100dvh / 0.9);
-    padding: clamp(28px, 3.4vw, 54px);
     gap: 18px;
   }
 }
@@ -302,11 +301,6 @@ select {
   padding-block: 40px;
 }
 
-/* Chat uses the available screen for the conversation and its side panels. */
-.courseo-chat-workspace {
-  max-width: none;
-  padding: clamp(12px, 1.5vw, 20px);
-}
 
 /* Shared loading motion: stable geometry, continuous rotation, gentle entry.
    Durations control presentation only, never request timing or progress. */
