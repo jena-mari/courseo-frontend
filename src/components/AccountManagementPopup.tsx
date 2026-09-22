@@ -1,7 +1,8 @@
+import { LoadingIndicator } from "./LoadingIndicator";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, KeyRound, LoaderCircle, LogOut, User, X } from "lucide-react";
+import { CheckCircle2, KeyRound, LogOut, User, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { changePassword } from "../lib/authApi";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
@@ -114,7 +115,7 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
           <label className="text-[12px] font-extrabold text-[#000181]">Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className={fieldClass} /></label>
         </div>
         {emailChanged && <label className="mt-4 block text-[12px] font-extrabold text-[#000181]">Current password<input type="password" value={profilePassword} onChange={(event) => setProfilePassword(event.target.value)} autoComplete="current-password" placeholder="Required to change email" className={fieldClass} /></label>}
-        <button type="submit" disabled={Boolean(busy)} className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 rounded-[15px] bg-[#000181] text-[12px] font-extrabold text-white disabled:opacity-50">{busy === "profile" && <LoaderCircle size={16} className="animate-spin" />}Save account details</button>
+        <button type="submit" disabled={Boolean(busy)} className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 rounded-[15px] bg-[#000181] text-[12px] font-extrabold text-white disabled:opacity-50">{busy === "profile" && <LoadingIndicator size={16} />}Save account details</button>
       </form>
 
       <form onSubmit={(event) => void savePassword(event)} className="mt-5 rounded-[20px] border border-[rgba(0,1,129,0.14)] p-5">
@@ -125,7 +126,7 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
           <label className="text-[12px] font-extrabold text-[#000181]">New password<input required type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={8} className={fieldClass} /></label>
         </div>
         <label className="mt-4 block text-[12px] font-extrabold text-[#000181]">Confirm new password<input required type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} className={fieldClass} /></label>
-        <button type="submit" disabled={Boolean(busy)} className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 rounded-[15px] border-2 border-[#000181] text-[12px] font-extrabold text-[#000181] disabled:opacity-50">{busy === "password" && <LoaderCircle size={16} className="animate-spin" />}Update password</button>
+        <button type="submit" disabled={Boolean(busy)} className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 rounded-[15px] border-2 border-[#000181] text-[12px] font-extrabold text-[#000181] disabled:opacity-50">{busy === "password" && <LoadingIndicator size={16} />}Update password</button>
         <Link to="/forgot-password" onClick={onClose} className="mt-3 flex justify-center text-[11px] font-extrabold text-[#5556b5] underline decoration-[#aaaadd] underline-offset-4 hover:text-[#000181]">Forgot your current password?</Link>
       </form>
 

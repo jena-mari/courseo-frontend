@@ -307,3 +307,30 @@ select {
   max-width: none;
   padding: clamp(12px, 1.5vw, 20px);
 }
+
+/* Shared loading motion: stable geometry, continuous rotation, gentle entry.
+   Durations control presentation only, never request timing or progress. */
+:root {
+  --courseo-loading-cycle: 1.6s;
+  --courseo-loading-entry: 240ms;
+}
+.courseo-loading-orbit {
+  transform-origin: 24px 24px;
+  animation: courseo-loading-turn var(--courseo-loading-cycle) linear infinite;
+}
+.courseo-loading-enter {
+  animation: courseo-loading-appear var(--courseo-loading-entry) ease-out both;
+}
+@keyframes courseo-loading-turn {
+  from { transform: rotate(-90deg); }
+  to { transform: rotate(270deg); }
+}
+@keyframes courseo-loading-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .courseo-loading-orbit, .courseo-loading-enter {
+    animation: none;
+  }
+}

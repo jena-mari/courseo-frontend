@@ -1,3 +1,5 @@
+import { LoadingIndicator } from "../components/LoadingIndicator";
+import { LoadingScreen } from "../components/LoadingScreen";
 import { lazy, Suspense, useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +10,7 @@ import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
-import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
+import { continueChat, startChat, type BackendMessage } from "../lib/chatApi";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { getKeyProviders, personalKeyState, usableProviderModels, type ProviderModel } from "../lib/keyApi";
 import { HelpSlider } from "../components/help-carousel";
@@ -16,8 +18,8 @@ import { AccountManagement } from "../components/AccountManagementPopup";
 import { LlmPrivacyDisclosure } from "../components/LlmPrivacyDisclosure";
 import { ApiKeyStatusNotice } from "../components/ApiKeyStatusNotice";
 import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
-import textBounce from "../functions/textBounce";
-import { STUDY_PLAN_STARTER, ENROLMENT_REQUEST, isStudyPlanStarter } from "../lib/chatStart";
+import { ChatProgress } from "../components/ChatProgress";
+import type { ChatPhase } from "../lib/chatProgress";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
@@ -35,7 +37,6 @@ interface Message {
 interface ChatSession {
   id: string;
   backendSessionId: string;
-  awaitingEnrolment?: boolean;
   title: string;
   messages: Message[];
   studyPlanData: StudyPlanResponse | null;
@@ -47,6 +48,7 @@ export interface ExtractedAIContent {
   studyPlanData: StudyPlanResponse | null;
 }
 
+const STUDY_PLAN_STARTER = "Create a study plan for me.";
 const SUGGESTED_PROMPTS = [
   { text: STUDY_PLAN_STARTER, primary: true },
   { text: "What subjects should I take in the Autumn session this year?" },
@@ -137,7 +139,7 @@ function loadInitialChats(storage: ReturnType<typeof accountStorage>): ChatSessi
     try {
       const parsedChats = JSON.parse(savedChatsRaw) as ChatSession[];
       savedChats = parsedChats
-        .filter((chat) => chat.backendSessionId || chat.awaitingEnrolment)
+        .filter((chat) => chat.backendSessionId)
         .map((chat) => ({
           ...chat,
           studyPlanData: chat.studyPlanData ?? null,
@@ -178,33 +180,6 @@ function loadInitialChats(storage: ReturnType<typeof accountStorage>): ChatSessi
     storage.removeItem(STORAGE_KEYS.bootstrapChat);
     return savedChats;
   }
-}
-
-function TypingIndicator() {
-  return (
-    <div className="flex items-end gap-3">
-      <div className="w-8 h-8 rounded-full bg-[rgba(131,231,255,0.5)] flex items-center justify-center shrink-0">
-        <Sparkles size={14} className="text-[#000181]" />
-      </div>
-      <div className="bg-[rgba(131,231,255,0.15)] border border-[rgba(0,1,129,0.1)] rounded-[20px] rounded-bl-sm px-4 py-3">
-        <div className="flex gap-1.5 items-center h-4">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="w-2 h-2 rounded-full bg-[rgba(0,1,129,0.5)]"
-              animate={{ y: ["0%", "-60%", "0%"] }}
-              transition={{
-                duration: 0.7,
-                repeat: Infinity,
-                delay: i * 0.15,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function MessageBubble({ message, index }: { message: Message; index: number }) {
@@ -256,6 +231,7 @@ export function ChatPage() {
   );
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [chatPhase, setChatPhase] = useState<ChatPhase>("sending");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [chatError, setChatError] = useState("");
   const [availableModels, setAvailableModels] = useState<Array<ProviderModel & { provider: string; providerLabel: string }>>([]);
@@ -369,16 +345,6 @@ export function ChatPage() {
     storage.setItem(STORAGE_KEYS.selectedModel, model);
   };
 
-  const setSmartTitle = useCallback((chatId: string, userText: string, assistantText: string) => {
-    void generateChatTitle(userText, assistantText, selectedModel)
-      .then((title) => {
-        if (!title) return;
-        setChats((current) => current.map((chat) => chat.id === chatId ? { ...chat, title } : chat));
-      })
-      .catch(() => {
-        // The readable local title remains in place if Gemini is unavailable.
-      });
-  }, [selectedModel]);
   useEffect(() => {
     if (activeChatId === "new") {
       setActiveMessages([]);
@@ -426,7 +392,8 @@ export function ChatPage() {
       const newMessages = [...activeMessages, userMsg];
       setActiveMessages(newMessages);
       setInputText("");
-      setIsTyping(true);
+      setChatPhase("sending");
+    setIsTyping(true);
 
       setChats((previousChats) =>
         previousChats.map((chat) =>
@@ -441,7 +408,8 @@ export function ChatPage() {
       );
 
       try {
-        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined);
+        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase);
+        setChatPhase("formatting");
         const content = parseAIResponse(data.reply.content);
 
         if (content.studyPlanData) {
@@ -471,9 +439,6 @@ export function ChatPage() {
               : chat
           )
         );
-        if (["New study plan", "My study plan", "New chat"].includes(activeChat.title)) {
-          setSmartTitle(activeChat.id, trimmed, content.cleanText);
-        }
       } catch (error) {
         if (isProviderKeyError(error)) {
           await handleUnavailableKey(error.message);
@@ -485,26 +450,12 @@ export function ChatPage() {
             : "Courseo could not complete that request.";
         setChatError(errorText);
 
-        const errorMessage: Message = {
-          id: `error-${Date.now()}`,
-          role: "assistant",
-          content: errorText,
-          timestamp: new Date(),
-        };
-        const failedMessages = [...newMessages, errorMessage];
-        setActiveMessages(failedMessages);
-        setChats((previousChats) =>
-          previousChats.map((chat) =>
-            chat.id === activeChat.id
-              ? { ...chat, messages: failedMessages }
-              : chat
-          )
-        );
+        setInputText((current) => current || trimmed);
       } finally {
         setIsTyping(false);
       }
     },
-    [activeMessages, activeChatId, chats, enrollment, handleUnavailableKey, isTyping, requireChatAccess, selectedModel, setSmartTitle]
+    [activeMessages, activeChatId, chats, enrollment, handleUnavailableKey, isTyping, requireChatAccess, selectedModel]
   );
 
   useEffect(() => {
@@ -542,27 +493,6 @@ export function ChatPage() {
     setShowMenu(false);
 
     if (isCreatingChat) return;
-    const draft = chats.find((chat) => chat.id === activeChatId && chat.awaitingEnrolment);
-    if (isStudyPlanStarter(trimmed)) {
-      const draftId = draft?.id ?? `draft-${crypto.randomUUID()}`;
-      const onboarding: ChatSession = {
-        id: draftId,
-        backendSessionId: "",
-        awaitingEnrolment: true,
-        title: "New study plan",
-        studyPlanData: null,
-        messages: [
-          { id: `${draftId}-request`, role: "user", content: trimmed, timestamp: new Date() },
-          { id: `${draftId}-instructions`, role: "assistant", content: ENROLMENT_REQUEST, timestamp: new Date() },
-        ],
-      };
-      setChats((current) => [onboarding, ...current.filter((chat) => chat.id !== draftId)]);
-      setActiveChatId(draftId);
-      setActiveMessages(onboarding.messages);
-      setStudyPlanData(null);
-      setInputText("");
-      return;
-    }
     setIsCreatingChat(true);
 
     //user message
@@ -573,12 +503,14 @@ export function ChatPage() {
       timestamp: new Date(),
     };
 
-    setActiveMessages([...(draft?.messages ?? []), userMsg]);
+    setActiveMessages([userMsg]);
     setInputText("");
+    setChatPhase("sending");
     setIsTyping(true);
 
     try {
-      const result = await startChat(trimmed, selectedModel || undefined, draft ? "enrolment" : "question");
+      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase);
+      setChatPhase("formatting");
       const parsedReply = parseAIResponse(result.reply.content);
 
       const aiMsg: Message = {
@@ -588,7 +520,7 @@ export function ChatPage() {
           timestamp: new Date(result.reply.created_at),
         };
 
-      const chatMessages = [...(draft?.messages ?? []), userMsg, aiMsg];
+      const chatMessages = [userMsg, aiMsg];
 
       const newChat: ChatSession = {
         id: result.session_id,
@@ -606,16 +538,15 @@ export function ChatPage() {
         model: selectedModel || undefined,
       };
 
-      setChats((existingChats) => [newChat, ...existingChats.filter((chat) => chat.id !== draft?.id)]);
+      setChats((existingChats) => [newChat, ...existingChats]);
       setActiveChatId(newChat.id);
       setActiveMessages(newChat.messages);
       setStudyPlanData(newChat.studyPlanData);
       // setInputText("");
       setChatError("");
-      setSmartTitle(newChat.id, trimmed, parsedReply.cleanText);
 
     } catch (error) {
-      setInputText(trimmed);
+      setInputText((current) => current || trimmed);
       if (isProviderKeyError(error)) {
         await handleUnavailableKey(error.message);
         return;
@@ -689,19 +620,7 @@ export function ChatPage() {
   }));
 
   if (isLoggingOut) {
-    return (
-      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#f7f8ff] font-['Montserrat',sans-serif] text-[#000181]" role="status" aria-live="polite">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="h-10 w-10" viewBox="0 0 40 40" aria-hidden="true">
-            <circle cx="20" cy="20" r="16" fill="none" stroke="#dfe1f5" strokeWidth="4" />
-            <path d="M20 4a16 16 0 0 1 16 16" fill="none" stroke="#000181" strokeWidth="4" strokeLinecap="round">
-              <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.75s" repeatCount="indefinite" />
-            </path>
-          </svg>
-          <p className="text-[13px] font-extrabold">Logging out securely…</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen title="Signing out" detail="Ending your secure session with Courseo…" />;
   }
 
 
@@ -825,7 +744,7 @@ export function ChatPage() {
                   transition={{ duration: 0.5 }}
                   className="courseo-chat-welcome flex w-full flex-col items-center justify-center max-w-3xl mx-auto"
                 >
-                  {textBounce("Creating new chat...", "font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4", -15)}
+                  <ChatProgress phase={chatPhase} />
                 </motion.div>
 
               ) : (
@@ -869,7 +788,7 @@ export function ChatPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                     >
-                      <TypingIndicator />
+                      <ChatProgress phase={chatPhase} />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -913,6 +832,7 @@ export function ChatPage() {
           </div>
 
           <div className="px-3 sm:px-6 pb-3 sm:pb-5 shrink-0">
+            {keyStatus === "checking" && <div className="mx-auto max-w-3xl"><ChatProgress phase="checking" /></div>}
             {chatError && (
               <p
                 role="alert"
@@ -925,7 +845,7 @@ export function ChatPage() {
             {/*button to download study plan*/}
             {studyPlanData && (
               <div className="flex justify-end gap-2 px-1 py-3 w-full max-w-3xl mx-auto">
-                <Suspense fallback={<span className="h-9 rounded-[15px] bg-[#f1e8ff] px-5 text-[11px] font-extrabold leading-9 text-[#000181]">Preparing download…</span>}>
+                <Suspense fallback={<span role="status" className="flex items-center gap-2 h-9 rounded-[15px] bg-[#f1e8ff] px-5 text-[11px] font-extrabold leading-9 text-[#000181]"><LoadingIndicator size={14} />Preparing download…</span>}>
                   <StudyPlanDownload studyPlan={studyPlanData} />
                 </Suspense>
               </div>

@@ -1,3 +1,4 @@
+import { LoadingIndicator } from "./LoadingIndicator";
 import { FileDown } from "lucide-react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import MyDocument from "../functions/pdf";
@@ -12,7 +13,7 @@ export default function StudyPlanDownload({ studyPlan }: { studyPlan: StudyPlanR
     >
       {({ loading }) => (
         <div className="flex items-center gap-2">
-          <FileDown size={14} className="shrink-0 text-[#000181]" />
+          {loading ? <LoadingIndicator size={14} className="text-[#000181]" /> : <FileDown size={14} className="shrink-0 text-[#000181]" />}
           <span className="whitespace-nowrap text-[11px] font-extrabold text-[#000181]">
             {loading ? "Preparing…" : "Study plan"}
           </span>

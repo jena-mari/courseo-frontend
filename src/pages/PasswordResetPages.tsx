@@ -1,3 +1,4 @@
+import { LoadingIndicator } from "../components/LoadingIndicator";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -6,7 +7,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  LoaderCircle,
   Lock,
   Mail,
   ShieldCheck,
@@ -218,7 +218,7 @@ export function ForgotPasswordPage() {
               disabled={loading}
               className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#000181] px-5 text-[13px] font-extrabold text-white shadow-[0_14px_30px_rgba(0,1,129,0.18)] transition hover:-translate-y-0.5 hover:bg-[#171898] disabled:translate-y-0 disabled:cursor-wait disabled:opacity-60"
             >
-              {loading && <LoaderCircle size={18} className="animate-spin" />}
+              {loading && <LoadingIndicator size={18} />}
               {loading ? "Sending reset link…" : "Send reset link"}
               {!loading && <ArrowRight size={17} />}
             </button>
@@ -345,7 +345,7 @@ export function ResetPasswordPage() {
               disabled={loading}
               className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#000181] px-5 text-[13px] font-extrabold text-white shadow-[0_14px_30px_rgba(0,1,129,0.18)] transition hover:-translate-y-0.5 hover:bg-[#171898] disabled:translate-y-0 disabled:cursor-wait disabled:opacity-60"
             >
-              {loading && <LoaderCircle size={18} className="animate-spin" />}
+              {loading && <LoadingIndicator size={18} />}
               {loading ? "Updating password…" : "Reset password"}
               {!loading && <ArrowRight size={17} />}
             </button>

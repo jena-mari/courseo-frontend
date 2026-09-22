@@ -1,3 +1,4 @@
+import { LoadingIndicator } from "./LoadingIndicator";
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, BookOpen, ClipboardCheck, Copy, ExternalLink, HelpCircle, KeyRound, ListChecks, MessageCircle, X } from "lucide-react";
@@ -92,7 +93,7 @@ function InstructionMedia({ media }: { media: NonNullable<HelpStep["media"]> }) 
     <figure className="relative overflow-hidden rounded-[20px] border border-white/90 bg-[#eef0ff] shadow-[0_18px_44px_rgba(24,25,111,0.13)]">
       <div className="relative aspect-video w-full overflow-hidden">
         {!loaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#e7e8ff] via-[#f7f7ff] to-[#ddf8ff]" aria-hidden="true" />
+          <div className="courseo-loading-enter absolute inset-0 flex items-center justify-center gap-2 bg-[#eef0ff] text-[12px] font-semibold text-[#000181]" role="status"><LoadingIndicator />Loading preview…</div>
         )}
         <img
           src={media.src}
