@@ -1,4 +1,6 @@
+import type { ChatContext } from "./chatContext";
 import { api } from "./api";
+import type { ChatProgressListener } from "./chatProgress";
 
 export interface BackendMessage {
   id: number | string;
@@ -18,44 +20,18 @@ export interface ChatResponse {
   reply: BackendMessage;
 }
 
-export function startChat(enrolment: string, model?: string, inputType: "enrolment" | "question" = "question") {
+export function startChat(message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
   return api<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message: enrolment, input_type: inputType, ...(model ? { model } : {}) }),
-  });
+    body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}), ...(context ? { context } : {}) }),
+  }, onProgress);
 }
 
-export function continueChat(sessionId: string, message: string, model?: string) {
+export function continueChat(sessionId: string, message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
   return api<ChatResponse>(`/api/v1/chat/${sessionId}`, {
     method: "POST",
-    body: JSON.stringify({ message, ...(model ? { model } : {}) }),
-  });
-}
-
-export async function generateChatTitle(
-  sessionId: string,
-  model?: string
-): Promise<string> {
-  const response = await fetch(`/api/v1/chat/${sessionId}/title`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ model }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to generate title: ${response.statusText}`);
-  }
-
-  const data: { title: string } = await response.json();
-
-  return data.title
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/^[\s\"'`*_#-]+|[\s\"'`*_#-]+$/g, "")
-    .replace(/\s+/g, " ")
-    .slice(0, 48)
-    .trim();
+    body: JSON.stringify({ message, ...(model ? { model } : {}), ...(context ? { context } : {}) }),
+  }, onProgress);
 }
 
 export function getChatHistory(sessionId: string) {

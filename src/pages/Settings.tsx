@@ -1,3 +1,4 @@
+import { LoadingIndicator } from "../components/LoadingIndicator";
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -6,7 +7,6 @@ import {
   ArrowLeft,
   Check,
   KeyRound,
-  LoaderCircle,
   RefreshCw,
   Server,
   Sparkles,
@@ -309,7 +309,6 @@ export function SettingsPage() {
     setDangerBusy(true);
     setDangerMessage("");
     try {
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
       const storedChats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<Record<string, unknown>>;
       const chatsWithoutPlans = storedChats.map((chat) => ({ ...chat, studyPlanData: null }));
       storage.setItem(STORAGE_KEYS.chats, JSON.stringify(chatsWithoutPlans));
@@ -354,7 +353,7 @@ export function SettingsPage() {
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 courseo-workspace flex items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
+      <div className="relative z-10 courseo-workspace flex items-stretch">
         <div className="hidden h-full lg:block">
           <CourseoSidebar
             chats={sidebarChats}
@@ -372,7 +371,7 @@ export function SettingsPage() {
           />
         </div>
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
+        <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] bg-white shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)]">
           <div className="shrink-0 px-4 pt-5 sm:px-7 sm:pt-6">
             <button
               type="button"
@@ -391,7 +390,7 @@ export function SettingsPage() {
                   Manage your profile and integrations.
                 </p>
               </div>
-              {activeTab === "profile" && <div className="flex items-center gap-3"><span role={saveStatus === "error" ? "alert" : "status"} className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={() => void saveChanges()} disabled={!profileLoaded || saveStatus === "saving" || saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]"><Check size={14} /> {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
+              {activeTab === "profile" && <div className="flex items-center gap-3"><span role={saveStatus === "error" ? "alert" : "status"} className={`text-[11px] font-bold ${saveStatus === "error" ? "text-red-600" : "text-emerald-700"}`}>{saveMessage}</span><button type="button" onClick={() => void saveChanges()} disabled={!profileLoaded || saveStatus === "saving" || saveStatus === "saved"} className="flex h-10 items-center gap-2 rounded-[13px] bg-[#000181] px-5 text-[12px] font-extrabold text-white shadow-sm disabled:bg-[#c8cae8] disabled:text-[#000181]">{saveStatus === "saving" ? <LoadingIndicator size={14} /> : <Check size={14} />} {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Save changes"}</button></div>}
             </div>
           </div>
 
@@ -489,7 +488,7 @@ export function SettingsPage() {
                     sub="Checks whether Courseo can respond from this browser"
                   >
                     {checkingBackend ? (
-                      <Badge tone="amber"><LoaderCircle size={12} className="animate-spin" /> Checking</Badge>
+                      <Badge tone="amber"><LoadingIndicator size={12} /> Checking</Badge>
                     ) : backendHealth?.state === "online" ? (
                       <Badge><Check size={12} strokeWidth={3} /> Online</Badge>
                     ) : backendHealth?.state === "unauthorized" ? (
@@ -512,7 +511,7 @@ export function SettingsPage() {
                       disabled={checkingBackend}
                       className="flex h-9 items-center gap-2 rounded-[12px] border border-[rgba(0,1,129,0.16)] px-3 !text-[11px] font-extrabold text-[#000181] transition-colors hover:bg-[rgba(131,231,255,0.18)] disabled:opacity-50"
                     >
-                      <RefreshCw size={12} className={checkingBackend ? "animate-spin" : ""} /> Refresh
+                      {checkingBackend ? <LoadingIndicator size={12} /> : <RefreshCw size={12} />} Refresh
                     </button>
                   </SettingRow>
                 </Panel>
@@ -564,7 +563,7 @@ export function SettingsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex flex-col overflow-y-auto overscroll-contain bg-black/45 p-4 touch-pan-y [-webkit-overflow-scrolling:touch]" onClick={() => !dangerBusy && setConfirmation(null)} role="presentation">
             <motion.div initial={{ scale: 0.94, y: 14 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 14 }} className="mx-auto my-auto w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()} role="alertdialog" aria-modal="true" aria-labelledby="danger-confirmation-title">
               <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-700"><AlertTriangle size={21} /></span><div><h2 id="danger-confirmation-title" className="text-[18px] font-black text-[#000181]">Clear all saved study plans?</h2><p className="mt-2 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.62)]">Every generated study plan saved in this browser will be permanently removed. Your conversations, profile, enrolment record, and API keys will stay.</p></div></div>
-              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setConfirmation(null)} disabled={dangerBusy} className="h-12 flex-1 rounded-[15px] border border-[rgba(0,1,129,0.2)] text-[12px] font-extrabold text-[#000181]">Cancel</button><button type="button" onClick={() => void confirmDangerAction()} disabled={dangerBusy} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-wait disabled:opacity-50">{dangerBusy && <LoaderCircle size={15} className="animate-spin" />}{dangerBusy ? "Clearing plans…" : "Clear saved plans"}</button></div>
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setConfirmation(null)} disabled={dangerBusy} className="h-12 flex-1 rounded-[15px] border border-[rgba(0,1,129,0.2)] text-[12px] font-extrabold text-[#000181]">Cancel</button><button type="button" onClick={() => void confirmDangerAction()} disabled={dangerBusy} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-wait disabled:opacity-50">{dangerBusy && <LoadingIndicator size={15} />}{dangerBusy ? "Clearing plans…" : "Clear saved plans"}</button></div>
             </motion.div>
           </motion.div>
         )}

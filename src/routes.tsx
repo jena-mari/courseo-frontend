@@ -1,3 +1,4 @@
+import { LoadingScreen } from "./components/LoadingScreen";
 import { useEffect } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { useLocation, useOutlet } from "react-router-dom";
@@ -31,7 +32,7 @@ function AnimatedRouteOutlet() {
 
 export const router = createBrowserRouter([{
   element: <AnimatedRouteOutlet />,
-  hydrateFallbackElement: <div className="h-[100dvh] w-full bg-[#f7f8ff]" role="status" aria-label="Loading Courseo" />,
+  hydrateFallbackElement: <LoadingScreen title="Opening Courseo" detail="Loading your workspace…" />,
   children: [
     {
       path: "/",

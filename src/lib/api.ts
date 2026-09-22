@@ -1,6 +1,9 @@
+import { resolveApiBaseUrl } from "./apiConfig";
+import type { ChatProgressListener } from "./chatProgress";
+
 // A relative default uses Vite's /api development proxy and supports same-origin
 // production deployments. Set VITE_API_BASE_URL only when the API has its own origin.
-export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+export const API_BASE_URL = resolveApiBaseUrl(import.meta.env.DEV, import.meta.env.VITE_API_URL, import.meta.env.VITE_API_BASE_URL);
 
 function detailText(detail: unknown): string {
   if (typeof detail === "string") return detail.toLowerCase();
@@ -31,7 +34,7 @@ function errorMessage(path: string, detail: unknown, status: number): string {
     if (/email|account|already|exist/.test(text)) return "An account with this email already exists. Try logging in instead.";
     return "That conflicts with information already saved to your account. Review it and try again.";
   }
-  if (status === 422) return "Check the information you entered and try again.";
+  if (status === 422) return path.startsWith("/api/v1/chat") ? "Courseo could not process this message. Please try again or check the backend logs if it continues." : "Check the information you entered and try again.";
   if (status === 429) return "Your AI provider is busy or its quota has been reached. Wait a moment or try another key.";
   if (status >= 500) return "Courseo is temporarily unavailable. Please try again in a few moments.";
   if (/invalid|expired/.test(text) && /reset|token/.test(text)) return "This password reset link is invalid or has expired. Request a new one.";
@@ -52,8 +55,9 @@ export class ApiError extends Error {
  * Shared fetch wrapper for the Courseo API.
  * Always sends cookies (`credentials: "include"`) so HttpOnly session auth works.
  */
-export async function api<T>(path: string, options?: RequestInit): Promise<T> {
+export async function api<T>(path: string, options?: RequestInit, onProgress?: ChatProgressListener): Promise<T> {
   let response: Response;
+  onProgress?.("waiting");
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
@@ -67,7 +71,7 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     if (cause instanceof DOMException && cause.name === "AbortError") {
       throw new ApiError("Courseo took too long to respond. Please try again.", 0);
     }
-    throw new ApiError("Courseo can’t reach the server. Check your connection and try again.", 0);
+    throw new ApiError("Courseo could not connect to the backend. Check that the backend is running and the API address is configured correctly, then try again.", 0);
   }
 
   if (!response.ok) {
@@ -79,7 +83,12 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  onProgress?.("receiving");
+  try {
+    return await response.json() as T;
+  } catch {
+    throw new ApiError("Courseo returned an unreadable response. Check the API configuration and backend logs.", response.status);
+  }
 }
 
 export interface BackendHealth {

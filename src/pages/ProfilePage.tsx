@@ -1,7 +1,8 @@
+import { LoadingIndicator } from "../components/LoadingIndicator";
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, GraduationCap, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, GraduationCap } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
@@ -102,7 +103,7 @@ export function ProfilePage() {
         <p className="mx-auto mt-2 max-w-md text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.62)]">Tell us what to call you and what interests you. We’ll work through your course details together in chat.</p>
       </div>
 
-      {loadingProfile && <p role="status" className="mt-4 text-center">Loading your profile…</p>}
+      {loadingProfile && <p role="status" className="courseo-loading-enter mt-4 flex items-center justify-center gap-2"><LoadingIndicator />Loading your profile…</p>}
       <fieldset disabled={loading || loadingProfile || !profileLoaded} className="mt-7 space-y-4 disabled:opacity-60">
         <label className="block text-[13px] font-extrabold text-[#000181]">Preferred name<input required maxLength={100} autoComplete="given-name" value={name} onChange={(event) => setName(event.target.value)} className="mt-2 h-[50px] w-full rounded-[16px] border-2 border-[rgba(0,1,129,0.25)] px-4 text-[14px] font-semibold outline-none focus:border-[#000181]" /></label>
 
@@ -119,7 +120,7 @@ export function ProfilePage() {
 
       {!loadingProfile && !profileLoaded && <button type="button" onClick={() => setLoadAttempt((value) => value + 1)} className="mt-4 text-sm font-bold text-[#000181]">Retry loading profile</button>}
       {error && <p role="alert" className="mt-4 text-center text-[12px] font-semibold text-red-600">{error}</p>}
-      <button type="submit" disabled={loading || leaving || loadingProfile || !profileLoaded || !name.trim() || (electiveMode === "interest" && electiveInterests.length === 0)} className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white disabled:opacity-50">{loading ? <LoaderCircle size={18} className="animate-spin" /> : <ArrowRight size={18} />}{loading ? "Saving your preferences…" : "Continue to secure setup"}</button>
+      <button type="submit" disabled={loading || leaving || loadingProfile || !profileLoaded || !name.trim() || (electiveMode === "interest" && electiveInterests.length === 0)} className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white disabled:opacity-50">{loading ? <LoadingIndicator size={18} /> : <ArrowRight size={18} />}{loading ? "Saving your preferences…" : "Continue to secure setup"}</button>
     </motion.form>
   </div>;
 }

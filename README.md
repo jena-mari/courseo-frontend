@@ -176,3 +176,22 @@ npm run preview  # Preview the production build locally
 - If the backend fails to start, check `DATABASE_URL` and `GEMINI_API_KEY` in its `.env` file.
 - If migrations or seeding fail, confirm the PostgreSQL database exists and the configured user can create and modify tables.
 - If port `5173` is already in use, Vite will normally choose another port and print its URL in the terminal.
+
+## Local chat requests and progress
+
+During Vite development, a loopback `VITE_API_URL` / `VITE_API_BASE_URL` is reached
+through the same-origin `/api` proxy. `COURSEO_API_PROXY_TARGET` can override the
+proxy destination; otherwise it uses the configured API URL and then the local
+port 7777 default. Sign in again after switching between localhost and 127.0.0.1.
+Production still uses the configured public API URL.
+
+All first messages are sent to the backend with `input_type: "question"`; the
+backend must support conversational starts and detect/project enrolment records
+on both first and subsequent turns. No canned assistant response is generated in
+the browser. The matching changes live in `intelli-study-planner-brain` and need
+to be deployed with this frontend.
+
+The chat status panel follows actual request stages (sending, waiting for the
+backend/AI response, receiving, formatting) and reports elapsed time. The JSON API
+does not report internal tool progress, so the UI does not claim that a particular
+handbook fetch or model operation is currently running.
