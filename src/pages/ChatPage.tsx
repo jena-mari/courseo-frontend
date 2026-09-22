@@ -1,6 +1,7 @@
+import { buildChatContext } from "../lib/chatContext";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { LoadingScreen } from "../components/LoadingScreen";
-import { lazy, Suspense, useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
+import { lazy, Suspense, useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, type KeyboardEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -254,6 +255,35 @@ export function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pendingPromptSentRef = useRef(false);
+
+  const resizeComposer = useCallback(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+    input.style.overflowY = input.scrollHeight > input.clientHeight ? "auto" : "hidden";
+  }, []);
+
+  // Covers typing, pasted text, prompt buttons, clearing after send and retries.
+  useLayoutEffect(resizeComposer, [inputText, resizeComposer]);
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    let width = input.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const nextWidth = input.getBoundingClientRect().width;
+      if (nextWidth !== width) {
+        width = nextWidth;
+        resizeComposer();
+      }
+    });
+    observer.observe(input);
+    window.addEventListener("resize", resizeComposer);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", resizeComposer);
+    };
+  }, [resizeComposer]);
   const handbookHref = `https://courses.uow.edu.au/courses/${user?.commencementYear ?? new Date().getFullYear()}/${user?.degreeCode ?? "766"}`;
 
   useEffect(() => {
@@ -408,7 +438,7 @@ export function ChatPage() {
       );
 
       try {
-        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase);
+        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
         setChatPhase("formatting");
         const content = parseAIResponse(data.reply.content);
 
@@ -455,7 +485,7 @@ export function ChatPage() {
         setIsTyping(false);
       }
     },
-    [activeMessages, activeChatId, chats, enrollment, handleUnavailableKey, isTyping, requireChatAccess, selectedModel]
+    [activeMessages, activeChatId, chats, enrollment, handleUnavailableKey, isTyping, requireChatAccess, selectedModel, user, storage]
   );
 
   useEffect(() => {
@@ -509,7 +539,7 @@ export function ChatPage() {
     setIsTyping(true);
 
     try {
-      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase);
+      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
       setChatPhase("formatting");
       const parsedReply = parseAIResponse(result.reply.content);
 
@@ -762,7 +792,7 @@ export function ChatPage() {
                   >
                     Let’s plan your studies
                   </motion.h1>
-                  {!enrollment && <p className="max-w-md text-center text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.6)]">Tell me about your course or paste your enrolment record. We’ll confirm your degree, campus, commencement year, and major together.</p>}
+                  {!enrollment && <p className="max-w-md text-center text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.6)]">Paste your enrolment record from SOLS, or ask a question about your studies.</p>}
                   {enrollment && (
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -861,13 +891,9 @@ export function ChatPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={keyStatus !== "ready"}
-                className="flex-1 resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-y-auto w-full"
-                style={{ minHeight: "1.6em", maxHeight: "8em" }}
-                onInput={(e) => {
-                  const el = e.currentTarget;
-                  el.style.height = "auto";
-                  el.style.height = el.scrollHeight + "px";
-                }}
+                className="flex-none resize-none text-[16px] font-semibold text-[rgba(0,1,129,0.72)] placeholder:text-[rgba(0,1,129,0.4)] outline-none bg-transparent leading-snug overflow-y-auto w-full"
+                aria-label="Message Courseo"
+                style={{ minHeight: "1.6em", maxHeight: "min(240px, 30dvh)" }}
               />
               <div className="flex items-center justify-between">
                 <button

@@ -1,20 +1,22 @@
+import { decodeMessageText } from "../lib/messageText";
 interface MessageRendererProps {
   content: string;
 }
 
 export function MessageRenderer({ content }: MessageRendererProps) {
-  // Helper to parse inline HTML 
   const renderFormattedText = (text: string) => {
-    // bold to strong tags
-    const withBold = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-    // render converted markup + existing inline HTML
-    return <span dangerouslySetInnerHTML={{ __html: withBold }} />;
+    const normalized = text.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/?strong>/gi, "**").replace(/<\/?em>/gi, "*");
+    return normalized.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
+      if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
+      if (part.startsWith("`") && part.endsWith("`")) return <code key={index}>{part.slice(1, -1)}</code>;
+      return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+    });
   };
 
   // Pre-process content into structural blocks
   const renderContentBlocks = () => {
-    const rawLines = content.split("\n");
+    const rawLines = decodeMessageText(content).replace(/^\s*\*\*(\d+\.)\*\*\s*/gm, "$1 ").split("\n");
     const elements: React.ReactNode[] = [];
     let i = 0;
 
@@ -150,9 +152,9 @@ export function MessageRenderer({ content }: MessageRendererProps) {
           elements.push(
             <div key={`numbered-${i}`} className="flex gap-2">
               <span className="text-[#000181] shrink-0 font-semibold">
-                {line.match(/^\d+\./)?.[0]}
+                {trimmed.match(/^\d+\./)?.[0]}
               </span>
-              <span>{renderFormattedText(line.replace(/^\d+\.\s*/, ""))}</span>
+              <span>{renderFormattedText(trimmed.replace(/^\d+\.\s*/, ""))}</span>
             </div>
           );
         } else {

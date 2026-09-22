@@ -1,3 +1,4 @@
+import type { ChatContext } from "./chatContext";
 import { api } from "./api";
 import type { ChatProgressListener } from "./chatProgress";
 
@@ -19,17 +20,17 @@ export interface ChatResponse {
   reply: BackendMessage;
 }
 
-export function startChat(message: string, model?: string, onProgress?: ChatProgressListener) {
+export function startChat(message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
   return api<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}) }),
+    body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}), ...(context ? { context } : {}) }),
   }, onProgress);
 }
 
-export function continueChat(sessionId: string, message: string, model?: string, onProgress?: ChatProgressListener) {
+export function continueChat(sessionId: string, message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
   return api<ChatResponse>(`/api/v1/chat/${sessionId}`, {
     method: "POST",
-    body: JSON.stringify({ message, ...(model ? { model } : {}) }),
+    body: JSON.stringify({ message, ...(model ? { model } : {}), ...(context ? { context } : {}) }),
   }, onProgress);
 }
 
