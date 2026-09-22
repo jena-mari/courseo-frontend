@@ -83,7 +83,7 @@
 
 @media (max-width: 1023px) {
   .courseo-hero-icon {
-    width: min(48vw, 260px);
+    width: min(40vw, 210px);
   }
 }
 
@@ -193,4 +193,111 @@
     outline: 3px solid #63d8ff;
     outline-offset: 3px;
   }
+}
+
+@layer base {
+  html {
+    font-family: 'Montserrat', Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Grid and flex children must be allowed to shrink inside narrow panels. */
+  fieldset, input, select, textarea {
+    min-width: 0;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+
+  select {
+    appearance: none;
+    padding-inline-end: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23000181' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.65rem center;
+    background-repeat: no-repeat;
+  }
+}
+
+/* Keep a usable workspace when the viewport is shortened by zoom or a keyboard.
+   Smaller heights scroll the document; each content panel also scrolls itself. */
+.courseo-workspace {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 28rem;
+  width: 100%;
+  max-width: 1680px;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 48px);
+}
+
+.courseo-scroll {
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.courseo-settings-content {
+  container-type: inline-size;
+}
+
+.courseo-setting-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@container (min-width: 36rem) {
+  .courseo-setting-row {
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem);
+    gap: 1.25rem;
+  }
+}
+
+.courseo-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+/* Keep mobile form text legible and avoid focus zoom changing the layout. */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']), select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Leave room for the select indicator even when a utility sets horizontal padding. */
+select {
+  padding-inline-end: 2rem;
+}
+
+/* A smaller, centred composition with a consistent border of background. */
+.courseo-landing-frame {
+  padding: clamp(28px, 6vh, 64px) clamp(24px, 6vw, 96px);
+}
+
+.courseo-page-frame {
+  padding: clamp(24px, 5vh, 56px) clamp(24px, 4vw, 64px);
+}
+
+/* Give desktop panels the smaller scale and open canvas of a zoomed-out view.
+   Compensate viewport-unit height; percentage width already accounts for zoom. */
+@media (min-width: 1024px) {
+  .courseo-workspace {
+    zoom: 0.9;
+    width: 100%;
+    max-width: calc(1680px / 0.9);
+    height: calc(100vh / 0.9);
+    height: calc(100dvh / 0.9);
+    padding: clamp(28px, 3.4vw, 54px);
+    gap: 18px;
+  }
+}
+
+.courseo-chat-welcome {
+  flex: 1 0 auto;
+  min-height: clamp(220px, 34dvh, 420px);
+  padding-block: 40px;
 }

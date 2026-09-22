@@ -65,7 +65,7 @@ export function ElectiveInterestsField({
         Choose how Courseo should tailor elective suggestions.
       </p>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Elective recommendation method">
+      <div className="courseo-choice-grid mt-3 grid gap-3" role="radiogroup" aria-label="Elective recommendation method">
         <label className={`relative flex cursor-pointer gap-3 rounded-[17px] border-2 p-4 transition ${mode === "degree" ? "border-[#000181] bg-[#eef0ff] shadow-[0_8px_22px_rgba(0,1,129,0.08)]" : "border-[rgba(0,1,129,0.14)] bg-white hover:border-[rgba(0,1,129,0.35)]"}`}>
           <input
             type="radio"

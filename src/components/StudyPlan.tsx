@@ -57,7 +57,7 @@ export function StudyPlan({
       <div className="mx-4 mb-4 border-t border-[rgba(0,1,129,0.10)]" />
 
       {!collapsed && (
-        <div className="flex-1 overflow-y-auto min-h-0 px-4 pb-4">
+        <div role="region" aria-label="Study plan" tabIndex={0} className="courseo-scroll flex-1 overflow-y-auto min-h-0 px-4 pb-4">
           {studyPlanInput ? ( studyPlanInput.plan.map((years) => (
               <section key={years.year} className="mb-6">
               <div className="mb-3 flex items-center justify-center gap-3">

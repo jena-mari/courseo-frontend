@@ -86,10 +86,10 @@ export function ProfilePage() {
     }
   };
 
-  return <div className="relative flex min-h-[100dvh] items-center justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
+  return <div className="courseo-page-frame relative flex min-h-[100dvh] items-center justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif]">
     <img src={imgBg} className="fixed inset-0 h-full w-full object-cover" alt="" aria-hidden="true" />
     <div className="fixed inset-0 bg-[#050515]/65 backdrop-blur-[3px]" />
-    <motion.form onSubmit={(event) => void submit(event)} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 my-auto w-full max-w-[680px] rounded-[30px] bg-white px-6 py-8 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-12 sm:py-10">
+    <motion.form onSubmit={(event) => void submit(event)} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 my-auto w-full max-w-[620px] rounded-[30px] bg-white px-6 py-8 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:px-12 sm:py-10">
       <div className="flex items-center justify-between gap-4">
         <img src={imgLogo} alt="Courseo" className="h-10 w-10" />
         <button type="button" onClick={() => void backToLogin()} disabled={loading || leaving} className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-bold text-[#000181] transition hover:bg-[#eef0ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#000181] disabled:opacity-50">
