@@ -129,7 +129,7 @@ Do not include a trailing slash. Rebuild the frontend after changing this value.
 
 The frontend is deployed to Render as a static site. Every merge to `main` runs
 `.github/workflows/deploy.yml`, which type-checks and builds the app, then triggers a
-Render deploy. Pull requests run the build check only.
+Render deploy and verifies that the public site serves the same commit. Pull requests run the build check only.
 
 ### One-time setup
 
@@ -144,6 +144,19 @@ Render deploy. Pull requests run the build check only.
    secret `RENDER_DEPLOY_HOOK_URL` with that value. This is the only GitHub secret the
    pipeline needs — the CI build is a compile check and both Vite variables have safe
    fallbacks.
+
+5. The live check defaults to `https://courseo-frontend.onrender.com`. Set the optional
+   GitHub Actions **variable** `COURSEO_SITE_URL` to override it. The workflow checks `/version.json` for the deployed commit for up to
+   20 minutes and fails if the new version never becomes live. Check Render's build
+   logs when this step fails; a successful deploy hook only means the request was queued.
+6. Apply the Blueprint changes to the existing Render service to activate the HTML
+   revalidation headers. Hashed assets remain cached.
+
+Account data in this browser is stored under account-specific keys. Legacy chat and
+profile caches have no reliable owner, so they are not imported into any account.
+AI warning acknowledgements persist through logout for each account in the same
+browser, and Settings → System → View warning reopens the disclosure. Cross-device
+acknowledgements require a backend preference; clearing browser data resets them.
 
 `autoDeploy` is disabled in `render.yaml` so a deploy happens only after the GitHub Actions
 build succeeds. A deploy can also be started manually from the **Actions** tab using the

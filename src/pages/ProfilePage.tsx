@@ -6,11 +6,12 @@ import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
 import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/ElectiveInterestsField";
-import { STORAGE_KEYS } from "../lib/storageKeys";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 
 export function ProfilePage() {
   const navigate = useNavigate();
   const { user, updateProfile, loadProfile, logout } = useAuth();
+  const storage = accountStorage(user?.id);
   const [name, setName] = useState(user?.displayName ?? user?.username ?? "");
   const [electiveInterests, setElectiveInterests] = useState(user?.electiveInterests ?? []);
   const [electiveMode, setElectiveMode] = useState<ElectiveRecommendationMode>(() => inferElectiveMode(user?.electiveInterests ?? []));
@@ -68,7 +69,7 @@ export function ProfilePage() {
         major: user.major ?? null,
         elective_interests: electiveMode === "interest" ? electiveInterests : [],
       });
-      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
+      storage.setItem(STORAGE_KEYS.profile, JSON.stringify({
         displayName: saved.displayName,
         email: saved.email,
         degreeCode: saved.degreeCode,

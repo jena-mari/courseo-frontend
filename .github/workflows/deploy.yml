@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test account isolation
+        run: npm test
+
       # Compile check only. Render runs the real production build with the
       # environment variables configured on the Render service.
       - name: Build
@@ -37,7 +40,14 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 25
     steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
       - name: Trigger Render deploy
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
@@ -51,3 +61,8 @@ jobs:
             --request POST "$RENDER_DEPLOY_HOOK_URL")
           echo "$response" | sed '$d'
           echo "Render deploy triggered for ${GITHUB_SHA}."
+
+      - name: Verify the new version is live
+        env:
+          COURSEO_SITE_URL: ${{ vars.COURSEO_SITE_URL || 'https://courseo-frontend.onrender.com' }}
+        run: node scripts/verify-deployment.mjs

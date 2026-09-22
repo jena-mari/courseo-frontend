@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -48,8 +49,17 @@ function localGeminiKeySettings() {
   };
 }
 
+const revision = process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA ||
+  execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+
 export default defineConfig({
-  plugins: [localGeminiKeySettings(), react(), tailwindcss()],
+  define: { __COURSEO_REVISION__: JSON.stringify(revision) },
+  plugins: [localGeminiKeySettings(), react(), tailwindcss(), {
+    name: "courseo-build-version",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ revision }) });
+    },
+  }],
   server: {
     proxy: {
       "/api": {
