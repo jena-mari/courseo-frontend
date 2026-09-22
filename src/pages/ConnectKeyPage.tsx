@@ -5,13 +5,14 @@ import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { ApiKeysPanel } from "../components/ApiKeysPanel";
 import { getKeyProviders, usableProviderModels, type ProvidersResponse } from "../lib/keyApi";
-import { STORAGE_KEYS } from "../lib/storageKeys";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
 export function ConnectKeyPage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const storage = accountStorage(user?.id);
   const location = useLocation();
   const [providers, setProviders] = useState<ProvidersResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export function ConnectKeyPage() {
   const [errorAction, setErrorAction] = useState<"retry" | "signin">("retry");
   const models = useMemo(() => usableProviderModels(providers), [providers]);
   const blockedDetail = (location.state as { detail?: string } | null)?.detail;
-  const [model, setModel] = useState(localStorage.getItem(STORAGE_KEYS.selectedModel) ?? "");
+  const [model, setModel] = useState(storage.getItem(STORAGE_KEYS.selectedModel) ?? "");
   const hasUsableKey = models.length > 0;
 
   const load = async () => {
@@ -38,7 +39,7 @@ export function ConnectKeyPage() {
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
-  const continueToChat = () => { if (model) localStorage.setItem(STORAGE_KEYS.selectedModel, model); navigate("/chat"); };
+  const continueToChat = () => { if (model) storage.setItem(STORAGE_KEYS.selectedModel, model); navigate("/chat"); };
   const canContinue = hasUsableKey;
 
   return <div className="relative min-h-[100dvh] w-full px-4 py-6 font-['Montserrat',sans-serif]">

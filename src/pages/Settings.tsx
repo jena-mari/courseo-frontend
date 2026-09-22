@@ -18,9 +18,10 @@ import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
 import { useAuth } from "../auth/AuthContext";
+import { LlmPrivacyDisclosure } from "../components/LlmPrivacyDisclosure";
 import { ApiKeysPanel } from "../components/ApiKeysPanel";
 import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/ElectiveInterestsField";
-import { STORAGE_KEYS } from "../lib/storageKeys";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
 type SettingsTab = "profile" | "system";
@@ -30,9 +31,9 @@ const TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "system", label: "System" },
 ];
 
-function getStoredChats(): Chat[] {
+function getStoredChats(storage: ReturnType<typeof accountStorage>): Chat[] {
   try {
-    const chats = JSON.parse(localStorage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string; title?: string }>;
+    const chats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string; title?: string }>;
     return chats
       .filter((chat): chat is { id: string; title: string } => Boolean(chat.id && chat.title))
       .map(({ id, title }) => ({ id, title }));
@@ -177,11 +178,13 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, updateProfile, loadProfile } = useAuth();
+  const storage = accountStorage(user?.id);
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(window.location.search).get("tab") === "system" ? "system" : "profile");
   const [showAccount, setShowAccount] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarChats, setSidebarChats] = useState<Chat[]>(getStoredChats);
+  const [sidebarChats, setSidebarChats] = useState<Chat[]>(() => getStoredChats(storage));
   const [storedProfile] = useState(() => getStoredProfile(user));
   const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username }));
   const [saveStatus, setSaveStatus] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle");
@@ -280,7 +283,7 @@ export function SettingsPage() {
         major: user.major ?? null,
         elective_interests: electiveMode === "interest" ? selectedInterests : [],
       });
-      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
+      storage.setItem(STORAGE_KEYS.profile, JSON.stringify({
         displayName: saved.displayName,
         email: saved.email,
         degreeCode: saved.degreeCode,
@@ -307,16 +310,16 @@ export function SettingsPage() {
     setDangerMessage("");
     try {
       await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
-      const storedChats = JSON.parse(localStorage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<Record<string, unknown>>;
+      const storedChats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<Record<string, unknown>>;
       const chatsWithoutPlans = storedChats.map((chat) => ({ ...chat, studyPlanData: null }));
-      localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(chatsWithoutPlans));
-      localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+      storage.setItem(STORAGE_KEYS.chats, JSON.stringify(chatsWithoutPlans));
+      storage.removeItem(STORAGE_KEYS.bootstrapChat);
       setDangerMessage("Your saved study plans were cleared. Your conversations are still available.");
       setConfirmation(null);
     } catch {
       try {
-        localStorage.removeItem(STORAGE_KEYS.chats);
-        localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+        storage.removeItem(STORAGE_KEYS.chats);
+        storage.removeItem(STORAGE_KEYS.bootstrapChat);
         setSidebarChats([]);
         setDangerMessage("Your saved study plans were cleared. Unreadable saved conversations were also removed.");
         setConfirmation(null);
@@ -332,10 +335,10 @@ export function SettingsPage() {
     setSidebarChats((current) => {
       const next = current.filter((chat) => chat.id !== id);
       try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string }>;
-        localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(stored.filter((chat) => chat.id !== id)));
+        const stored = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string }>;
+        storage.setItem(STORAGE_KEYS.chats, JSON.stringify(stored.filter((chat) => chat.id !== id)));
       } catch {
-        localStorage.removeItem(STORAGE_KEYS.chats);
+        storage.removeItem(STORAGE_KEYS.chats);
       }
       return next;
     });
@@ -461,6 +464,11 @@ export function SettingsPage() {
 
             {activeTab === "system" && (
               <div className="grid gap-5">
+                <Panel icon={<AlertTriangle size={20} />} title="AI privacy warning" description="Review what Courseo shares with your AI provider">
+                  <SettingRow label="View the AI warning again" sub="Your acknowledgement is remembered for this account in this browser.">
+                    <button type="button" onClick={() => setShowPrivacy(true)} className="rounded-[12px] bg-[#eef0ff] px-4 py-2 text-[12px] font-extrabold text-[#000181]">View warning</button>
+                  </SettingRow>
+                </Panel>
                 <div id="api-keys" className="scroll-mt-5">
                   <Panel
                     icon={<KeyRound size={20} strokeWidth={2.5} />}
@@ -539,6 +547,10 @@ export function SettingsPage() {
         {showAccount && (
           <AccountManagement onClose={() => setShowAccount(false)} />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPrivacy && <LlmPrivacyDisclosure reviewOnly onAcknowledge={() => setShowPrivacy(false)} onLeave={() => setShowPrivacy(false)} />}
       </AnimatePresence>
 
       <AnimatePresence>

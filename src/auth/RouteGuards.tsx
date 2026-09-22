@@ -61,7 +61,7 @@ export function ProtectedRoute() {
 
   if (status === "loading") return <AuthLoading />;
   if (!user) return <Navigate to="/" replace state={{ authRequired: true, returnTo: location.pathname }} />;
-  return <Outlet />;
+  return <Outlet key={user?.id ?? "anonymous"} />;
 }
 
 /** Login/register: bounce away if already authenticated. */

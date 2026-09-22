@@ -17,6 +17,7 @@ import {
   type ProfileUpdate,
   type UserOut,
 } from "../lib/authApi";
+import { STORAGE_KEYS } from "../lib/storageKeys";
 import {
   cacheAuthUser,
   clearCachedAuthUser,
@@ -79,6 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  // Session cookies are shared between tabs; discard mounted account data when
+  // another tab signs in or out before checking the new session.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEYS.user && event.key !== null) return;
+      if (event.oldValue === event.newValue) return;
+      authMutationRef.current += 1;
+      setStatus("loading");
+      setUser(null);
+      void refresh();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [refresh]);
+
   const login = useCallback(async (email: string, password: string) => {
     const current = await loginUser({ email, password });
     authMutationRef.current += 1;
@@ -121,7 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (profile: ProfileUpdate) => {
+    const mutationAtStart = authMutationRef.current;
     const current = await updateCurrentUser(profile);
+    if (mutationAtStart !== authMutationRef.current) throw new DOMException("Account changed", "AbortError");
     const mapped = applyUser(current);
     setUser(mapped);
     setStatus("authenticated");
@@ -129,7 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadProfile = useCallback(async (signal?: AbortSignal) => {
+    const mutationAtStart = authMutationRef.current;
     const current = await fetchCurrentUser(signal);
+    if (signal?.aborted || mutationAtStart !== authMutationRef.current) throw new DOMException("Account changed", "AbortError");
     const mapped = applyUser(current);
     setUser(mapped);
     return mapped;

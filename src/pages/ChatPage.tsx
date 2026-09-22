@@ -9,7 +9,7 @@ import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
 import { StudyPlan } from "../components/StudyPlan";
 import { MessageRenderer } from "../components/message-renderer";
 import { continueChat, generateChatTitle, startChat, type BackendMessage } from "../lib/chatApi";
-import { STORAGE_KEYS } from "../lib/storageKeys";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { getKeyProviders, personalKeyState, usableProviderModels, type ProviderModel } from "../lib/keyApi";
 import { HelpSlider } from "../components/help-carousel";
 import { AccountManagement } from "../components/AccountManagementPopup";
@@ -128,9 +128,9 @@ function toFrontendMessage(message: BackendMessage): Message {
   };
 }
 
-function loadInitialChats(): ChatSession[] {
+function loadInitialChats(storage: ReturnType<typeof accountStorage>): ChatSession[] {
   let savedChats: ChatSession[] = [];
-  const savedChatsRaw = localStorage.getItem(STORAGE_KEYS.chats);
+  const savedChatsRaw = storage.getItem(STORAGE_KEYS.chats);
 
   if (savedChatsRaw) {
     try {
@@ -146,11 +146,11 @@ function loadInitialChats(): ChatSession[] {
           })),
         }));
     } catch {
-      localStorage.removeItem(STORAGE_KEYS.chats);
+      storage.removeItem(STORAGE_KEYS.chats);
     }
   }
 
-  const bootstrapRaw = localStorage.getItem(STORAGE_KEYS.bootstrapChat);
+  const bootstrapRaw = storage.getItem(STORAGE_KEYS.bootstrapChat);
   if (!bootstrapRaw) return savedChats;
 
   try {
@@ -174,7 +174,7 @@ function loadInitialChats(): ChatSession[] {
       ),
     ];
   } catch {
-    localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+    storage.removeItem(STORAGE_KEYS.bootstrapChat);
     return savedChats;
   }
 }
@@ -240,9 +240,10 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
 export function ChatPage() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const storage = useMemo(() => accountStorage(user?.id), [user?.id]);
   const location = useLocation();
-  const enrollment = localStorage.getItem(STORAGE_KEYS.enrolment) ?? "";
-  const initialChats = useMemo(loadInitialChats, []);
+  const enrollment = storage.getItem(STORAGE_KEYS.enrolment) ?? "";
+  const initialChats = useMemo(() => loadInitialChats(storage), [storage]);
   const initialActiveChat = initialChats[0];
 
   const [chats, setChats] = useState<ChatSession[]>(initialChats);
@@ -257,10 +258,10 @@ export function ChatPage() {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [chatError, setChatError] = useState("");
   const [availableModels, setAvailableModels] = useState<Array<ProviderModel & { provider: string; providerLabel: string }>>([]);
-  const [selectedModel, setSelectedModel] = useState(localStorage.getItem(STORAGE_KEYS.selectedModel) ?? "");
+  const [selectedModel, setSelectedModel] = useState(storage.getItem(STORAGE_KEYS.selectedModel) ?? "");
   const [keyStatus, setKeyStatus] = useState<"checking" | "ready" | "invalid" | "missing" | "error">("checking");
   const [showKeyNotice, setShowKeyNotice] = useState(false);
-  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(() => Boolean(user?.id && localStorage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(() => Boolean(user?.id && storage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [studyPlanCollapsed, setStudyPlanCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -279,7 +280,7 @@ export function ChatPage() {
   const handbookHref = `https://courses.uow.edu.au/courses/${user?.commencementYear ?? new Date().getFullYear()}/${user?.degreeCode ?? "766"}`;
 
   useEffect(() => {
-    setPrivacyAcknowledged(Boolean(user?.id && localStorage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
+    setPrivacyAcknowledged(Boolean(user?.id && storage.getItem(STORAGE_KEYS.llmPrivacyAcknowledged) === user.id));
   }, [user?.id]);
 
   useEffect(() => {
@@ -306,7 +307,7 @@ export function ChatPage() {
         const next = models.some((item) => item.name === current)
           ? current
           : models.find((item) => item.name === data.default_model)?.name ?? models[0]?.name ?? "";
-        if (next) localStorage.setItem(STORAGE_KEYS.selectedModel, next);
+        if (next) storage.setItem(STORAGE_KEYS.selectedModel, next);
         return next;
       });
     }).catch(() => {
@@ -358,13 +359,13 @@ export function ChatPage() {
 
   const acknowledgePrivacy = () => {
     if (!user?.id) return;
-    localStorage.setItem(STORAGE_KEYS.llmPrivacyAcknowledged, user.id);
+    storage.setItem(STORAGE_KEYS.llmPrivacyAcknowledged, user.id);
     setPrivacyAcknowledged(true);
   };
 
   const changeModel = (model: string) => {
     setSelectedModel(model);
-    localStorage.setItem(STORAGE_KEYS.selectedModel, model);
+    storage.setItem(STORAGE_KEYS.selectedModel, model);
   };
 
   const setSmartTitle = useCallback((chatId: string) => {
@@ -390,8 +391,8 @@ export function ChatPage() {
 
   useEffect(() => {
     if (location.pathname !== "/chat") return;
-    localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(chats));
-    localStorage.removeItem(STORAGE_KEYS.bootstrapChat);
+    storage.setItem(STORAGE_KEYS.chats, JSON.stringify(chats));
+    storage.removeItem(STORAGE_KEYS.bootstrapChat);
   }, [chats, location.pathname]);
 
   useEffect(() => {
@@ -514,10 +515,10 @@ export function ChatPage() {
     ) {
       return;
     }
-    const pendingPrompt = localStorage.getItem(STORAGE_KEYS.pendingPrompt);
+    const pendingPrompt = storage.getItem(STORAGE_KEYS.pendingPrompt);
     if (!pendingPrompt) return;
     pendingPromptSentRef.current = true;
-    localStorage.removeItem(STORAGE_KEYS.pendingPrompt);
+    storage.removeItem(STORAGE_KEYS.pendingPrompt);
     void sendMessage(pendingPrompt);
   }, [isTyping, location.pathname, privacyAcknowledged, sendMessage]);
 
@@ -617,7 +618,7 @@ export function ChatPage() {
 
     if (!enrollment) {
       // navigate("/");
-      localStorage.setItem(STORAGE_KEYS.enrolment, " ");
+      storage.setItem(STORAGE_KEYS.enrolment, " ");
       return;
     }
 

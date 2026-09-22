@@ -3,11 +3,12 @@ import { AlertTriangle, ArrowLeft, MessageSquareText, ShieldCheck, UserRoundX } 
 import { motion } from "framer-motion";
 
 interface LlmPrivacyDisclosureProps {
+  reviewOnly?: boolean;
   onAcknowledge: () => void;
   onLeave: () => void;
 }
 
-export function LlmPrivacyDisclosure({ onAcknowledge, onLeave }: LlmPrivacyDisclosureProps) {
+export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = false }: LlmPrivacyDisclosureProps) {
   const [confirmed, setConfirmed] = useState(false);
 
   return (
@@ -53,14 +54,14 @@ export function LlmPrivacyDisclosure({ onAcknowledge, onLeave }: LlmPrivacyDiscl
           </div>
         </div>
 
-        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[15px] border-2 border-[rgba(0,1,129,0.15)] p-4 text-[12px] font-bold leading-relaxed">
+        {!reviewOnly && <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-[15px] border-2 border-[rgba(0,1,129,0.15)] p-4 text-[12px] font-bold leading-relaxed">
           <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#000181]" />
           <span>I understand what is sent and will review my content before submitting it.</span>
-        </label>
+        </label>}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-[auto_1fr]">
-          <button type="button" onClick={onLeave} className="flex h-12 items-center justify-center gap-2 rounded-[15px] border-2 border-[rgba(0,1,129,0.16)] px-5 text-[12px] font-extrabold transition hover:bg-[#f3f4ff]"><ArrowLeft size={16} /> Back to home</button>
-          <button type="button" onClick={onAcknowledge} disabled={!confirmed} className="h-12 rounded-[15px] bg-[#000181] px-5 text-[12px] font-extrabold text-white transition hover:bg-[#171899] disabled:cursor-not-allowed disabled:opacity-40">I understand — continue to chat</button>
+          {!reviewOnly && <button type="button" onClick={onLeave} className="flex h-12 items-center justify-center gap-2 rounded-[15px] border-2 border-[rgba(0,1,129,0.16)] px-5 text-[12px] font-extrabold transition hover:bg-[#f3f4ff]"><ArrowLeft size={16} /> Back to home</button>}
+          <button type="button" onClick={onAcknowledge} disabled={!reviewOnly && !confirmed} className="h-12 rounded-[15px] bg-[#000181] px-5 text-[12px] font-extrabold text-white transition hover:bg-[#171899] disabled:cursor-not-allowed disabled:opacity-40">{reviewOnly ? "Close warning" : "I understand — continue to chat"}</button>
         </div>
       </motion.section>
     </motion.div>

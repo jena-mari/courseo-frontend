@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import { CheckCircle2, KeyRound, LoaderCircle, LogOut, User, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { changePassword } from "../lib/authApi";
-import { clearCourseoStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 
 export function AccountManagement({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const { user, updateProfile, logout } = useAuth();
+  const storage = accountStorage(user?.id);
   const [name, setName] = useState(user?.displayName ?? user?.username ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [profilePassword, setProfilePassword] = useState("");
@@ -30,7 +31,6 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
     setBusy("logout");
     try {
       await logout();
-      clearCourseoStorage();
       navigate("/login");
     } catch {
       setBusy("");
@@ -58,7 +58,7 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
         elective_interests: user.electiveInterests ?? [],
         ...(emailChanged ? { current_password: profilePassword } : {}),
       });
-      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({
+      storage.setItem(STORAGE_KEYS.profile, JSON.stringify({
         displayName: saved.displayName,
         email: saved.email,
         degreeCode: saved.degreeCode,
