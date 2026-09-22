@@ -100,16 +100,16 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[rgba(0,1,129,0.08)] px-5 py-4 last:border-b-0">
+    <div className="courseo-setting-row border-b border-[rgba(0,1,129,0.08)] px-5 py-4 last:border-b-0">
       <div className="min-w-0">
         <p className="text-[13px] font-extrabold text-[#000181]">{label}</p>
         {sub && (
-          <p className="mt-0.5 text-[12px] font-semibold text-[rgba(0,1,129,0.52)]">
+          <p className="mt-0.5 break-words [overflow-wrap:anywhere] text-[12px] font-semibold text-[rgba(0,1,129,0.52)]">
             {sub}
           </p>
         )}
       </div>
-      {children && <div className="shrink-0">{children}</div>}
+      {children && <div className="min-w-0">{children}</div>}
     </div>
   );
 }
@@ -134,7 +134,7 @@ function TextInput({
       value={value}
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
-      className="h-9 w-64 max-w-[42vw] rounded-[12px] border border-[rgba(0,1,129,0.2)] bg-[rgba(131,231,255,0.12)] px-3 text-[12px] font-bold text-[#000181] outline-none transition-colors placeholder:text-[rgba(0,1,129,0.35)] hover:bg-[rgba(131,231,255,0.22)]"
+      className="h-10 w-full max-w-full rounded-[12px] border border-[rgba(0,1,129,0.2)] bg-[rgba(131,231,255,0.12)] px-3 text-[12px] font-bold text-[#000181] outline-none transition-colors placeholder:text-[rgba(0,1,129,0.35)] hover:bg-[rgba(131,231,255,0.22)]"
     />
   );
 }
@@ -354,8 +354,8 @@ export function SettingsPage() {
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 flex h-[100dvh] min-h-[480px] items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
-        <div className="hidden h-full md:block">
+      <div className="relative z-10 courseo-workspace flex items-stretch gap-3 p-2.5 sm:p-4 xl:gap-4 xl:p-5">
+        <div className="hidden h-full lg:block">
           <CourseoSidebar
             chats={sidebarChats}
             activeChatId="settings"
@@ -423,7 +423,7 @@ export function SettingsPage() {
             })}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
+          <div className="courseo-scroll courseo-settings-content min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6" role="region" aria-label="Settings content" tabIndex={0}>
             {activeTab === "profile" && !profileLoaded && saveStatus === "error" && <button type="button" onClick={() => setLoadAttempt((value) => value + 1)} className="mb-4 text-sm font-bold text-[#000181]">Retry loading profile</button>}
             {activeTab === "profile" && (
               <fieldset disabled={!profileLoaded || saveStatus === "saving"} className="grid min-w-0 gap-5 disabled:opacity-60">

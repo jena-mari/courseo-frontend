@@ -221,7 +221,7 @@ function MessageBubble({ message, index }: { message: Message; index: number }) 
         </div>
       )}
       <div
-        className={`max-w-[75%] rounded-[20px] px-5 py-3 text-[14px] font-['Montserrat',sans-serif] ${
+        className={`min-w-0 max-w-[90%] [overflow-wrap:anywhere] sm:max-w-[85%] rounded-[20px] px-5 py-3 text-[14px] font-['Montserrat',sans-serif] ${
           isUser
             ? "bg-[#000181] text-white rounded-br-sm"
             : "bg-[rgba(131,231,255,0.15)] border border-[rgba(0,1,129,0.1)] text-[#000181] rounded-bl-sm"
@@ -740,8 +740,8 @@ export function ChatPage() {
       />
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 h-[100dvh] min-h-[480px]">
-        <div className="hidden md:block h-full">
+      <div className="relative z-10 flex items-stretch gap-3 xl:gap-4 p-2.5 sm:p-4 xl:p-5 courseo-workspace">
+        <div className="hidden lg:block h-full">
           <CourseoSidebar
           chats={sidebarChats}
           activeChatId={activeChatId}
@@ -763,7 +763,7 @@ export function ChatPage() {
               <button
                 type="button"
                 onClick={() => setMobileSidebarOpen(true)}
-                className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#000181] hover:bg-gray-100 transition-colors"
+                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#000181] hover:bg-gray-100 transition-colors"
                 aria-label="Open navigation"
               >
                 <PanelLeftOpen size={21} />
@@ -838,7 +838,7 @@ export function ChatPage() {
 
           {/* <Slider onClose={() => setShowHelp(false)}></Slider> */}
 
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
+          <div className="courseo-scroll min-h-0 min-w-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6" role="region" aria-label="Conversation" tabIndex={0}>
             {isEmptyChat ? (
               <>
               {isCreatingChat ? (
@@ -846,7 +846,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center min-h-full py-6 max-w-50px mx-auto"
+                  className="flex flex-col items-center justify-center py-6 max-w-3xl mx-auto"
                 >
                   {textBounce("Creating new chat...", "font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4", -15)}
                 </motion.div>
@@ -856,7 +856,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center min-h-full py-6 max-w-3xl mx-auto"
+                  className="flex flex-col items-center justify-center py-6 max-w-3xl mx-auto"
                 >
                   <motion.h1
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -899,40 +899,41 @@ export function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
             )}
-          </div>
 
-          <AnimatePresence>
-            {isEmptyChat && !isCreatingChat && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ delay: 0.2 }}
-                className="mx-auto flex max-h-[240px] w-full max-w-[816px] shrink-0 flex-col gap-2 overflow-auto px-4 pb-3 sm:px-6"
-              >
-                <div className="mb-1 flex items-center justify-between gap-3 rounded-[14px] border border-[rgba(0,1,129,0.12)] bg-white/80 px-3 py-2.5">
-                  <span className="flex min-w-0 items-center gap-2 text-[11px] font-bold leading-relaxed text-[rgba(0,1,129,0.65)]"><BookOpen size={16} className="shrink-0 text-[#000181]" /> Get your enrolment record from SOLS before Courseo builds your plan.</span>
-                  <button type="button" onClick={() => setShowHelp(true)} className="shrink-0 rounded-[10px] bg-[#eef0ff] px-3 py-2 text-[10px] font-extrabold text-[#000181] transition hover:bg-[#e1e4ff]">View instructions</button>
-                </div>
-                {SUGGESTED_PROMPTS.map((prompt, i) => (
-                  <motion.button
-                    key={prompt.text}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => fillComposer(prompt.text)}
-                    className={prompt.primary
-                      ? "rounded-[16px] bg-[#000181] px-4 py-3.5 text-left text-[14px] font-extrabold text-white shadow-[0_8px_22px_rgba(0,1,129,0.2)] transition hover:bg-[#171899]"
-                      : "rounded-[15px] border border-[rgba(0,1,129,0.12)] bg-[#eafaff] px-4 py-2.5 text-left text-[12px] font-extrabold text-[rgba(0,1,129,0.72)] transition-colors hover:bg-[#d8f7ff]"}
-                  >
-                    {prompt.text}
-                  </motion.button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {isEmptyChat && !isCreatingChat && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ delay: 0.2 }}
+                  className="mx-auto flex w-full max-w-3xl flex-col gap-2 pb-3"
+                >
+                  <div className="mb-1 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[rgba(0,1,129,0.12)] bg-white/80 px-3 py-2.5">
+                    <span className="flex min-w-0 items-center gap-2 text-[11px] font-bold leading-relaxed text-[rgba(0,1,129,0.65)]"><BookOpen size={16} className="shrink-0 text-[#000181]" /> Get your enrolment record from SOLS before Courseo builds your plan.</span>
+                    <button type="button" onClick={() => setShowHelp(true)} className="shrink-0 rounded-[10px] bg-[#eef0ff] px-3 py-2 text-[10px] font-extrabold text-[#000181] transition hover:bg-[#e1e4ff]">View instructions</button>
+                  </div>
+                  {SUGGESTED_PROMPTS.map((prompt, i) => (
+                    <motion.button
+                      key={prompt.text}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + i * 0.08 }}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => fillComposer(prompt.text)}
+                      className={prompt.primary
+                        ? "rounded-[16px] bg-[#000181] px-4 py-3.5 text-left text-[14px] font-extrabold text-white shadow-[0_8px_22px_rgba(0,1,129,0.2)] transition hover:bg-[#171899]"
+                        : "rounded-[15px] border border-[rgba(0,1,129,0.12)] bg-[#eafaff] px-4 py-2.5 text-left text-[12px] font-extrabold text-[rgba(0,1,129,0.72)] transition-colors hover:bg-[#d8f7ff]"}
+                    >
+                      {prompt.text}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
 
           <div className="px-3 sm:px-6 pb-3 sm:pb-5 shrink-0">
             {chatError && (
@@ -1009,7 +1010,7 @@ export function ChatPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-[#050515]/45 backdrop-blur-[2px] md:hidden"
+            className="fixed inset-0 z-40 bg-[#050515]/45 backdrop-blur-[2px] lg:hidden"
             onClick={() => setMobileSidebarOpen(false)}
           >
             <motion.div

@@ -11,15 +11,17 @@ function AnimatedRouteOutlet() {
   const reduceMotion = useReducedMotion();
   const transition = reduceMotion ? { duration: 0.01 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 
+  // Opacity keeps viewport-fixed dialogs independent of the page height.
+  // A transform or even blur(0px) would create a containing block for them.
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, filter: "blur(4px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -7, filter: "blur(3px)" }}
+        initial={{ opacity: reduceMotion ? 1 : 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: reduceMotion ? 1 : 0 }}
         transition={transition}
-        className="h-full w-full"
+        className="min-h-[100dvh] w-full min-w-0"
       >
         {outlet}
       </motion.div>

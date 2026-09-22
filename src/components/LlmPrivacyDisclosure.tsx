@@ -26,7 +26,7 @@ export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = fals
         aria-modal="true"
         aria-labelledby="llm-privacy-title"
         aria-describedby="llm-privacy-description"
-        className="mx-auto my-auto w-full max-w-[650px] rounded-[28px] border border-white/80 bg-white p-5 text-[#000181] shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-8"
+        className="mx-auto my-auto w-full shrink-0 max-w-[650px] rounded-[28px] border border-white/80 bg-white p-5 text-[#000181] shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-8"
       >
         <div className="flex items-start gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-[#eef0ff]">

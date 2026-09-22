@@ -16,7 +16,7 @@ export function HandbookModal({ onClose }: { onClose: () => void }) {
   const handbookUrl = `https://courses.uow.edu.au/courses/${handbookYear}/766`;
 
   return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain bg-black/35 p-4 touch-pan-y [-webkit-overflow-scrolling:touch] sm:p-6" onClick={onClose} role="presentation">
-    <motion.div initial={{ scale: 0.92, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.92, y: 20, opacity: 0 }} transition={{ type: "spring", stiffness: 280, damping: 28 }} className="relative mx-auto my-auto w-full max-w-2xl rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:p-9" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="handbook-dialog-title">
+    <motion.div initial={{ scale: 0.92, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.92, y: 20, opacity: 0 }} transition={{ type: "spring", stiffness: 280, damping: 28 }} className="relative mx-auto my-auto w-full shrink-0 max-w-2xl rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:p-9" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="handbook-dialog-title">
       <button type="button" onClick={onClose} className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full text-[#000181] hover:bg-[#f1f3ff]" aria-label="Close course handbook"><X size={21} /></button>
 
       <div className="flex items-center gap-3 pr-12">

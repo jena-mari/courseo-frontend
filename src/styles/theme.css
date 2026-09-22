@@ -194,3 +194,77 @@
     outline-offset: 3px;
   }
 }
+
+@layer base {
+  html {
+    font-family: 'Montserrat', Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Grid and flex children must be allowed to shrink inside narrow panels. */
+  fieldset, input, select, textarea {
+    min-width: 0;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+
+  select {
+    appearance: none;
+    padding-inline-end: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23000181' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.65rem center;
+    background-repeat: no-repeat;
+  }
+}
+
+/* Keep a usable workspace when the viewport is shortened by zoom or a keyboard.
+   Smaller heights scroll the document; each content panel also scrolls itself. */
+.courseo-workspace {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 26rem;
+}
+
+.courseo-scroll {
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.courseo-settings-content {
+  container-type: inline-size;
+}
+
+.courseo-setting-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@container (min-width: 36rem) {
+  .courseo-setting-row {
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem);
+    gap: 1.25rem;
+  }
+}
+
+.courseo-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+/* Keep mobile form text legible and avoid focus zoom changing the layout. */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']), select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Leave room for the select indicator even when a utility sets horizontal padding. */
+select {
+  padding-inline-end: 2rem;
+}

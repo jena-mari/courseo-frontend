@@ -55,7 +55,7 @@ export function CourseoSidebar({
       initial={false}
       animate={{ width: collapsed ? 64 : expandedWidth }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative flex h-full shrink-0 flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_12px_38px_rgba(0,1,129,0.11)] backdrop-blur-xl"
+      className="relative flex h-full shrink-0 flex-col overflow-x-hidden overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 shadow-[0_12px_38px_rgba(0,1,129,0.11)] backdrop-blur-xl"
     >
       <div className={`flex shrink-0 items-center pt-4 pb-3 ${
         collapsed ? "justify-center px-2" : "justify-between px-4"
@@ -138,7 +138,7 @@ export function CourseoSidebar({
 
       <div className={`${collapsed ? "mx-3" : "mx-4"} my-3 border-t border-[#000181]`} />
 
-      <div className={`min-h-0 flex-1 overflow-y-auto ${collapsed ? "px-3" : "px-4"}`}>
+      <div role="region" aria-label="Chat history" tabIndex={0} className={`min-h-24 flex-1 overflow-y-auto ${collapsed ? "px-3" : "px-4"}`}>
         {!collapsed && (
           <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#000181]">
             Previous Chats

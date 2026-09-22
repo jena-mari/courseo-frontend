@@ -82,7 +82,7 @@ export function MessageRenderer({ content }: MessageRendererProps) {
         const headers = parseRow(headerLine);
 
         elements.push(
-          <div key={`table-${i}`} className="my-3 overflow-x-auto">
+          <div key={`table-${i}`} className="my-3 max-w-full overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
             <table className="min-w-full border-collapse border border-gray-700 text-sm">
               <thead>
                 <tr className="bg-[#000181]">
@@ -143,7 +143,7 @@ export function MessageRenderer({ content }: MessageRendererProps) {
           elements.push(
             <div key={`bullet-${i}`} className="flex gap-2">
               <span className="text-[#000181] mt-0.5 shrink-0">•</span>
-              <span>{renderFormattedText(stripped)}</span>
+              <span className="min-w-0">{renderFormattedText(stripped)}</span>
             </div>
           );
         } else if (isNumbered) {
@@ -170,5 +170,5 @@ export function MessageRenderer({ content }: MessageRendererProps) {
     return elements;
   };
 
-  return <div className="space-y-1">{renderContentBlocks()}</div>;
+  return <div className="min-w-0 space-y-1 [overflow-wrap:anywhere]">{renderContentBlocks()}</div>;
 }
