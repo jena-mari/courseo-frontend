@@ -62,7 +62,7 @@ export function LoginCard({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
-      className="relative w-full max-w-[590px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:px-12 sm:py-10"
+      className="relative w-full max-w-[540px] rounded-[28px] border border-white/70 bg-white px-6 py-7 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:px-12 sm:py-10"
     >
       <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
         <img src={imgLogo} alt="Courseo" className="w-10 h-10 object-contain" />
@@ -199,7 +199,7 @@ export function LoginCard({
 
 export function LoginPage() {
   return (
-    <div className="relative flex min-h-[100dvh] w-full items-start justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif] sm:items-center">
+    <div className="courseo-page-frame relative flex min-h-[100dvh] w-full items-start justify-center overflow-y-auto px-4 py-6 font-['Montserrat',sans-serif] sm:items-center">
       <img
         src={imgBg}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"

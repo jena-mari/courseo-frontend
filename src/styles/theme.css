@@ -83,7 +83,7 @@
 
 @media (max-width: 1023px) {
   .courseo-hero-icon {
-    width: min(48vw, 260px);
+    width: min(40vw, 210px);
   }
 }
 
@@ -225,7 +225,11 @@
 .courseo-workspace {
   height: 100vh;
   height: 100dvh;
-  min-height: 26rem;
+  min-height: 28rem;
+  width: 100%;
+  max-width: 1680px;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 48px);
 }
 
 .courseo-scroll {
@@ -267,4 +271,33 @@
 /* Leave room for the select indicator even when a utility sets horizontal padding. */
 select {
   padding-inline-end: 2rem;
+}
+
+/* A smaller, centred composition with a consistent border of background. */
+.courseo-landing-frame {
+  padding: clamp(28px, 6vh, 64px) clamp(24px, 6vw, 96px);
+}
+
+.courseo-page-frame {
+  padding: clamp(24px, 5vh, 56px) clamp(24px, 4vw, 64px);
+}
+
+/* Give desktop panels the smaller scale and open canvas of a zoomed-out view.
+   Compensate viewport-unit height; percentage width already accounts for zoom. */
+@media (min-width: 1024px) {
+  .courseo-workspace {
+    zoom: 0.9;
+    width: 100%;
+    max-width: calc(1680px / 0.9);
+    height: calc(100vh / 0.9);
+    height: calc(100dvh / 0.9);
+    padding: clamp(28px, 3.4vw, 54px);
+    gap: 18px;
+  }
+}
+
+.courseo-chat-welcome {
+  flex: 1 0 auto;
+  min-height: clamp(220px, 34dvh, 420px);
+  padding-block: 40px;
 }

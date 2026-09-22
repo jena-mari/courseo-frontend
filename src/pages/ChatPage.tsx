@@ -838,7 +838,7 @@ export function ChatPage() {
 
           {/* <Slider onClose={() => setShowHelp(false)}></Slider> */}
 
-          <div className="courseo-scroll min-h-0 min-w-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6" role="region" aria-label="Conversation" tabIndex={0}>
+          <div className={`courseo-scroll min-h-0 min-w-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 ${isEmptyChat ? "flex flex-col" : ""}`} role="region" aria-label="Conversation" tabIndex={0}>
             {isEmptyChat ? (
               <>
               {isCreatingChat ? (
@@ -846,7 +846,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center py-6 max-w-3xl mx-auto"
+                  className="courseo-chat-welcome flex w-full flex-col items-center justify-center max-w-3xl mx-auto"
                 >
                   {textBounce("Creating new chat...", "font-bold max-w-[80%] text-[clamp(36px,6vw,68px)] text-[#000181] text-center tracking-[-2.5px] leading-[0.98] mb-4", -15)}
                 </motion.div>
@@ -856,7 +856,7 @@ export function ChatPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center justify-center py-6 max-w-3xl mx-auto"
+                  className="courseo-chat-welcome flex w-full flex-col items-center justify-center max-w-3xl mx-auto"
                 >
                   <motion.h1
                     initial={{ opacity: 0, scale: 0.9 }}

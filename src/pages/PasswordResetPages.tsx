@@ -26,7 +26,7 @@ function ResetShell({ children }: { children: ReactNode }) {
       />
       <div className="fixed inset-0 bg-white/10" aria-hidden="true" />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-[1240px] items-center px-5 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <header className="relative z-10 mx-auto flex w-full max-w-[1080px] items-center px-5 py-6 sm:px-8 lg:px-10 lg:py-8">
         <Link to="/" className="group inline-flex items-center gap-3" aria-label="Courseo home">
           <img
             src={imgLogo}
@@ -42,7 +42,7 @@ function ResetShell({ children }: { children: ReactNode }) {
         </Link>
       </header>
 
-      <main className="relative z-10 mx-auto grid min-h-[calc(100dvh-100px)] w-full max-w-[1240px] items-center gap-12 px-5 pb-10 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10 lg:pb-20">
+      <main className="relative z-10 mx-auto grid min-h-[calc(100dvh-100px)] w-full max-w-[1080px] items-center gap-8 px-6 pb-10 sm:px-12 lg:grid-cols-[0.85fr_1.15fr] lg:px-16 lg:pb-16">
         <aside className="hidden min-h-[590px] flex-col justify-center lg:flex" aria-hidden="true">
           <img
             src={imgLogo}
