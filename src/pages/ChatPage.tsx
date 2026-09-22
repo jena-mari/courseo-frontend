@@ -17,6 +17,7 @@ import { LlmPrivacyDisclosure } from "../components/LlmPrivacyDisclosure";
 import { ApiKeyStatusNotice } from "../components/ApiKeyStatusNotice";
 import { normalizeStudyPlanResponse, type StudyPlanResponse } from "../types/studyPlanType";
 import textBounce from "../functions/textBounce";
+import { STUDY_PLAN_STARTER, ENROLMENT_REQUEST, isStudyPlanStarter } from "../lib/chatStart";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 
@@ -34,6 +35,7 @@ interface Message {
 interface ChatSession {
   id: string;
   backendSessionId: string;
+  awaitingEnrolment?: boolean;
   title: string;
   messages: Message[];
   studyPlanData: StudyPlanResponse | null;
@@ -45,7 +47,6 @@ export interface ExtractedAIContent {
   studyPlanData: StudyPlanResponse | null;
 }
 
-const STUDY_PLAN_STARTER = "Create a study plan for me.";
 const SUGGESTED_PROMPTS = [
   { text: STUDY_PLAN_STARTER, primary: true },
   { text: "What subjects should I take in the Autumn session this year?" },
@@ -136,7 +137,7 @@ function loadInitialChats(storage: ReturnType<typeof accountStorage>): ChatSessi
     try {
       const parsedChats = JSON.parse(savedChatsRaw) as ChatSession[];
       savedChats = parsedChats
-        .filter((chat) => chat.backendSessionId)
+        .filter((chat) => chat.backendSessionId || chat.awaitingEnrolment)
         .map((chat) => ({
           ...chat,
           studyPlanData: chat.studyPlanData ?? null,
@@ -541,6 +542,27 @@ export function ChatPage() {
     setShowMenu(false);
 
     if (isCreatingChat) return;
+    const draft = chats.find((chat) => chat.id === activeChatId && chat.awaitingEnrolment);
+    if (isStudyPlanStarter(trimmed)) {
+      const draftId = draft?.id ?? `draft-${crypto.randomUUID()}`;
+      const onboarding: ChatSession = {
+        id: draftId,
+        backendSessionId: "",
+        awaitingEnrolment: true,
+        title: "New study plan",
+        studyPlanData: null,
+        messages: [
+          { id: `${draftId}-request`, role: "user", content: trimmed, timestamp: new Date() },
+          { id: `${draftId}-instructions`, role: "assistant", content: ENROLMENT_REQUEST, timestamp: new Date() },
+        ],
+      };
+      setChats((current) => [onboarding, ...current.filter((chat) => chat.id !== draftId)]);
+      setActiveChatId(draftId);
+      setActiveMessages(onboarding.messages);
+      setStudyPlanData(null);
+      setInputText("");
+      return;
+    }
     setIsCreatingChat(true);
 
     //user message
@@ -551,15 +573,12 @@ export function ChatPage() {
       timestamp: new Date(),
     };
 
-    setActiveMessages([userMsg]);
+    setActiveMessages([...(draft?.messages ?? []), userMsg]);
     setInputText("");
     setIsTyping(true);
 
     try {
-      const requestPrompt = trimmed === STUDY_PLAN_STARTER
-        ? `${trimmed}\n\nBefore creating the plan, ask me to copy and paste my enrolment record from SOLS.`
-        : trimmed;
-      const result = await startChat(requestPrompt, selectedModel || undefined);
+      const result = await startChat(trimmed, selectedModel || undefined, draft ? "enrolment" : "question");
       const parsedReply = parseAIResponse(result.reply.content);
 
       const aiMsg: Message = {
@@ -569,7 +588,7 @@ export function ChatPage() {
           timestamp: new Date(result.reply.created_at),
         };
 
-      const chatMessages = [userMsg, aiMsg];
+      const chatMessages = [...(draft?.messages ?? []), userMsg, aiMsg];
 
       const newChat: ChatSession = {
         id: result.session_id,
@@ -587,7 +606,7 @@ export function ChatPage() {
         model: selectedModel || undefined,
       };
 
-      setChats((existingChats) => [newChat, ...existingChats]);
+      setChats((existingChats) => [newChat, ...existingChats.filter((chat) => chat.id !== draft?.id)]);
       setActiveChatId(newChat.id);
       setActiveMessages(newChat.messages);
       setStudyPlanData(newChat.studyPlanData);
@@ -596,6 +615,7 @@ export function ChatPage() {
       setSmartTitle(newChat.id, trimmed, parsedReply.cleanText);
 
     } catch (error) {
+      setInputText(trimmed);
       if (isProviderKeyError(error)) {
         await handleUnavailableKey(error.message);
         return;
@@ -611,57 +631,14 @@ export function ChatPage() {
     }
   };
 
-  const handleNewChat = async () => {
-    if (!requireChatAccess()) return;
+  const handleNewChat = () => {
+    if (isTyping || isCreatingChat || !requireChatAccess()) return;
     setShowMenu(false);
     setChatError("");
-
-    if (!enrollment) {
-      // navigate("/");
-      storage.setItem(STORAGE_KEYS.enrolment, " ");
-      return;
-    }
-
-    if (isCreatingChat) return;
-    setIsCreatingChat(true);
-
-    try {
-      setActiveMessages([]);
-      // if (enrollment != " ") {
-        
-      // }
-      const result = await startChat(enrollment, selectedModel || undefined);
-      const parsedReply = parseAIResponse(result.reply.content);
-      const newChat: ChatSession = {
-        id: result.session_id,
-        backendSessionId: result.session_id,
-        title: "New study plan",
-        messages: [toFrontendMessage(result.reply)],
-        studyPlanData: parsedReply.studyPlanData,
-        model: selectedModel || undefined,
-      };
-
-      setChats((existingChats) => [newChat, ...existingChats]);
-      setActiveChatId(newChat.id);
-      setActiveMessages(newChat.messages);
-      setStudyPlanData(newChat.studyPlanData);
-      setInputText("");
-      setChatError("");
-      setSmartTitle(newChat.id, enrollment, parsedReply.cleanText);
-
-    } catch (error) {
-      if (isProviderKeyError(error)) {
-        await handleUnavailableKey(error.message);
-        return;
-      }
-      setChatError(
-        error instanceof Error
-          ? error.message
-          : "Courseo could not create a new chat."
-      );
-    } finally {
-      setIsCreatingChat(false);
-    }
+    setActiveChatId("new");
+    setActiveMessages([]);
+    setStudyPlanData(null);
+    setInputText("");
   };
 
   const fillComposer = (prompt: string) => {

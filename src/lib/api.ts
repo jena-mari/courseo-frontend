@@ -1,3 +1,5 @@
+import { chatValidationMessage } from "./chatStart";
+
 // A relative default uses Vite's /api development proxy and supports same-origin
 // production deployments. Set VITE_API_BASE_URL only when the API has its own origin.
 export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
@@ -31,7 +33,7 @@ function errorMessage(path: string, detail: unknown, status: number): string {
     if (/email|account|already|exist/.test(text)) return "An account with this email already exists. Try logging in instead.";
     return "That conflicts with information already saved to your account. Review it and try again.";
   }
-  if (status === 422) return "Check the information you entered and try again.";
+  if (status === 422) return chatValidationMessage(path, detail) ?? "Check the information you entered and try again.";
   if (status === 429) return "Your AI provider is busy or its quota has been reached. Wait a moment or try another key.";
   if (status >= 500) return "Courseo is temporarily unavailable. Please try again in a few moments.";
   if (/invalid|expired/.test(text) && /reset|token/.test(text)) return "This password reset link is invalid or has expired. Request a new one.";
