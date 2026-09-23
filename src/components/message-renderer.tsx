@@ -6,11 +6,13 @@ interface MessageRendererProps {
 export function MessageRenderer({ content }: MessageRendererProps) {
   const renderFormattedText = (text: string) => {
     const normalized = text.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/?strong>/gi, "**").replace(/<\/?em>/gi, "*");
-    return normalized.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((part, index) => {
+    return normalized.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|<a\s+[^>]*href=["'][^"']+["'][^>]*>.*?<\/a>)/gi).map((part, index) => {
+      const linkMatch = part.match( /<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/i ); 
+      if (linkMatch) { const [, href, linkText] = linkMatch; return ( <a key={index} href={href} target="_blank" rel="noopener noreferrer" className="text-[#000181] underline hover:opacity-80" > {linkText} </a> ); }
       if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
       if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
       if (part.startsWith("`") && part.endsWith("`")) return <code key={index}>{part.slice(1, -1)}</code>;
-      return <span key={index} className="whitespace-pre-wrap">{part}</span>;
+      return <span key={index} className="">{part}</span>;
     });
   };
 
@@ -84,14 +86,14 @@ export function MessageRenderer({ content }: MessageRendererProps) {
         const headers = parseRow(headerLine);
 
         elements.push(
-          <div key={`table-${i}`} className="my-3 max-w-full overflow-x-auto" tabIndex={0} aria-label="Scrollable table">
+          <div key={`table-${i}`} className="my-3 w-full max-w-full overflow-x-auto overscroll-x-contain" tabIndex={0} aria-label="Scrollable table">
             <table className="min-w-full border-collapse border border-gray-700 text-sm">
               <thead>
                 <tr className="bg-[#000181]">
                   {headers.map((h, hIdx) => (
                     <th
                       key={hIdx}
-                      className="border border-gray-700 px-3 py-1.5 text-[0.7rem] text-left font-semibold text-white"
+                      className="whitespace-nowrap border border-gray-700 px-3 py-3 text-[0.7rem] text-left font-semibold text-white"
                     >
                       {renderFormattedText(h)}
                     </th>
@@ -106,7 +108,7 @@ export function MessageRenderer({ content }: MessageRendererProps) {
                       {cells.map((cell, cIdx) => (
                         <th
                           key={cIdx}
-                          className="border border-gray-700 px-2 py-1.5 text-[0.7rem] font-normal text-left text-gray-700"
+                          className="whitespace-normal break-normal border border-gray-700 px-2 py-1.5 text-[0.7rem] font-normal text-left text-gray-700"
                         >
                           {renderFormattedText(cell)}
                         </th>
@@ -172,5 +174,5 @@ export function MessageRenderer({ content }: MessageRendererProps) {
     return elements;
   };
 
-  return <div className="min-w-0 space-y-1 [overflow-wrap:anywhere]">{renderContentBlocks()}</div>;
+  return <div className="min-w-0 space-y-1">{renderContentBlocks()}</div>;
 }
