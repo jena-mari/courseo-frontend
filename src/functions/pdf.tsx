@@ -1,5 +1,5 @@
 import type { StudyPlanResponse } from "../types/studyPlanType";
-import { Page, Text, View, Document, StyleSheet, Image, renderToStream } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 import imgLogo from "../assets/courseo-logo.png";
 
 interface MyDocumentProps {

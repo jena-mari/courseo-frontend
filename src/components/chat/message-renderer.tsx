@@ -1,4 +1,4 @@
-import { decodeMessageText } from "../lib/messageText";
+import { decodeMessageText } from "../../lib/messageText";
 interface MessageRendererProps {
   content: string;
 }

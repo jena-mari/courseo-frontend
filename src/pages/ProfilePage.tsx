@@ -1,4 +1,4 @@
-import { LoadingIndicator } from "../components/LoadingIndicator";
+import { LoadingIndicator } from "../components/ui/LoadingIndicator";
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, GraduationCap } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
-import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/ElectiveInterestsField";
+import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/account/ElectiveInterestsField";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 
 export function ProfilePage() {

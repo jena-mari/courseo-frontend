@@ -1,4 +1,4 @@
-import { LoadingIndicator } from "../components/LoadingIndicator";
+import { LoadingIndicator } from "../components/ui/LoadingIndicator";
 import { useState, useEffect, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";

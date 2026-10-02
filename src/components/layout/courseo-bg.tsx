@@ -1,4 +1,4 @@
-import imgBg from "../assets/courseo-bg.png";
+import imgBg from "../../assets/courseo-bg.png";
 
 interface BackgroundProps {
   children: React.ReactNode;

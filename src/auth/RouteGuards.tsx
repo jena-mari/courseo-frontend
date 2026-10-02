@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { LoadingScreen } from "../components/LoadingScreen";
+import { LoadingScreen } from "../components/ui/LoadingScreen";
 
 /** Requires a valid backend session cookie (/me). */
 export function ProtectedRoute() {

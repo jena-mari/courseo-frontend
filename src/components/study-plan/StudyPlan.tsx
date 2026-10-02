@@ -1,9 +1,7 @@
 import { BookOpen, CalendarDays, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import SubjectCard from "./subject-card";
-import type { StudyPlanResponse } from "../types/studyPlanType";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import MyDocument from "../functions/pdf";
+import type { StudyPlanResponse } from "../../types/studyPlanType";
 
 
 interface studyPlanProps {

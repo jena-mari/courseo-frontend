@@ -1,7 +1,7 @@
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, ExternalLink, KeyRound, Pencil, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
-import { addApiKey, deleteApiKey, getKeyProviders, getSavedKeys, updateApiKey, verifyApiKey, type KeyProvider, type SavedCredential } from "../lib/keyApi";
+import { addApiKey, deleteApiKey, getKeyProviders, getSavedKeys, updateApiKey, verifyApiKey, type KeyProvider, type SavedCredential } from "../../lib/keyApi";
 
 function friendlyKeyError(error: unknown) {
   const message = error instanceof Error ? error.message : "Could not save this API key.";

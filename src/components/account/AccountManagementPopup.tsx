@@ -1,11 +1,11 @@
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, LogOut, X } from "lucide-react";
-import { useAuth } from "../auth/AuthContext";
-import { changePassword } from "../lib/authApi";
-import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { useAuth } from "../../auth/AuthContext";
+import { changePassword } from "../../lib/authApi";
+import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
 
 export function AccountManagement({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();

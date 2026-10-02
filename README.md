@@ -195,3 +195,32 @@ The chat status panel follows actual request stages (sending, waiting for the
 backend/AI response, receiving, formatting) and reports elapsed time. The JSON API
 does not report internal tool progress, so the UI does not claim that a particular
 handbook fetch or model operation is currently running.
+
+## Frontend structure
+
+`src/pages` contains route screens. `ChatPage.tsx` composes the chat workspace,
+side panels, and overlays; its header, conversation, and composer live in
+`src/components/chat`.
+
+Components are grouped by responsibility:
+
+- `components/chat`: chat header, conversation, composer, messages, and progress.
+- `components/study-plan`: study-plan panel, subject cards, handbook popup, and PDF download.
+- `components/account`: account management, API keys, privacy disclosure, and elective interests.
+- `components/layout`: shared sidebar and background.
+- `components/help`: instruction carousel.
+- `components/ui`: shared loading indicators, loading screen, and update notice.
+
+Chat behaviour lives in `src/features/chat`:
+
+- `useChat.ts`: chat creation, sending, selection, deletion, storage, and workspace actions.
+- `useChatAccess.ts`: API-key validation, model selection, and privacy acknowledgement.
+- `useComposer.ts`: textarea sizing and resize-observer cleanup.
+- `chatSession.ts`: saved-chat restoration, response parsing, message conversion, and titles.
+- `types.ts` and `constants.ts`: chat data contracts and suggested prompts.
+
+Keep network clients in `src/lib` and shared data contracts in `src/types`.
+When changing chat behaviour, edit the relevant hook or helper; when changing its
+appearance, edit the corresponding component. Import modules directly so their
+ownership stays visible. Account storage keys and API request contracts remain
+shared with the other route screens.

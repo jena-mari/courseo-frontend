@@ -1,15 +1,15 @@
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, BookOpen, ClipboardCheck, Copy, ExternalLink, HelpCircle, KeyRound, ListChecks, MessageCircle, X } from "lucide-react";
 import { Copilot } from "@lobehub/icons";
-import copilotStepOne from "../assets/instructions/01-copilot.gif";
-import copilotStepTwo from "../assets/instructions/02-copilot.gif";
-import copilotStepThree from "../assets/instructions/03-copilot.gif";
-import courseoStepOne from "../assets/instructions/01-courseo.gif";
-import courseoStepTwo from "../assets/instructions/02-courseo.gif";
-import courseoStepThree from "../assets/instructions/03-courseo.gif";
-import courseoStepFour from "../assets/instructions/04-courseo.gif";
+import copilotStepOne from "../../assets/instructions/01-copilot.gif";
+import copilotStepTwo from "../../assets/instructions/02-copilot.gif";
+import copilotStepThree from "../../assets/instructions/03-copilot.gif";
+import courseoStepOne from "../../assets/instructions/01-courseo.gif";
+import courseoStepTwo from "../../assets/instructions/02-courseo.gif";
+import courseoStepThree from "../../assets/instructions/03-courseo.gif";
+import courseoStepFour from "../../assets/instructions/04-courseo.gif";
 
 type Pathway = "courseo" | "copilot";
 type HelpStep = {

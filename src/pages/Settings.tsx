@@ -1,4 +1,4 @@
-import { LoadingIndicator } from "../components/LoadingIndicator";
+import { LoadingIndicator } from "../components/ui/LoadingIndicator";
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,13 +14,13 @@ import {
   UserCircle,
 } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
-import { CourseoSidebar, type Chat } from "../components/courseo-sidebar";
-import { HelpSlider } from "../components/help-carousel";
-import { AccountManagement } from "../components/AccountManagementPopup";
+import { CourseoSidebar, type Chat } from "../components/layout/courseo-sidebar";
+import { HelpSlider } from "../components/help/help-carousel";
+import { AccountManagement } from "../components/account/AccountManagementPopup";
 import { useAuth } from "../auth/AuthContext";
-import { LlmPrivacyDisclosure } from "../components/LlmPrivacyDisclosure";
-import { ApiKeysPanel } from "../components/ApiKeysPanel";
-import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/ElectiveInterestsField";
+import { LlmPrivacyDisclosure } from "../components/account/LlmPrivacyDisclosure";
+import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
+import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/account/ElectiveInterestsField";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 

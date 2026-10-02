@@ -1,4 +1,4 @@
-import { LoadingScreen } from "./components/LoadingScreen";
+import { LoadingScreen } from "./components/ui/LoadingScreen";
 import { useEffect } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { useLocation, useOutlet } from "react-router-dom";

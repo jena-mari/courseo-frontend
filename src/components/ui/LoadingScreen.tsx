@@ -1,6 +1,6 @@
 import { LoadingIndicator } from "./LoadingIndicator";
-import imgBg from "../assets/courseo-bg.png";
-import imgLogo from "../assets/courseo-logo.png";
+import imgBg from "../../assets/courseo-bg.png";
+import imgLogo from "../../assets/courseo-logo.png";
 
 export function LoadingScreen({ title, detail }: { title: string; detail: string }) {
   return (

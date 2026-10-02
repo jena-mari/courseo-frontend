@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { BookOpen, CalendarDays, ExternalLink, GraduationCap, MapPin, ShieldCheck, X } from "lucide-react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 
 function Detail({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return <div className="flex items-start gap-3 rounded-[15px] border border-[rgba(0,1,129,0.1)] bg-white px-4 py-3">

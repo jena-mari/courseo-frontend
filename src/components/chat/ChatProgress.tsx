@@ -1,6 +1,6 @@
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { useEffect, useState } from "react";
-import { CHAT_PHASES, type ChatPhase } from "../lib/chatProgress";
+import { CHAT_PHASES, type ChatPhase } from "../../lib/chatProgress";
 
 export function ChatProgress({ phase }: { phase: ChatPhase }) {
   const [seconds, setSeconds] = useState(0);

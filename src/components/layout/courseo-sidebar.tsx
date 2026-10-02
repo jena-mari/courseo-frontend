@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, KeyRound, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
-import imgLogo from "../assets/courseo-logo.png";
+import imgLogo from "../../assets/courseo-logo.png";
 import { motion } from "framer-motion";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 
 export interface Chat {
   id: string;

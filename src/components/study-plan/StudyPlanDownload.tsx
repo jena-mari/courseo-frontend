@@ -1,8 +1,8 @@
-import { LoadingIndicator } from "./LoadingIndicator";
+import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { FileDown } from "lucide-react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
-import MyDocument from "../functions/pdf";
-import type { StudyPlanResponse } from "../types/studyPlanType";
+import MyDocument from "../../functions/pdf";
+import type { StudyPlanResponse } from "../../types/studyPlanType";
 
 export default function StudyPlanDownload({ studyPlan }: { studyPlan: StudyPlanResponse }) {
   return (

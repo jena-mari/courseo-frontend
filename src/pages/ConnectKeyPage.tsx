@@ -1,10 +1,10 @@
-import { LoadingIndicator } from "../components/LoadingIndicator";
+import { LoadingIndicator } from "../components/ui/LoadingIndicator";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, KeyRound, ShieldAlert } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
-import { ApiKeysPanel } from "../components/ApiKeysPanel";
+import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
 import { getKeyProviders, usableProviderModels, type ProvidersResponse } from "../lib/keyApi";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { ApiError } from "../lib/api";
