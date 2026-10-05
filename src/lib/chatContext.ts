@@ -1,5 +1,7 @@
 import type { CourseoUser } from "./authSession";
 
+export type ElectiveRecommendationMode = "degree" | "interest";
+
 /** Hints from the signed-in account; the backend must resolve authoritative profile data. */
 export interface ChatContext {
   profile: {
@@ -7,12 +9,15 @@ export interface ChatContext {
     major: string | null;
     campus: string | null;
     commencement_year: number | null;
-    elective_interests: string[];
+    elective_mode?: ElectiveRecommendationMode;
+    elective_interests?: string[];
   };
   enrolment_record?: string;
 }
 
-export function buildChatContext(user: CourseoUser | null, enrolment: string): ChatContext | undefined {
+export function buildChatContext(user: CourseoUser | null, enrolment: string, 
+  electiveMode: ElectiveRecommendationMode = "degree", electiveInterests: string[] = []
+): ChatContext | undefined {
   if (!user) return undefined;
   return {
     profile: {
@@ -20,7 +25,9 @@ export function buildChatContext(user: CourseoUser | null, enrolment: string): C
       major: user.major || null,
       campus: user.campus || null,
       commencement_year: user.commencementYear ?? null,
-      elective_interests: [...user.electiveInterests],
+
+      elective_mode: electiveMode,
+      elective_interests: [...electiveInterests]
     },
     ...(enrolment.trim() ? { enrolment_record: enrolment.trim() } : {}),
   };
