@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent }
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { buildChatContext } from "../../lib/chatContext";
-import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
 import { continueChat, startChat } from "../../lib/chatApi";
 import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
 import type { StudyPlanResponse } from "../../types/studyPlanType";
@@ -45,9 +44,6 @@ export function useChat() {
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
     initialActiveChat?.studyPlanData ?? null
   );
-
-  const electiveInterests = user?.electiveInterests ?? [];
-  const electiveMode = inferElectiveMode(electiveInterests);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useComposer(inputText);
@@ -122,8 +118,7 @@ export function useChat() {
       );
 
       try {
-        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, 
-          buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? "", electiveMode, electiveInterests));
+        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
         setChatPhase("formatting");
         const content = parseAIResponse(data.reply.content);
 
@@ -223,8 +218,7 @@ export function useChat() {
     setIsTyping(true);
 
     try {
-      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase, 
-          buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? "", electiveMode, electiveInterests));
+      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
       setChatPhase("formatting");
       const parsedReply = parseAIResponse(result.reply.content);
 

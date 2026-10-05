@@ -20,37 +20,11 @@ export interface ChatResponse {
   reply: BackendMessage;
 }
 
-// export function startChat(message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
-//   return api<ChatResponse>("/api/v1/chat", {
-//     method: "POST",
-//     body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}), ...(context ? { context } : {}) }),
-//   }, onProgress);
-// }
-export function startChat(
-  message: string,
-  model?: string,
-  onProgress?: ChatProgressListener,
-  context?: ChatContext
-) {
-  const payload = {
-    message,
-    input_type: "question",
-    ...(model ? { model } : {}),
-    ...(context ? { context } : {}),
-  };
-
-  console.log("START CHAT PAYLOAD:", payload);
-  console.log("ELECTIVE MODE:", context?.profile?.elective_mode);
-  console.log("ELECTIVE INTERESTS:", context?.profile?.elective_interests);
-
-  return api<ChatResponse>(
-    "/api/v1/chat",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    onProgress
-  );
+export function startChat(message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
+  return api<ChatResponse>("/api/v1/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}), ...(context ? { context } : {}) }),
+  }, onProgress);
 }
 
 export function continueChat(sessionId: string, message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
