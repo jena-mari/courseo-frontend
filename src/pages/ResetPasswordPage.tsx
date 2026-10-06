@@ -33,7 +33,7 @@ export function ResetPasswordCard({ onClose }: ResetPasswordCardProps = {}) {
     e.preventDefault();
     setError("");
     if (!token) {
-      setError("This reset link is invalid or missing.");
+      setError("The reset password link is invalid or missing.");
       return;
     }
     if (password.length < 8) {

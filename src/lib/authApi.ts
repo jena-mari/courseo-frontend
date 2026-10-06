@@ -33,6 +33,13 @@ export function fetchCurrentUser() {
   return api<UserOut>("/api/v1/auth/me");
 }
 
+export function deleteAccount(password: string) {
+  return api<void>("/api/v1/auth/me", {
+    method: "DELETE",
+    body: JSON.stringify({ password }),
+  });
+}
+
 export function requestPasswordReset(email: string) {
   return api<void>("/api/v1/auth/forgot-password", {
     method: "POST",

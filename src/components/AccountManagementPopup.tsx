@@ -1,30 +1,64 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogOut, Mail, User, X } from "lucide-react";
+import { Eye, EyeOff, Lock, LogOut, Mail, Trash2, User, X } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { clearCourseoStorage } from "../lib/storageKeys";
 
 export function AccountManagement({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout, deleteAccount } = useAuth();
   const [username, setUsername] = useState(user?.username ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  const busy = isLoggingOut || isDeleting;
 
   const handleLogout = async () => {
-    if (isLoggingOut) return;
+    if (busy) return;
     setIsLoggingOut(true);
+    setActionError("");
     try {
       await logout();
       clearCourseoStorage();
       navigate("/login");
     } catch {
       setIsLoggingOut(false);
-      setIsSuccess(false);
-      setMessage("Unable to log out. Please try again.");
+      setActionError("Unable to log out. Please try again.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (busy) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setActionError("");
+      return;
+    }
+    if (deletePassword.length < 8) {
+      setActionError("Enter the password for this account (at least 8 characters).");
+      return;
+    }
+
+    setIsDeleting(true);
+    setActionError("");
+    try {
+      await deleteAccount(deletePassword);
+      clearCourseoStorage();
+      navigate("/login", {
+        replace: true,
+        state: { message: "Your account has been deleted." },
+      });
+    } catch (err) {
+      setIsDeleting(false);
+      setActionError(err instanceof Error ? err.message : "Unable to delete your account.");
     }
   };
 
@@ -164,15 +198,58 @@ export function AccountManagement({ onClose }: { onClose: () => void }) {
         </form>
 
         <div className="mt-6 border-t border-[rgba(0,1,129,0.12)] pt-5">
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            disabled={isLoggingOut}
-            className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-[14px] font-extrabold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <LogOut size={16} strokeWidth={2.25} />
-            {isLoggingOut ? "Logging out…" : "Log out"}
-          </button>
+          {confirmDelete && (
+            <div className="mb-3">
+              <label htmlFor="account-delete-password" className="mb-2 block text-[13px] font-extrabold text-red-700">
+                Confirm with password
+              </label>
+              <div className="flex h-[52px] items-center gap-3 rounded-[18px] border-2 border-red-200 px-4 transition-colors focus-within:border-red-500">
+                <Lock size={16} className="shrink-0 text-red-400" />
+                <input
+                  id="account-delete-password"
+                  type={showDeletePassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  placeholder="Account password"
+                  className="min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-[#000181] outline-none placeholder:text-[rgba(0,1,129,0.35)]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword((open) => !open)}
+                  className="shrink-0 text-[rgba(0,1,129,0.5)] transition-colors hover:text-[#000181]"
+                  aria-label={showDeletePassword ? "Hide password" : "Show password"}
+                >
+                  {showDeletePassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+          )}
+          {actionError && (
+            <p role="alert" className="mb-3 text-center text-sm font-semibold text-red-600">
+              {actionError}
+            </p>
+          )}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              disabled={busy}
+              className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[18px] border border-[rgba(0,1,129,0.25)] bg-white px-4 text-[14px] font-extrabold text-[#000181] transition-colors hover:bg-[#f1f3ff] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <LogOut size={16} strokeWidth={2.25} />
+              {isLoggingOut ? "Logging out…" : "Log out"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDeleteAccount()}
+              disabled={busy}
+              className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-[18px] border border-red-200 bg-red-50 px-4 text-[14px] font-extrabold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Trash2 size={16} strokeWidth={2.25} />
+              {isDeleting ? "Deleting…" : confirmDelete ? "Delete forever" : "Delete account"}
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
