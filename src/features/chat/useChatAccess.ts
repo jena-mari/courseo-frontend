@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetState
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
-import { getKeyProviders, personalKeyState, usableProviderModels, type ProviderModel } from "../../lib/keyApi";
+import { getKeyProviders, personalKeyState, usableProviderModels, providerModels } from "../../lib/keyApi";
 
 export function useChatAccess(setChatError: Dispatch<SetStateAction<string>>) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const storage = useMemo(() => accountStorage(user?.id), [user?.id]);
-  const [availableModels, setAvailableModels] = useState<Array<ProviderModel & { provider: string; providerLabel: string }>>([]);
+  const [availableModels, setAvailableModels] = useState<ReturnType<typeof providerModels>>([]);
   const [selectedModel, setSelectedModel] = useState(storage.getItem(STORAGE_KEYS.selectedModel) ?? "");
   const [keyStatus, setKeyStatus] = useState<"checking" | "ready" | "invalid" | "missing" | "error">("checking");
   const [showKeyNotice, setShowKeyNotice] = useState(false);
@@ -21,7 +21,7 @@ export function useChatAccess(setChatError: Dispatch<SetStateAction<string>>) {
     setKeyStatus("checking");
     void getKeyProviders().then((data) => {
       const models = usableProviderModels(data);
-      setAvailableModels(models);
+      setAvailableModels(providerModels(data));
       const state = personalKeyState(data);
       if (state === "missing") {
         setKeyStatus("missing");
@@ -81,7 +81,7 @@ export function useChatAccess(setChatError: Dispatch<SetStateAction<string>>) {
         setChatError("");
         return;
       }
-      setAvailableModels(usableProviderModels(data));
+      setAvailableModels(providerModels(data));
       setKeyStatus("invalid");
       setShowKeyNotice(true);
       setChatError("");
@@ -98,6 +98,7 @@ export function useChatAccess(setChatError: Dispatch<SetStateAction<string>>) {
   };
 
   const changeModel = (model: string) => {
+    if (!availableModels.some((item) => item.name === model && item.available)) return;
     setSelectedModel(model);
     storage.setItem(STORAGE_KEYS.selectedModel, model);
   };

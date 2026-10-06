@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, PanelLeftOpen, PanelRightOpen } from "lucide-react";
+import { ProviderModelOptions } from "../account/ProviderModelOptions";
 import type { ChatController } from "../../features/chat/useChat";
 
 type Props = Pick<ChatController, "navigate" | "setMobileSidebarOpen" | "availableModels" | "selectedModel" | "changeModel" | "setMobileStudyPlanOpen" | "setShowMenu" | "showMenu" | "isCreatingChat" | "handleNewChat" | "handbookHref" | "enrollment" | "handleLogout" | "isLoggingOut">;
@@ -19,16 +20,17 @@ export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, se
               <p className="font-extrabold text-xl sm:text-2xl text-[#000181] tracking-[-0.96px]">
                 Courseo
               </p>
-              {availableModels.length > 0 && (
+              {availableModels.length > 0 && (<>
                 <select
                   aria-label="AI model"
                   value={selectedModel}
                   onChange={(event) => changeModel(event.target.value)}
                   className="ml-2 hidden h-9 max-w-[220px] rounded-[11px] border border-[rgba(0,1,129,0.16)] bg-[#f7f8ff] px-3 text-[11px] font-extrabold text-[#000181] outline-none sm:block"
                 >
-                  {availableModels.map((model) => <option key={model.name} value={model.name}>{model.label} · {model.providerLabel}</option>)}
+                  <ProviderModelOptions models={availableModels} />
                 </select>
-              )}
+                <button type="button" onClick={() => navigate("/settings?tab=system#api-keys")} className="ml-2 hidden text-[11px] font-bold text-[#000181] underline sm:block">API keys</button>
+              </>)}
             </div>
             <div className="flex items-center gap-1">
               <button

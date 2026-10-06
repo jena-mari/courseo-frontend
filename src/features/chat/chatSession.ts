@@ -1,3 +1,4 @@
+import { studyPlanFromTable, studyPlanTable } from "../../lib/studyPlanResponse";
 import { ApiError } from "../../lib/api";
 import type { BackendMessage } from "../../lib/chatApi";
 import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
@@ -43,28 +44,33 @@ export function parseAIResponse(aiResponseText: unknown): ExtractedAIContent {
 
   if (!originalText) return emptyResult;
 
-  const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-  const jsonMatch = originalText.match(jsonRegex);
+  let cleanText = originalText;
   let studyPlanData: StudyPlanResponse | null = null;
-
-  if (jsonMatch?.[1]) {
+  // Accept fenced JSON (any case or no language) and raw JSON responses.
+  const candidates = [...originalText.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)];
+  for (const candidate of candidates) {
     try {
-      const parsedPlan: unknown = JSON.parse(jsonMatch[1].trim());
-      const normalizedPlan = normalizeStudyPlanResponse(parsedPlan);
-      if (normalizedPlan) {
-        studyPlanData = normalizedPlan;
-      } else {
-        console.warn("Ignored an assistant study plan with an invalid structure.");
+      const plan = normalizeStudyPlanResponse(JSON.parse(candidate[1]));
+      if (plan?.plan.some((year) => year.sessions.some((session) => session.subjects.length))) {
+        studyPlanData = plan;
+        cleanText = cleanText.replace(candidate[0], "");
       }
-    } catch (error) {
-      console.error("Failed to parse extracted Study Plan JSON:", error);
-    }
+    } catch { /* Other code blocks are ordinary message content. */ }
   }
-
-  return {
-    cleanText: originalText.replace(jsonRegex, "").trim(),
-    studyPlanData,
-  };
+  if (!studyPlanData) {
+    try {
+      const plan = normalizeStudyPlanResponse(JSON.parse(originalText));
+      if (plan?.plan.some((year) => year.sessions.some((session) => session.subjects.length))) {
+        studyPlanData = plan;
+        cleanText = "";
+      }
+    } catch { /* A prose response may still contain a complete plan table. */ }
+  }
+  studyPlanData ??= studyPlanFromTable(cleanText);
+  if (studyPlanData && !studyPlanFromTable(cleanText)) {
+    cleanText = `${cleanText.trim()}\n\n${studyPlanTable(studyPlanData)}`;
+  }
+  return { cleanText: cleanText.trim(), studyPlanData };
 }
 
 export function toFrontendMessage(message: BackendMessage): Message {
@@ -89,7 +95,7 @@ export function loadInitialChats(storage: ReturnType<typeof accountStorage>): Ch
         .filter((chat) => chat.backendSessionId)
         .map((chat) => ({
           ...chat,
-          studyPlanData: chat.studyPlanData ?? null,
+          studyPlanData: chat.studyPlanData ?? [...chat.messages].reverse().filter((message) => message.role === "assistant").map((message) => parseAIResponse(message.content).studyPlanData).find(Boolean) ?? null,
           messages: chat.messages.map((message) => ({
             ...message,
             timestamp: new Date(message.timestamp),
