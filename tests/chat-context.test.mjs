@@ -5,7 +5,7 @@ import { decodeMessageText } from '../src/lib/messageText.ts';
 
 test('chat context carries academic fields and record without account identity or invented values', () => {
  const user={id:'a',email:'private@example.com',username:'private',displayName:'Private',degreeCode:'766',major:null,campus:null,commencementYear:null,electiveInterests:['AI']};
- assert.deepEqual(buildChatContext(user,' record '),{profile:{degree_code:'766',major:null,campus:null,commencement_year:null,elective_interests:['AI']},enrolment_record:'record'});
+ assert.deepEqual(buildChatContext(user,' record '),{profile:{degree_code:'766',major:null,campus:null,commencement_year:null,elective_mode: 'degree', elective_interests:[]},enrolment_record:'record'});
  assert.equal(buildChatContext(null,'old record'),undefined);
  assert.equal('enrolment_record' in buildChatContext(user,''),false);
 });
