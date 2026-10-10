@@ -27,7 +27,7 @@ export function buildChatContext(user: CourseoUser | null, enrolment: string,
       commencement_year: user.commencementYear ?? null,
 
       elective_mode: electiveMode,
-      elective_interests: [...electiveInterests]
+      elective_interests: electiveMode === "interest" ? [...electiveInterests] : [],
     },
     ...(enrolment.trim() ? { enrolment_record: enrolment.trim() } : {}),
   };
