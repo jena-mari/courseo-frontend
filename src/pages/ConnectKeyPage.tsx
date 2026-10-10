@@ -4,8 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, KeyRound, ShieldAlert } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
+import { ProviderModelOptions } from "../components/account/ProviderModelOptions";
 import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
-import { getKeyProviders, usableProviderModels, type ProvidersResponse } from "../lib/keyApi";
+import { getKeyProviders, providerModels, usableProviderModels, type ProvidersResponse } from "../lib/keyApi";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import { ApiError } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
@@ -20,6 +21,7 @@ export function ConnectKeyPage() {
   const [error, setError] = useState("");
   const [errorAction, setErrorAction] = useState<"retry" | "signin">("retry");
   const models = useMemo(() => usableProviderModels(providers), [providers]);
+  const catalog = useMemo(() => providerModels(providers), [providers]);
   const blockedDetail = (location.state as { detail?: string } | null)?.detail;
   const [model, setModel] = useState(storage.getItem(STORAGE_KEYS.selectedModel) ?? "");
   const hasUsableKey = models.length > 0;
@@ -51,7 +53,7 @@ export function ConnectKeyPage() {
       {loading ? <div className="courseo-loading-enter mt-8 flex items-start gap-3 rounded-[16px] border border-[rgba(0,1,129,0.1)] bg-[#f7f8ff] p-5 text-[#000181]" role="status" aria-live="polite"><LoadingIndicator size={20} /><div><p className="text-[13px] font-extrabold">Loading AI providers</p><p className="mt-1 text-[12px] leading-relaxed">Fetching available providers and secure key setup options…</p></div></div> : error ? <div role="alert" className="mt-6 rounded-[16px] bg-red-50 p-4 text-center"><p className="text-sm font-semibold text-red-700">{error}</p><button type="button" onClick={() => { if (errorAction === "signin") { void logout().finally(() => navigate("/", { replace: true, state: { authRequired: true, returnTo: "/connect-key" } })); return; } setLoading(true); setError(""); void load(); }} className="mt-3 rounded-[12px] bg-[#000181] px-4 py-2 text-[12px] font-extrabold text-white">{errorAction === "signin" ? "Log in again" : "Try again"}</button></div> : <>
         {blockedDetail && <div role="alert" className="mt-6 rounded-[15px] border border-amber-300 bg-amber-50 p-4 text-[12px] font-semibold leading-relaxed text-amber-900"><p className="font-extrabold">This chat needs an API key</p><p className="mt-1">{blockedDetail}</p></div>}
         <div className="mt-7"><ApiKeysPanel compact onConnected={() => void load()} /></div>
-        {models.length > 0 && <label className="mt-5 block text-[12px] font-extrabold text-[#000181]">Model for new chats<select value={model} onChange={(event) => setModel(event.target.value)} className="mt-2 h-12 w-full rounded-[14px] border border-[rgba(0,1,129,0.2)] bg-white px-4 text-[13px] font-bold text-[#000181]">{models.map((item) => <option key={item.name} value={item.name}>{item.label} — {item.providerLabel}{item.priced ? " (may incur charges)" : ""}</option>)}</select></label>}
+        {catalog.length > 0 && <label className="mt-5 block text-[12px] font-extrabold text-[#000181]">Model for new chats<select value={model} onChange={(event) => setModel(event.target.value)} className="mt-2 h-12 w-full rounded-[14px] border border-[rgba(0,1,129,0.2)] bg-white px-4 text-[13px] font-bold text-[#000181]">{!model && <option value="">Connect a key to select a model</option>}<ProviderModelOptions models={catalog} /></select></label>}
         {!hasUsableKey && <div role="alert" className="mt-4 flex items-start gap-3 rounded-[14px] border border-red-200 bg-red-50 p-4 text-red-800"><ShieldAlert size={18} className="mt-0.5 shrink-0" /><div><p className="text-[12px] font-extrabold">A verified API key is required</p><p className="mt-1 text-[11px] font-semibold leading-relaxed">Connect and verify a personal key above before starting a Courseo chat.</p></div></div>}
         <button onClick={continueToChat} disabled={!canContinue} className="mt-5 flex h-[54px] w-full items-center justify-center gap-2 rounded-[17px] bg-[#000181] text-[13px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40">{hasUsableKey ? "Continue with my key" : "Connect a key to continue"} <ArrowRight size={17} /></button>
       </>}

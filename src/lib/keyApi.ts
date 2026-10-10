@@ -38,6 +38,16 @@ export const verifyApiKey = (id: string) =>
   api<{ id: string; status: string; verified: boolean; detail: string }>(`/api/v1/keys/${id}/verify`, { method: "POST" });
 export const deleteApiKey = (id: string) => api<void>(`/api/v1/keys/${id}`, { method: "DELETE" });
 
+/** Provider catalog and availability come from the same backend as API key settings. */
+export function providerModels(data: ProvidersResponse | null) {
+  if (!data) return [];
+  return data.providers.flatMap((provider) => provider.models.map((model) => ({
+    ...model, provider: provider.provider, providerLabel: provider.label,
+    available: provider.has_usable_key,
+    keyStatus: provider.has_usable_key ? "Connected" : provider.key_count > 0 ? "Check API key" : "Connect API key",
+  })));
+}
+
 /** Models the current user can run with a verified personal key. */
 export function usableProviderModels(data: ProvidersResponse | null) {
   if (!data) return [];
