@@ -11,6 +11,7 @@ import type { ChatSession, Message } from "./types";
 import { buildChatTitle, isProviderKeyError, loadInitialChats, parseAIResponse } from "./chatSession";
 import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
+import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
 
 export function useChat() {
   const navigate = useNavigate();
@@ -118,7 +119,10 @@ export function useChat() {
       );
 
       try {
-        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
+        const electiveInterests = user?.electiveInterests ?? [];
+        const electiveMode = inferElectiveMode(electiveInterests);
+
+        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? "", electiveMode, electiveInterests));
         setChatPhase("formatting");
         const content = parseAIResponse(data.reply.content);
 
@@ -218,7 +222,22 @@ export function useChat() {
     setIsTyping(true);
 
     try {
-      const result = await startChat(trimmed, selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? ""));
+
+      const electiveInterests = user?.electiveInterests ?? [];
+      const electiveMode = inferElectiveMode(electiveInterests);
+
+      const result = await startChat(
+        trimmed,
+        selectedModel || undefined,
+        setChatPhase,
+        buildChatContext(
+          user,
+          storage.getItem(STORAGE_KEYS.enrolment) ?? "",
+          electiveMode,
+          electiveInterests
+        )
+      );      
+      
       setChatPhase("formatting");
       const parsedReply = parseAIResponse(result.reply.content);
 
