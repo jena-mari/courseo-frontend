@@ -9,6 +9,7 @@ export interface UserOut {
   commencement_year: number | null;
   campus: "Wollongong" | "Liverpool" | null;
   major: string | null;
+  elective_mode: "degree" | "interest";
   elective_interests: string[];
   created_at: string;
 }
@@ -16,6 +17,7 @@ export interface UserOut {
 export interface ProfileUpdate {
   email?: string;
   display_name?: string;
+  elective_mode?: "degree" | "interest";
   elective_interests?: string[];
   current_password?: string;
   degree_code?: "766";

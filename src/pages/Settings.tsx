@@ -286,6 +286,7 @@ export function SettingsPage() {
         commencement_year: user.commencementYear ?? null,
         campus: user.campus ?? null,
         major: user.major ?? null,
+        elective_mode: electiveMode,
         elective_interests: electiveMode === "interest" ? selectedInterests : [],
       });
       storage.setItem(STORAGE_KEYS.profile, JSON.stringify({

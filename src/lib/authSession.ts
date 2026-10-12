@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from "./storageKeys";
 import type { UserOut } from "./authApi";
+import { ElectiveRecommendationMode } from "./chatContext";
 
 const USER_KEY = STORAGE_KEYS.user;
 
@@ -14,6 +15,7 @@ export interface CourseoUser {
   commencementYear: number | null;
   campus: "Wollongong" | "Liverpool" | null;
   major: string | null;
+  electiveMode: ElectiveRecommendationMode;
   electiveInterests: string[];
 }
 
@@ -28,6 +30,7 @@ export function toCourseoUser(user: UserOut): CourseoUser {
     commencementYear: user.commencement_year ?? null,
     campus: user.campus ?? null,
     major: user.major ?? null,
+    electiveMode: user.elective_mode ?? "degree",
     electiveInterests: user.elective_interests ?? [],
   };
 }
@@ -53,7 +56,8 @@ export function getCachedAuthUser(): CourseoUser | null {
       commencementYear: user.commencementYear ?? null,
       campus: user.campus ?? null,
       major: user.major ?? null,
-      electiveInterests: user.electiveInterests ?? [],
+      electiveMode: user.electiveMode === "interest" ? "interest" : "degree", 
+      electiveInterests: Array.isArray(user.electiveInterests) ? user.electiveInterests : [],
     };
   } catch {
     clearCachedAuthUser();
