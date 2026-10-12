@@ -23,6 +23,7 @@ function errorMessage(path: string, detail: unknown, status: number): string {
     if (/current password|password is incorrect/.test(text)) return "Your current password is incorrect. Check it and try again.";
     return "Your session has expired. Log in again to continue.";
   }
+  if (path.endsWith("/auth/me") && /invalid password/.test(text)) return "Your current password is incorrect. Check it and try again.";
   if (status === 403) return "You don’t have permission to make that change.";
   if (status === 404) {
     if (/key|credential|provider/.test(text)) return "That saved API key could not be found. Refresh the page and try again.";

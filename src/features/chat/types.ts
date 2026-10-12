@@ -15,6 +15,7 @@ export interface ChatSession {
   title: string;
   messages: Message[];
   studyPlanData: StudyPlanResponse | null;
+  studyPlanCleared?: boolean;
   model?: string;
 }
 

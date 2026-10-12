@@ -7,6 +7,7 @@ export interface ChatContext {
     major: string | null;
     campus: string | null;
     commencement_year: number | null;
+    elective_mode: "degree" | "interest";
     elective_interests: string[];
   };
   enrolment_record?: string;
@@ -20,6 +21,7 @@ export function buildChatContext(user: CourseoUser | null, enrolment: string): C
       major: user.major || null,
       campus: user.campus || null,
       commencement_year: user.commencementYear ?? null,
+      elective_mode: user.electiveInterests.length ? "interest" : "degree",
       elective_interests: [...user.electiveInterests],
     },
     ...(enrolment.trim() ? { enrolment_record: enrolment.trim() } : {}),

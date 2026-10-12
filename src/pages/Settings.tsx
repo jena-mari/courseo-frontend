@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
+  BookOpen,
   Check,
   KeyRound,
   RefreshCw,
@@ -16,12 +17,14 @@ import {
 import imgBg from "../assets/courseo-bg.png";
 import { CourseoSidebar, type Chat } from "../components/layout/courseo-sidebar";
 import { HelpSlider } from "../components/help/help-carousel";
+import { HandbookModal } from "../components/study-plan/HandbookModalPopup";
 import { AccountManagement } from "../components/account/AccountManagementPopup";
 import { useAuth } from "../auth/AuthContext";
 import { LlmPrivacyDisclosure } from "../components/account/LlmPrivacyDisclosure";
 import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
 import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/account/ElectiveInterestsField";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { clearStudyPlansFromChats } from "../lib/savedStudyPlans";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
 type SettingsTab = "profile" | "system";
@@ -177,11 +180,12 @@ function DangerButton({ children, onClick }: { children: ReactNode; onClick: () 
 export function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateProfile, loadProfile } = useAuth();
+  const { user, updateProfile, loadProfile, deleteAccount } = useAuth();
   const storage = accountStorage(user?.id);
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(window.location.search).get("tab") === "system" ? "system" : "profile");
   const [showAccount, setShowAccount] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showHandbook, setShowHandbook] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarChats, setSidebarChats] = useState<Chat[]>(() => getStoredChats(storage));
@@ -193,7 +197,8 @@ export function SettingsPage() {
   const [checkingBackend, setCheckingBackend] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(storedProfile.interests);
   const [electiveMode, setElectiveMode] = useState<ElectiveRecommendationMode>(() => inferElectiveMode(storedProfile.interests));
-  const [confirmation, setConfirmation] = useState<"plans" | null>(null);
+  const [confirmation, setConfirmation] = useState<"plans" | "account" | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
   const [dangerBusy, setDangerBusy] = useState(false);
   const [dangerMessage, setDangerMessage] = useState("");
 
@@ -309,22 +314,17 @@ export function SettingsPage() {
     setDangerBusy(true);
     setDangerMessage("");
     try {
-      const storedChats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<Record<string, unknown>>;
-      const chatsWithoutPlans = storedChats.map((chat) => ({ ...chat, studyPlanData: null }));
-      storage.setItem(STORAGE_KEYS.chats, JSON.stringify(chatsWithoutPlans));
+      if (confirmation === "account") {
+        await deleteAccount(deletePassword);
+        navigate("/login", { replace: true });
+        return;
+      }
+      storage.setItem(STORAGE_KEYS.chats, clearStudyPlansFromChats(storage.getItem(STORAGE_KEYS.chats) ?? "[]"));
       storage.removeItem(STORAGE_KEYS.bootstrapChat);
       setDangerMessage("Your saved study plans were cleared. Your conversations are still available.");
       setConfirmation(null);
-    } catch {
-      try {
-        storage.removeItem(STORAGE_KEYS.chats);
-        storage.removeItem(STORAGE_KEYS.bootstrapChat);
-        setSidebarChats([]);
-        setDangerMessage("Your saved study plans were cleared. Unreadable saved conversations were also removed.");
-        setConfirmation(null);
-      } catch {
-        setDangerMessage("Courseo could not clear your saved study plans. Please try again.");
-      }
+    } catch (cause) {
+      setDangerMessage(cause instanceof Error ? cause.message : "Courseo could not complete that action. Please try again.");
     } finally {
       setDangerBusy(false);
     }
@@ -478,6 +478,12 @@ export function SettingsPage() {
                   </Panel>
                 </div>
 
+                <Panel icon={<BookOpen size={20} />} title="Course handbook" description="View the handbook details available to Courseo">
+                  <SettingRow label="Handbook details" sub="Review your course, campus, and handbook year">
+                    <button type="button" onClick={() => setShowHandbook(true)} className="rounded-[12px] bg-[#eef0ff] px-4 py-2 text-[12px] font-extrabold text-[#000181]">View handbook</button>
+                  </SettingRow>
+                </Panel>
+
                 <Panel
                   icon={<Server size={20} strokeWidth={2.5} />}
                   title="Backend status"
@@ -530,9 +536,9 @@ export function SettingsPage() {
                   </SettingRow>
                   <SettingRow
                     label="Delete account"
-                    sub="Backend support is required before this action can be enabled"
+                    sub="Permanently delete your account, conversations, and saved API keys"
                   >
-                    <Badge tone="amber">Backend required</Badge>
+                    <DangerButton onClick={() => { setConfirmation("account"); setDeletePassword(""); setDangerMessage(""); }}>Delete account</DangerButton>
                   </SettingRow>
                 </Panel>
                 {dangerMessage && <p role="status" className={`rounded-[14px] px-4 py-3 text-[12px] font-semibold ${dangerMessage.includes("cleared") ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{dangerMessage}</p>}
@@ -541,6 +547,10 @@ export function SettingsPage() {
           </div>
         </main>
       </div>
+
+      <AnimatePresence>
+        {showHandbook && <HandbookModal onClose={() => setShowHandbook(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showAccount && (
@@ -562,8 +572,10 @@ export function SettingsPage() {
         {confirmation && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex flex-col overflow-y-auto overscroll-contain bg-black/45 p-4 touch-pan-y [-webkit-overflow-scrolling:touch]" onClick={() => !dangerBusy && setConfirmation(null)} role="presentation">
             <motion.div initial={{ scale: 0.94, y: 14 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 14 }} className="mx-auto my-auto w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()} role="alertdialog" aria-modal="true" aria-labelledby="danger-confirmation-title">
-              <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-700"><AlertTriangle size={21} /></span><div><h2 id="danger-confirmation-title" className="text-[18px] font-black text-[#000181]">Clear all saved study plans?</h2><p className="mt-2 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.62)]">Every generated study plan saved in this browser will be permanently removed. Your conversations, profile, enrolment record, and API keys will stay.</p></div></div>
-              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setConfirmation(null)} disabled={dangerBusy} className="h-12 flex-1 rounded-[15px] border border-[rgba(0,1,129,0.2)] text-[12px] font-extrabold text-[#000181]">Cancel</button><button type="button" onClick={() => void confirmDangerAction()} disabled={dangerBusy} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-wait disabled:opacity-50">{dangerBusy && <LoadingIndicator size={15} />}{dangerBusy ? "Clearing plans…" : "Clear saved plans"}</button></div>
+              <div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-700"><AlertTriangle size={21} /></span><div><h2 id="danger-confirmation-title" className="text-[18px] font-black text-[#000181]">{confirmation === "account" ? "Delete your account?" : "Clear all saved study plans?"}</h2><p className="mt-2 text-[12px] font-semibold leading-relaxed text-[rgba(0,1,129,0.62)]">{confirmation === "account" ? "Your account, conversations, study plans, and saved API keys will be permanently deleted. Enter your current password to confirm." : "Every generated study plan saved in this browser will be permanently removed. Your conversations, profile, enrolment record, and API keys will stay."}</p></div></div>
+              {confirmation === "account" && <label className="mt-4 block text-[12px] font-bold text-[#000181]">Current password<input type="password" autoComplete="current-password" value={deletePassword} disabled={dangerBusy} onChange={(event) => setDeletePassword(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#d9daea] px-3" /></label>}
+              {dangerMessage && <p role="alert" className="mt-3 text-[12px] font-semibold text-red-700">{dangerMessage}</p>}
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setConfirmation(null)} disabled={dangerBusy} className="h-12 flex-1 rounded-[15px] border border-[rgba(0,1,129,0.2)] text-[12px] font-extrabold text-[#000181]">Cancel</button><button type="button" onClick={() => void confirmDangerAction()} disabled={dangerBusy || (confirmation === "account" && deletePassword.length < 8)} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-wait disabled:opacity-50">{dangerBusy && <LoadingIndicator size={15} />}{confirmation === "account" ? (dangerBusy ? "Deleting account…" : "Delete account") : (dangerBusy ? "Clearing plans…" : "Clear saved plans")}</button></div>
             </motion.div>
           </motion.div>
         )}

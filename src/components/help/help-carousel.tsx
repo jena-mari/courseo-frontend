@@ -55,7 +55,7 @@ const STEP_SETS: Record<Pathway, HelpStep[]> = {
       title: "Create and refine your plan",
       description: "Paste your copied enrolment record into a new chat, then check the study plan Courseo creates.",
       detail: "Ask Courseo to explain requirements or explore alternatives, and use the official handbook link to verify final enrolment decisions, dates, and course rules.",
-      media: { src: courseoStepFour, alt: "Creating and refining your plan" },
+      media: { src: courseoStepFour, alt: "Creating and refining a study plan in Courseo" },
     },
   ],
   copilot: [
