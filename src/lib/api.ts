@@ -15,13 +15,17 @@ function detailText(detail: unknown): string {
 }
 
 /** Keep server, provider, and validation internals out of user-facing copy. */
-function errorMessage(path: string, detail: unknown, status: number): string {
+function errorMessage(path: string, detail: unknown, status: number, method?: string): string {
   const text = detailText(detail);
 
   if (status === 401) {
     if (path.endsWith("/auth/login")) return "Your email or password is incorrect. Check both and try again.";
     if (/current password|password is incorrect/.test(text)) return "Your current password is incorrect. Check it and try again.";
     return "Your session has expired. Log in again to continue.";
+  }
+  if (path.endsWith("/auth/me") && method === "DELETE") {
+    if (status === 400) return "Your current password is incorrect. Check it and try again.";
+    if (status === 422) return "Courseo could not remove your stored API keys, so account deletion could not be completed. Please try again.";
   }
   if (path.endsWith("/auth/me") && /invalid password/.test(text)) return "Your current password is incorrect. Check it and try again.";
   if (status === 403) return "You don’t have permission to make that change.";
@@ -77,7 +81,7 @@ export async function api<T>(path: string, options?: RequestInit, onProgress?: C
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new ApiError(errorMessage(path, error?.detail, response.status), response.status);
+    throw new ApiError(errorMessage(path, error?.detail, response.status, options?.method), response.status);
   }
 
   if (response.status === 204) {

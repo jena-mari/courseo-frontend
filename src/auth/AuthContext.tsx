@@ -18,6 +18,7 @@ import {
   type ProfileUpdate,
   type UserOut,
 } from "../lib/authApi";
+import { ApiError } from "../lib/api";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import {
   cacheAuthUser,
@@ -134,9 +135,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteAccount = useCallback(async (password: string) => {
-    if (!user) return;
+    if (!user) throw new ApiError("Your session has expired. Log in again to continue.", 401);
     const mutationAtStart = authMutationRef.current;
-    await deleteCurrentAccount(password);
+    try {
+      await deleteCurrentAccount(password);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401 && mutationAtStart === authMutationRef.current) {
+        authMutationRef.current += 1;
+        clearCachedAuthUser();
+        setUser(null);
+        setStatus("anonymous");
+      }
+      throw cause;
+    }
     accountStorage(user.id).clear();
     if (mutationAtStart !== authMutationRef.current) return;
     authMutationRef.current += 1;
