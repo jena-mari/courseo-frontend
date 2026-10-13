@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  deleteCurrentAccount,
   fetchCurrentUser,
   loginUser,
   logoutUser,
@@ -17,7 +18,8 @@ import {
   type ProfileUpdate,
   type UserOut,
 } from "../lib/authApi";
-import { STORAGE_KEYS } from "../lib/storageKeys";
+import { ApiError } from "../lib/api";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 import {
   cacheAuthUser,
   clearCachedAuthUser,
@@ -38,6 +40,7 @@ interface AuthContextValue {
     displayName?: string | null
   ) => Promise<CourseoUser>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   updateUser: (user: CourseoUser) => void;
   updateProfile: (profile: ProfileUpdate) => Promise<CourseoUser>;
   refresh: () => Promise<void>;
@@ -131,6 +134,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const deleteAccount = useCallback(async (password: string) => {
+    if (!user) throw new ApiError("Your session has expired. Log in again to continue.", 401);
+    const mutationAtStart = authMutationRef.current;
+    try {
+      await deleteCurrentAccount(password);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401 && mutationAtStart === authMutationRef.current) {
+        authMutationRef.current += 1;
+        clearCachedAuthUser();
+        setUser(null);
+        setStatus("anonymous");
+      }
+      throw cause;
+    }
+    accountStorage(user.id).clear();
+    if (mutationAtStart !== authMutationRef.current) return;
+    authMutationRef.current += 1;
+    clearCachedAuthUser();
+    setUser(null);
+    setStatus("anonymous");
+  }, [user]);
+
   const updateUser = useCallback((next: CourseoUser) => {
     cacheAuthUser(next);
     setUser(next);
@@ -162,12 +187,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      deleteAccount,
       updateUser,
       updateProfile,
       refresh,
       loadProfile,
     }),
-    [user, status, login, register, logout, updateUser, updateProfile, refresh, loadProfile]
+    [user, status, login, register, logout, deleteAccount, updateUser, updateProfile, refresh, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

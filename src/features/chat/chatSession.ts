@@ -1,3 +1,4 @@
+import { restoreSavedStudyPlan } from "../../lib/savedStudyPlans";
 import { studyPlanFromTable, studyPlanTable } from "../../lib/studyPlanResponse";
 import { ApiError } from "../../lib/api";
 import type { BackendMessage } from "../../lib/chatApi";
@@ -95,7 +96,7 @@ export function loadInitialChats(storage: ReturnType<typeof accountStorage>): Ch
         .filter((chat) => chat.backendSessionId)
         .map((chat) => ({
           ...chat,
-          studyPlanData: chat.studyPlanData ?? [...chat.messages].reverse().filter((message) => message.role === "assistant").map((message) => parseAIResponse(message.content).studyPlanData).find(Boolean) ?? null,
+          studyPlanData: restoreSavedStudyPlan(chat, () => [...chat.messages].reverse().filter((message) => message.role === "assistant").map((message) => parseAIResponse(message.content).studyPlanData).find(Boolean) ?? null),
           messages: chat.messages.map((message) => ({
             ...message,
             timestamp: new Date(message.timestamp),

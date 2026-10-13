@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { getCourseHandbook, type CourseHandbook } from "../../lib/handbookApi";
 import { BookOpen, CalendarDays, ExternalLink, GraduationCap, MapPin, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -13,7 +14,24 @@ function Detail({ icon, label, value }: { icon: ReactNode; label: string; value:
 export function HandbookModal({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
   const handbookYear = user?.commencementYear ?? new Date().getFullYear();
-  const handbookUrl = `https://courses.uow.edu.au/courses/${handbookYear}/766`;
+  const course = user?.degreeCode ?? "766";
+  const campus = user?.campus ?? "Wollongong";
+  const handbookUrl = `https://courses.uow.edu.au/courses/${handbookYear}/${course}`;
+  const [handbook, setHandbook] = useState<CourseHandbook | null>(null);
+  const [handbookError, setHandbookError] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setHandbook(null);
+    setHandbookError("");
+    void getCourseHandbook(course, handbookYear, campus, controller.signal).then((data) => {
+      if (!controller.signal.aborted) setHandbook(data);
+    }).catch(() => {
+      if (!controller.signal.aborted) setHandbookError("Handbook details are unavailable. You can still open the official UOW handbook below.");
+    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [course, handbookYear, campus]);
 
   return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain bg-black/35 p-4 touch-pan-y [-webkit-overflow-scrolling:touch] sm:p-6" onClick={onClose} role="presentation">
     <motion.div initial={{ scale: 0.92, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.92, y: 20, opacity: 0 }} transition={{ type: "spring", stiffness: 280, damping: 28 }} className="relative mx-auto my-auto w-full shrink-0 max-w-2xl rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_28px_80px_rgba(0,0,0,0.32)] sm:rounded-[32px] sm:p-9" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="handbook-dialog-title">
@@ -38,6 +56,9 @@ export function HandbookModal({ onClose }: { onClose: () => void }) {
         <p className="text-[12px] font-semibold leading-relaxed">Course requirements and dates can change. Courseo checks handbook data when giving advice, and the official UOW page remains the source of truth.</p>
       </div>
 
+      {loading && <p role="status" className="mt-4 text-[12px] font-semibold text-[#000181]">Loading handbook details…</p>}
+      {handbookError && <p role="status" className="mt-4 text-[12px] font-semibold text-[#000181]">{handbookError}</p>}
+      {handbook && <section className="mt-5 rounded-[16px] border border-[#d9daea] p-4" aria-label="Saved handbook details"><h3 className="text-[14px] font-extrabold text-[#000181]">{handbook.title}</h3><p className="mt-1 text-[11px] font-semibold text-[#000181]/60">{handbook.year} · {handbook.campus}</p><div className="courseo-scroll mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap text-[12px] leading-relaxed text-[#000181]" tabIndex={0}>{handbook.information}</div></section>}
       <a href={handbookUrl} target="_blank" rel="noopener noreferrer" className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-[17px] bg-[#000181] text-[13px] font-extrabold text-white">Open the official UOW handbook <ExternalLink size={16} /></a>
     </motion.div>
   </motion.div>;

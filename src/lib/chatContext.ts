@@ -9,14 +9,15 @@ export interface ChatContext {
     major: string | null;
     campus: string | null;
     commencement_year: number | null;
-    elective_mode?: ElectiveRecommendationMode;
+    elective_mode: ElectiveRecommendationMode;
     elective_interests: string[];
   };
   enrolment_record?: string;
 }
 
 export function buildChatContext(user: CourseoUser | null, enrolment: string,
-  electiveMode: ElectiveRecommendationMode = "degree", electiveInterests: string[] = []
+  electiveMode: ElectiveRecommendationMode = user?.electiveMode ?? (user?.electiveInterests?.length ? "interest" : "degree"),
+  electiveInterests: string[] = user?.electiveInterests ?? []
 ): ChatContext | undefined {
   if (!user) return undefined;
   return {

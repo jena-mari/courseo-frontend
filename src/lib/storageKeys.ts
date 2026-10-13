@@ -25,6 +25,14 @@ export function clearCourseoStorage() {
 export function accountStorage(userId: string | null | undefined) {
   const keyFor = (key: string) => `courseo:account:${encodeURIComponent(userId!)}:${key}`;
   return {
+    keyFor,
+    clear() {
+      if (!userId) return;
+      for (const key of COURSE_STORAGE_KEYS) {
+        localStorage.removeItem(keyFor(key));
+        sessionStorage.removeItem(keyFor(key));
+      }
+    },
     getItem(key: string): string | null {
       if (!userId) return null;
       const value = localStorage.getItem(keyFor(key));

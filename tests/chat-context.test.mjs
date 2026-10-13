@@ -5,7 +5,7 @@ import { decodeMessageText } from '../src/lib/messageText.ts';
 
 test('chat context carries academic fields and record without account identity or invented values', () => {
  const user={id:'a',email:'private@example.com',username:'private',displayName:'Private',degreeCode:'766',major:null,campus:null,commencementYear:null,electiveInterests:['AI']};
- assert.deepEqual(buildChatContext(user,' record '),{profile:{degree_code:'766',major:null,campus:null,commencement_year:null,elective_mode: 'degree', elective_interests:[]},enrolment_record:'record'});
+ assert.deepEqual(buildChatContext(user,' record '),{profile:{degree_code:'766',major:null,campus:null,commencement_year:null,elective_mode:'interest',elective_interests:['AI']},enrolment_record:'record'});
  assert.equal(buildChatContext(null,'old record'),undefined);
  assert.equal('enrolment_record' in buildChatContext(user,''),false);
 });
@@ -20,3 +20,13 @@ test('reply text decodes numeric and double-escaped entities without parsing HTM
  assert.equal(decodeMessageText('&#x110000;'), '&#x110000;');
  assert.equal(decodeMessageText('&lt;img src=x onerror=alert(1)&gt;'), '<img src=x onerror=alert(1)>');
 });
+
+test("empty elective preferences use degree mode for every chat context", () => {
+ assert.equal(buildChatContext({electiveInterests:[]}, "").profile.elective_mode, "degree");
+});
+
+ test('explicit degree mode ignores retained interests', () => {
+  const context = buildChatContext({ electiveMode: 'degree', electiveInterests: ['AI'] }, '', 'degree', ['AI']);
+  assert.equal(context.profile.elective_mode, 'degree');
+  assert.deepEqual(context.profile.elective_interests, []);
+ });

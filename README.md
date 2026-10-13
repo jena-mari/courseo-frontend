@@ -224,3 +224,39 @@ When changing chat behaviour, edit the relevant hook or helper; when changing it
 appearance, edit the corresponding component. Import modules directly so their
 ownership stays visible. Account storage keys and API request contracts remain
 shared with the other route screens.
+
+## Account actions, elective preferences, and pending integrations
+
+Settings → System clears plans saved in this browser while preserving conversations.
+An explicit `studyPlanCleared` flag prevents old assistant messages from rebuilding
+cleared plans. A newly generated plan can replace a cleared plan. This action does
+not delete backend conversation history; there is no plan-deletion endpoint in the
+local backend.
+
+Account deletion calls `DELETE /api/v1/auth/me` with `{ password }` and session cookies.
+The local backend verifies the password, deletes the user and associated data,
+purges provider keys and chat checkpoints, and clears its session cookie. After a
+successful response the frontend clears the deleted account's browser data and
+returns to login. Deploy that backend endpoint before using this frontend action.
+
+Onboarding and Settings share `ElectiveInterestsField` and save `elective_interests`
+through `PATCH /api/v1/auth/me`. Chat starts and continuations derive `elective_mode`
+(`interest` for nonempty interests, otherwise `degree`) from the saved account
+preferences and send it with the interests in `context.profile`. This integrates
+the functional change from `origin/Tabitha` without its console payload logging.
+
+Settings → System → View handbook reads
+`GET /api/v1/handbook/courses/{course}?year={year}&campus={campus}`. That endpoint
+exists in the local backend checkout. It displays the returned handbook year and
+campus because the service can fall back to an older or different-campus entry.
+The official handbook link remains available if the API or seeded data is absent.
+Confirm that these routes and the required handbook data are deployed; the public
+handbook API address is still pending.
+
+Courseo tutorial slide 4 uses `src/assets/instructions/04-courseo.gif` to demonstrate creating and refining a plan.
+
+WAM is deferred. The backend enrolment parser deliberately discards numeric marks,
+so its current subject data cannot support a reliable WAM calculation. Future work
+needs validated marks and credit-point weights, confirmed rules for repeated,
+failed, and credited subjects, and a backend calculation/result contract before
+adding a frontend WAM display. Grade bands should not be substituted for marks.

@@ -58,3 +58,17 @@ test('a delayed write remains bound to the original account after a switch', () 
   oldRequestStorage.setItem(STORAGE_KEYS.chats, 'Alice late reply');
   assert.equal(currentStorage.getItem(STORAGE_KEYS.chats), 'Bob chat');
 });
+
+ test('deleting an account clears only its owned browser data', () => {
+  for (const key of Object.values(STORAGE_KEYS)) {
+    accountStorage('alice').setItem(key, 'Alice data');
+    accountStorage('bob').setItem(key, 'Bob data');
+  }
+  localStorage.setItem('unrelated', 'keep');
+  accountStorage('alice').clear();
+  for (const key of Object.values(STORAGE_KEYS)) {
+    assert.equal(accountStorage('alice').getItem(key), null);
+    assert.equal(accountStorage('bob').getItem(key), 'Bob data');
+  }
+  assert.equal(localStorage.getItem('unrelated'), 'keep');
+ });

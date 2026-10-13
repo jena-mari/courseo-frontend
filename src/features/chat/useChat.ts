@@ -68,6 +68,14 @@ export function useChat() {
   }, [activeChatId, chats]);
 
   useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === storage.keyFor(STORAGE_KEYS.chats)) setChats(loadInitialChats(storage));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [user?.id]);
+
+  useEffect(() => {
     if (location.pathname !== "/chat") return;
     storage.setItem(STORAGE_KEYS.chats, JSON.stringify(chats));
     storage.removeItem(STORAGE_KEYS.bootstrapChat);
@@ -147,6 +155,7 @@ export function useChat() {
                   ...chat,
                   title: chat.title,
                   messages: finalMessages,
+                  studyPlanCleared: content.studyPlanData ? false : chat.studyPlanCleared,
                   studyPlanData:
                     content.studyPlanData ?? chat.studyPlanData,
                 }

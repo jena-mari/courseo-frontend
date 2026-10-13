@@ -71,3 +71,7 @@ export function resetPassword(token: string, password: string) {
     body: JSON.stringify({ token, password }),
   });
 }
+
+export function deleteCurrentAccount(password: string) {
+  return api<void>("/api/v1/auth/me", { method: "DELETE", body: JSON.stringify({ password }) });
+}
