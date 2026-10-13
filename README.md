@@ -185,11 +185,10 @@ proxy destination; otherwise it uses the configured API URL and then the local
 port 7777 default. Sign in again after switching between localhost and 127.0.0.1.
 Production still uses the configured public API URL.
 
-All first messages are sent to the backend with `input_type: "question"`; the
-backend must support conversational starts and detect/project enrolment records
-on both first and subsequent turns. No canned assistant response is generated in
-the browser. The matching changes live in `intelli-study-planner-brain` and need
-to be deployed with this frontend.
+Chat starts and follow-ups use the `update-langgraph-flow` request contract:
+`{ message, model?, context? }`. The obsolete `input_type` field is omitted.
+Profile PATCH requests send only edited fields; `elective_mode` belongs in
+`context.profile` for chat, and is not accepted by the profile endpoint.
 
 The chat status panel follows actual request stages (sending, waiting for the
 backend/AI response, receiving, formatting) and reports elapsed time. The JSON API

@@ -55,7 +55,7 @@ const revision = process.env.RENDER_GIT_COMMIT || process.env.GITHUB_SHA ||
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const configuredApi = env.VITE_API_URL?.trim() || env.VITE_API_BASE_URL?.trim();
-  const proxyTarget = env.COURSEO_API_PROXY_TARGET?.trim() || configuredApi || "http://127.0.0.1:7777";
+  const proxyTarget = (env.COURSEO_API_PROXY_TARGET?.trim() || configuredApi || "http://127.0.0.1:7777").replace(/\/+$/, "").replace(/\/api\/v1$/, "");
   return {
   define: { __COURSEO_REVISION__: JSON.stringify(revision) },
   plugins: [localGeminiKeySettings(), react(), tailwindcss(), {

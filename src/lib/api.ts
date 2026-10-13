@@ -1,3 +1,4 @@
+import { validationIssues, type ValidationIssue } from "./apiValidation";
 import { resolveApiBaseUrl } from "./apiConfig";
 import type { ChatProgressListener } from "./chatProgress";
 
@@ -16,6 +17,8 @@ function detailText(detail: unknown): string {
 
 /** Keep server, provider, and validation internals out of user-facing copy. */
 function errorMessage(path: string, detail: unknown, status: number, method?: string): string {
+  const issues = validationIssues(detail);
+  if (status === 422 && issues.length) return issues.map((issue) => `${issue.field}: ${issue.message}`).join(" ");
   const text = detailText(detail);
 
   if (status === 401) {
@@ -39,6 +42,7 @@ function errorMessage(path: string, detail: unknown, status: number, method?: st
     if (/email|account|already|exist/.test(text)) return "An account with this email already exists. Try logging in instead.";
     return "That conflicts with information already saved to your account. Review it and try again.";
   }
+  if (status === 422 && path.startsWith("/api/v1/chat") && /selected model|does not offer|model.*unavailable/.test(text)) return "Your AI provider does not offer this model for your key. Choose another available model and try again.";
   if (status === 422) return path.startsWith("/api/v1/chat") ? "Courseo could not process this message. Please try again or check the backend logs if it continues." : "Check the information you entered and try again.";
   if (status === 429) return "Your AI provider is busy or its quota has been reached. Wait a moment or try another key.";
   if (status >= 500) return "Courseo is temporarily unavailable. Please try again in a few moments.";
@@ -50,7 +54,7 @@ function errorMessage(path: string, detail: unknown, status: number, method?: st
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly status: number) {
+  constructor(message: string, public readonly status: number, public readonly issues: ValidationIssue[] = []) {
     super(message);
     this.name = "ApiError";
   }
@@ -81,7 +85,7 @@ export async function api<T>(path: string, options?: RequestInit, onProgress?: C
 
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new ApiError(errorMessage(path, error?.detail, response.status, options?.method), response.status);
+    throw new ApiError(errorMessage(path, error?.detail, response.status, options?.method), response.status, validationIssues(error?.detail));
   }
 
   if (response.status === 204) {

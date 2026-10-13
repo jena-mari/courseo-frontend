@@ -10,3 +10,9 @@ test('production and explicitly remote APIs use their configured address', () =>
   assert.equal(resolveApiBaseUrl(true,'https://api.example.com'),'https://api.example.com');
   assert.equal(resolveApiBaseUrl(false,' ','https://legacy.example.com/'),'https://legacy.example.com');
 });
+
+test('API origins with a version prefix do not duplicate /api/v1', () => {
+  assert.equal(resolveApiBaseUrl(false,'https://api.example.test/api/v1/'), 'https://api.example.test');
+  assert.equal(resolveApiBaseUrl(false,'/api/v1'), '');
+  assert.equal(resolveApiBaseUrl(true,'http://localhost:60459/api/v1'), '');
+});

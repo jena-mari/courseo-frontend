@@ -1,9 +1,11 @@
+import { ApiError } from "../../lib/api";
 import { LoadingIndicator } from "../ui/LoadingIndicator";
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Check, ExternalLink, KeyRound, Pencil, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { addApiKey, deleteApiKey, getKeyProviders, getSavedKeys, updateApiKey, verifyApiKey, type KeyProvider, type SavedCredential } from "../../lib/keyApi";
 
 function friendlyKeyError(error: unknown) {
+  if (error instanceof ApiError && error.issues.length) return error.message;
   const message = error instanceof Error ? error.message : "Could not save this API key.";
   if (/rate|quota|too many/i.test(message)) {
     return "Too many attempts or the provider quota was reached. Please wait and try again.";

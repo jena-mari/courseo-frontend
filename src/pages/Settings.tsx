@@ -46,7 +46,7 @@ function getStoredChats(storage: ReturnType<typeof accountStorage>): Chat[] {
   }
 }
 
-function getStoredProfile(user: { email: string; username: string; commencementYear?: number | null; campus?: "Wollongong" | "Liverpool" | null; major?: string | null; electiveInterests?: string[] } | null | undefined) {
+function getStoredProfile(user: { email: string; username: string; commencementYear?: number | null; campus?: string | null; major?: string | null; electiveInterests?: string[] } | null | undefined) {
   return {
     email: user?.email ?? "",
     username: user?.username ?? "",
@@ -283,11 +283,6 @@ export function SettingsPage() {
     try {
       const saved = await updateProfile({
         display_name: displayName,
-        degree_code: "766",
-        commencement_year: user.commencementYear ?? null,
-        campus: user.campus ?? null,
-        major: user.major ?? null,
-        elective_mode: electiveMode,
         elective_interests: electiveMode === "interest" ? selectedInterests : [],
       });
       storage.setItem(STORAGE_KEYS.profile, JSON.stringify({
