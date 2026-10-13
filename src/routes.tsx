@@ -1,8 +1,9 @@
 import { LoadingScreen } from "./components/ui/LoadingScreen";
 import { useEffect } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 import { useLocation, useOutlet } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { legacyHashRoute } from "./lib/hashRouting";
 import { GuestRoute, ProtectedRoute } from "./auth/RouteGuards";
 
 function AnimatedRouteOutlet() {
@@ -30,7 +31,11 @@ function AnimatedRouteOutlet() {
   );
 }
 
-export const router = createBrowserRouter([{
+// Migrate old URLs only when the host has already served the app shell.
+const migratedRoute = legacyHashRoute(window.location);
+if (migratedRoute) window.history.replaceState(window.history.state, "", migratedRoute);
+
+export const router = createHashRouter([{
   element: <AnimatedRouteOutlet />,
   hydrateFallbackElement: <LoadingScreen title="Opening Courseo" detail="Loading your workspace…" />,
   children: [

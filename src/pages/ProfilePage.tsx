@@ -46,7 +46,7 @@ export function ProfilePage() {
     } catch {
       // AuthContext clears the local session even if the server is unreachable.
     } finally {
-      window.location.replace("/login");
+      window.location.replace("/#/login");
     }
   };
 

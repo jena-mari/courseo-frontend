@@ -183,7 +183,7 @@ export function SettingsPage() {
   const location = useLocation();
   const { user, updateProfile, loadProfile } = useAuth();
   const storage = accountStorage(user?.id);
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(window.location.search).get("tab") === "system" ? "system" : "profile");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => new URLSearchParams(location.search).get("tab") === "system" ? "system" : "profile");
   const [showAccount, setShowAccount] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHandbook, setShowHandbook] = useState(false);
