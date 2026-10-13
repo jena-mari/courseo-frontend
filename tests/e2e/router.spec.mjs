@@ -107,3 +107,61 @@ test('browser tab uses Courseo AI and the bundled Courseo logo favicon', async (
   const { readFile } = await import('node:fs/promises');
   expect(await response.body()).toEqual(await readFile('src/assets/courseo-logo.png'));
 });
+
+for (const screen of ['profile','settings']) {
+  test(`${screen} preference form PATCH matches update-langgraph-flow and preserves values after validation errors`, async ({page}) => {
+    await authenticate(page);
+    let reject = true;
+    let submitted;
+    await page.route('**/api/v1/auth/me', route => {
+      if (route.request().method() !== 'PATCH') return route.fulfill({json:user});
+      submitted = route.request().postDataJSON();
+      expect(Object.keys(submitted).sort()).toEqual(['display_name','elective_interests']);
+      if (reject) return route.fulfill({status:422,json:{detail:[{loc:['body','display_name'],type:'string_too_long',msg:'String should have at most 100 characters',ctx:{max_length:100}}]}});
+      return route.fulfill({json:{...user,...submitted}});
+    });
+    await page.goto(`/#/${screen}`);
+    const name = page.getByRole('textbox', {name:'Preferred name',exact:true});
+    await expect(name).toBeEnabled();
+    await name.fill('Correctable Student');
+    await page.getByText('Interest-based', {exact:true}).click();
+    await page.getByRole('button', {name:'Machine Learning',exact:true}).click();
+    const save = page.getByRole('button', {name:screen === 'profile' ? 'Continue to secure setup' : 'Save changes',exact:true});
+    await save.click();
+    await expect(page.getByRole('alert')).toContainText('Preferred name: Use no more than 100 characters.');
+    await expect(name).toHaveValue('Correctable Student');
+    expect(submitted).toEqual({display_name:'Correctable Student',elective_interests:['Machine Learning']});
+    reject = false;
+    await save.click();
+    if (screen === 'profile') await expect(page).toHaveURL(/#\/connect-key$/);
+    else await expect(page.getByRole('button',{name:'Saved',exact:true})).toBeVisible();
+  });
+}
+
+test('follow-up uses the available UI model instead of the saved obsolete model and exposes application 422 without retrying', async ({page}) => {
+  await authenticate(page);
+  await page.addInitScript(() => {
+    const key = 'courseo:account:router-test:courseoChats';
+    const chats = JSON.parse(localStorage.getItem(key));
+    chats[0].backendSessionId = '00000000-0000-4000-8000-000000000001';
+    chats[0].model = 'obsolete-model';
+    localStorage.setItem(key,JSON.stringify(chats));
+  });
+  let calls = 0;
+  await page.route('**/api/v1/chat/*', route => {
+    calls += 1;
+    const payload = route.request().postDataJSON();
+    expect(payload.model).toBe('gemini-test');
+    expect(payload).not.toHaveProperty('input_type');
+    expect(payload.context.profile.elective_mode).toBe('degree');
+    return route.fulfill({status:422,json:{detail:'Your AI provider does not offer the selected model for this key.'}});
+  });
+  await page.goto('/#/chat');
+  const composer = page.getByRole('textbox',{name:'Message Courseo'});
+  await expect(composer).toBeEnabled();
+  await composer.fill('A test question');
+  await page.getByRole('button',{name:'Send',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('Choose another available model');
+  await expect(composer).toHaveValue('A test question');
+  expect(calls).toBe(1);
+});

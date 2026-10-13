@@ -11,9 +11,9 @@ export interface CourseoUser {
   displayName: string | null;
   /** Display label: display name, or email local-part. */
   username: string;
-  degreeCode: "766";
+  degreeCode: string;
   commencementYear: number | null;
-  campus: "Wollongong" | "Liverpool" | null;
+  campus: string | null;
   major: string | null;
   electiveMode: ElectiveRecommendationMode;
   electiveInterests: string[];
@@ -30,7 +30,7 @@ export function toCourseoUser(user: UserOut): CourseoUser {
     commencementYear: user.commencement_year ?? null,
     campus: user.campus ?? null,
     major: user.major ?? null,
-    electiveMode: user.elective_mode ?? "degree",
+    electiveMode: user.elective_interests?.length ? "interest" : "degree",
     electiveInterests: user.elective_interests ?? [],
   };
 }
@@ -52,7 +52,7 @@ export function getCachedAuthUser(): CourseoUser | null {
     }
     return {
       ...user,
-      degreeCode: "766",
+      degreeCode: user.degreeCode ?? "766",
       commencementYear: user.commencementYear ?? null,
       campus: user.campus ?? null,
       major: user.major ?? null,

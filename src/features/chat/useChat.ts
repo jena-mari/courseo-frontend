@@ -130,7 +130,7 @@ export function useChat() {
         const electiveInterests = user?.electiveInterests ?? [];
         const electiveMode = inferElectiveMode(electiveInterests);
 
-        const data = await continueChat(activeChat.backendSessionId, trimmed, activeChat.model || selectedModel || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? "", electiveMode, electiveInterests));
+        const data = await continueChat(activeChat.backendSessionId, trimmed, selectedModel || activeChat.model || undefined, setChatPhase, buildChatContext(user, storage.getItem(STORAGE_KEYS.enrolment) ?? "", electiveMode, electiveInterests));
         setChatPhase("formatting");
         const content = parseAIResponse(data.reply.content);
 

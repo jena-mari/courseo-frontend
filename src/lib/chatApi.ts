@@ -23,7 +23,7 @@ export interface ChatResponse {
 export function startChat(message: string, model?: string, onProgress?: ChatProgressListener, context?: ChatContext) {
   return api<ChatResponse>("/api/v1/chat", {
     method: "POST",
-    body: JSON.stringify({ message, input_type: "question", ...(model ? { model } : {}), ...(context ? { context } : {}) }),
+    body: JSON.stringify({ message, ...(model ? { model } : {}), ...(context ? { context } : {}) }),
   }, onProgress);
 }
 
