@@ -12,3 +12,7 @@ dist/
 # Editor and operating-system files
 .DS_Store
 *.log
+
+# Browser test output
+test-results/
+playwright-report/

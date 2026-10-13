@@ -1,3 +1,4 @@
+import { SpaRouteError, verifySpaRoutes } from "./verify-spa-routes.mjs";
 import { setTimeout } from "node:timers/promises";
 
 const siteUrl = process.env.COURSEO_SITE_URL;
@@ -14,11 +15,13 @@ while (Date.now() < deadline) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const version = await response.json();
     if (version.revision === expected) {
+      await verifySpaRoutes(siteUrl);
       console.log(`Verified live revision ${expected} at ${siteUrl}`);
       process.exit(0);
     }
     console.log("Waiting for Render to serve the requested revision…");
   } catch (error) {
+    if (error instanceof SpaRouteError) throw error;
     console.log(`Waiting for the deployment marker: ${error.message}`);
   }
   await setTimeout(15_000);

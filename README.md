@@ -260,3 +260,31 @@ so its current subject data cannot support a reliable WAM calculation. Future wo
 needs validated marks and credit-point weights, confirmed rules for repeated,
 failed, and credited subjects, and a backend calculation/result contract before
 adding a frontend WAM display. Grade bands should not be substituted for marks.
+
+### A page returns 404 when refreshed
+
+Courseo uses browser routing. The Render static site must have a rewrite from
+`/*` to `/index.html`. This is already declared in `render.yaml`, but deploying
+application code does not apply a Blueprint to a service created separately.
+In the Render dashboard, open the frontend service → Redirects/Rewrites and add
+Source `/*`, Destination `/index.html`, Action **Rewrite**. Alternatively sync
+the Blueprint to the existing service. After saving, open `/chat` directly and
+refresh it; the app should load even when signed out.
+
+Deployment verification checks the revision and direct `/chat`, `/settings`, and
+`/login` requests. It fails if a route returns 404, redirects, or does not serve
+the app shell, so a missing SPA rewrite cannot be reported as a successful release.
+
+### Router end-to-end tests
+
+`npm run test:e2e` builds Courseo and tests direct chat navigation, full reloads
+with a saved conversation, Settings navigation, browser back/forward, and
+signed-out routing in an isolated Chromium browser. Account and provider API
+responses are mocked; these tests verify routing and browser cache restoration,
+not backend availability. On macOS the tests use installed Google Chrome; set
+`COURSEO_BROWSER_PATH` to another Chromium executable if needed. On other systems
+run `npx playwright install chromium` once.
+
+Set `COURSEO_E2E_SITE_URL=https://courseo-frontend.onrender.com` when running
+`npm run test:e2e` to also test the deployed `/chat` route without API mocks.
+A passing local preview does not prove the deployed host has the required rewrite.
