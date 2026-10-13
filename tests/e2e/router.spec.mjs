@@ -92,3 +92,18 @@ test('password reset token is read from the hash-route query', async ({page}) =>
   await page.getByRole('button', {name:'Reset password',exact:true}).click();
   await expect.poll(() => submitted).toEqual({token:'e2e-test-token',password:'temporary-test-password'});
 });
+
+test('browser tab uses Courseo AI and the bundled Courseo logo favicon', async ({page, request}) => {
+  await page.route('**/api/v1/auth/me', route => route.fulfill({status:401,json:{detail:'Not authenticated'}}));
+  await page.goto('/#/');
+  await expect(page).toHaveTitle('Courseo AI');
+  const icon = page.locator('link[rel="icon"]');
+  await expect(icon).toHaveAttribute('type', 'image/png');
+  const href = await icon.getAttribute('href');
+  expect(href).toMatch(/^\/assets\/courseo-logo-.*\.png$/);
+  const response = await request.get(href);
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toBe('image/png');
+  const { readFile } = await import('node:fs/promises');
+  expect(await response.body()).toEqual(await readFile('src/assets/courseo-logo.png'));
+});
