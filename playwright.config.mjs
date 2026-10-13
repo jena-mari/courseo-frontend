@@ -10,7 +10,7 @@ export default defineConfig({
     launchOptions: { executablePath: process.env.COURSEO_BROWSER_PATH || (process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : undefined) },
   },
   webServer: {
-    command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
+    command: 'npm run build && node tests/e2e/static-server.mjs',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
     timeout: 120000,

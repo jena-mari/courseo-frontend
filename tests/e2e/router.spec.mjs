@@ -19,12 +19,12 @@ test('authenticated chat survives a direct visit and two full reloads with saved
   await authenticate(page);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  const response = await page.goto('/chat');
+  const response = await page.goto('/#/chat');
   expect(response.status()).toBe(200);
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await expect(page.getByRole('region', {name:'Conversation',exact:true})).toContainText('Your saved conversation survived reload.');
     await expect(page.getByRole('textbox', {name:'Message Courseo'})).toBeEnabled();
-    await expect(page).toHaveURL(/\/chat$/);
+    await expect(page).toHaveURL(/#\/chat$/);
     if (attempt < 2) expect((await page.reload()).status()).toBe(200);
   }
   expect(errors).toEqual([]);
@@ -32,7 +32,7 @@ test('authenticated chat survives a direct visit and two full reloads with saved
 
 test('settings navigation, reload, browser back and forward preserve their routes', async ({page}) => {
   await authenticate(page);
-  await page.goto('/chat');
+  await page.goto('/#/chat');
   await expect(page.getByRole('textbox', {name:'Message Courseo'})).toBeEnabled();
   await page.getByRole('button', {name:'Settings',exact:true}).click();
   await expect(page.getByRole('heading', {name:'Settings',exact:true})).toBeVisible();
@@ -46,8 +46,8 @@ test('settings navigation, reload, browser back and forward preserve their route
 
 test('a signed-out direct chat visit and reload show the signed-out landing instead of a 404', async ({page}) => {
   await page.route('**/api/v1/auth/me', (route) => route.fulfill({status:401,json:{detail:'Not authenticated'}}));
-  expect((await page.goto('/chat')).status()).toBe(200);
-  await expect(page).toHaveURL('http://127.0.0.1:4173/');
+  expect((await page.goto('/#/chat')).status()).toBe(200);
+  await expect(page).toHaveURL('http://127.0.0.1:4173/#/');
   await expect(page.getByRole('button', {name:'Log in',exact:true})).toBeVisible();
   expect((await page.reload()).status()).toBe(200);
   await expect(page.getByRole('button', {name:'Log in',exact:true})).toBeVisible();
@@ -55,9 +55,40 @@ test('a signed-out direct chat visit and reload show the signed-out landing inst
 
 test('deployed chat direct navigation and reload serve the app shell', async ({page}) => {
   test.skip(!process.env.COURSEO_E2E_SITE_URL, 'Set COURSEO_E2E_SITE_URL to test the live deployment.');
-  const url = new URL('/chat', process.env.COURSEO_E2E_SITE_URL).href;
+  const url = new URL('/#/chat', process.env.COURSEO_E2E_SITE_URL).href;
   const response = await page.goto(url);
-  expect(response.status(), 'The deployed host must serve index.html for /chat').toBe(200);
+  expect(response.status(), 'The deployed host must serve index.html for /#/chat').toBe(200);
   await expect(page.locator('#root')).toBeAttached();
   expect((await page.reload()).status()).toBe(200);
+});
+
+test('hash routes work on a static host that returns 404 for clean paths', async ({page, request}) => {
+  expect((await request.get('/chat')).status()).toBe(404);
+  await authenticate(page);
+  expect((await page.goto('/#/chat')).status()).toBe(200);
+  await expect(page.getByRole('textbox', {name:'Message Courseo'})).toBeEnabled();
+  expect((await page.reload()).status()).toBe(200);
+  await expect(page.getByRole('textbox', {name:'Message Courseo'})).toBeEnabled();
+});
+
+test('Settings query parameters and API key anchor survive hash-route reloads', async ({page}) => {
+  await authenticate(page);
+  await page.route('**/api/v1/keys', route => route.fulfill({json:[]}));
+  await page.goto('/#/settings?tab=system#api-keys');
+  await expect(page.getByRole('tab', {name:'System',exact:true})).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#api-keys')).toBeVisible();
+  expect((await page.reload()).status()).toBe(200);
+  await expect(page.getByRole('tab', {name:'System',exact:true})).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/#\/settings\?tab=system#api-keys$/);
+});
+
+test('password reset token is read from the hash-route query', async ({page}) => {
+  let submitted;
+  await page.route('**/api/v1/auth/me', route => route.fulfill({status:401,json:{detail:'Not authenticated'}}));
+  await page.route('**/api/v1/auth/reset-password', route => { submitted = route.request().postDataJSON(); return route.fulfill({status:204}); });
+  await page.goto('/#/reset-password?token=e2e-test-token');
+  await page.getByLabel('New password', {exact:true}).fill('temporary-test-password');
+  await page.getByLabel('Confirm new password', {exact:true}).fill('temporary-test-password');
+  await page.getByRole('button', {name:'Reset password',exact:true}).click();
+  await expect.poll(() => submitted).toEqual({token:'e2e-test-token',password:'temporary-test-password'});
 });
