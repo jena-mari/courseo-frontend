@@ -6,9 +6,9 @@ import { lazy, Suspense } from "react";
 import { LoadingIndicator } from "../ui/LoadingIndicator";
 const StudyPlanDownload = lazy(() => import("../study-plan/StudyPlanDownload"));
 
-type Props = Pick<ChatController, "keyStatus" | "chatError" | "studyPlanData" | "inputRef" | "inputText" | "setInputText" | "handleKeyDown" | "submitComposer" | "isTyping">;
+type Props = Pick<ChatController, "keyStatus" | "chatError" | "studyPlanData" | "inputRef" | "inputText" | "setInputText" | "handleKeyDown" | "submitComposer" | "isTyping" | "canCalculateWam" | "isCalculatingWam" | "handleCalculateWam">;
 
-export function ChatComposer({ keyStatus, chatError, studyPlanData, inputRef, inputText, setInputText, handleKeyDown, submitComposer, isTyping }: Props) {
+export function ChatComposer({ keyStatus, chatError, studyPlanData, inputRef, inputText, setInputText, handleKeyDown, submitComposer, isTyping, canCalculateWam, isCalculatingWam, handleCalculateWam }: Props) {
   return (
           <div className="px-3 sm:px-6 pb-3 sm:pb-5 shrink-0">
             {keyStatus === "checking" && <div className="mx-auto max-w-3xl"><ChatProgress phase="checking" /></div>}
@@ -19,6 +19,18 @@ export function ChatComposer({ keyStatus, chatError, studyPlanData, inputRef, in
               >
                 {chatError}
               </p>
+            )}
+
+            {canCalculateWam && (
+              <div className="flex justify-end px-1 pt-3 w-full max-w-3xl mx-auto">
+                <button
+                  onClick={handleCalculateWam}
+                  disabled={isCalculatingWam || isTyping}
+                  className="h-9 rounded-[15px] bg-[#f1e8ff] px-5 text-[11px] font-extrabold text-[#000181] disabled:opacity-40 transition-opacity"
+                >
+                  {isCalculatingWam ? "Calculating…" : "Calculate WAM"}
+                </button>
+              </div>
             )}
 
             {/*button to download study plan*/}

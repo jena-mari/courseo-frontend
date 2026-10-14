@@ -27,6 +27,7 @@ export function ChatPage() {
     inputRef, handbookHref, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
+    canCalculateWam, isCalculatingWam, handleCalculateWam,
   } = useChat();
 
   if (isLoggingOut) {
@@ -105,6 +106,9 @@ export function ChatPage() {
             handleKeyDown={handleKeyDown}
             submitComposer={submitComposer}
             isTyping={isTyping}
+            canCalculateWam={canCalculateWam}
+            isCalculatingWam={isCalculatingWam}
+            handleCalculateWam={handleCalculateWam}
           />
 
         </main>

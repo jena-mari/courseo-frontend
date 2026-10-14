@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { buildChatContext } from "../../lib/chatContext";
 import { continueChat, startChat } from "../../lib/chatApi";
+import { looksLikeEnrolmentRecord } from "../../lib/enrolment";
+import { calculateWam, describeWam } from "../../lib/wamApi";
 import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
 import type { StudyPlanResponse } from "../../types/studyPlanType";
 import type { ChatPhase } from "../../lib/chatProgress";
@@ -31,6 +33,7 @@ export function useChat() {
   );
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isCalculatingWam, setIsCalculatingWam] = useState(false);
   const [chatPhase, setChatPhase] = useState<ChatPhase>("sending");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [chatError, setChatError] = useState("");
@@ -297,6 +300,37 @@ export function useChat() {
     }
   };
 
+  // A record pasted into the composer wins over the one saved on the profile.
+  const wamRecord = looksLikeEnrolmentRecord(inputText) ? inputText : enrollment;
+  const activeBackendSessionId = chats.find((chat) => chat.id === activeChatId)?.backendSessionId;
+  const canCalculateWam = Boolean(activeBackendSessionId && wamRecord.trim());
+
+  const handleCalculateWam = async () => {
+    if (!activeBackendSessionId || !wamRecord.trim() || isCalculatingWam || isTyping) return;
+    setChatError("");
+    setIsCalculatingWam(true);
+    try {
+      const result = await calculateWam(activeBackendSessionId, wamRecord);
+      const wamMessage: Message = {
+        id: `wam-${Date.now()}`,
+        role: "assistant",
+        content: describeWam(result),
+        timestamp: new Date(),
+      };
+      const chatId = activeChatId;
+      setActiveMessages((messages) => [...messages, wamMessage]);
+      setChats((previousChats) =>
+        previousChats.map((chat) =>
+          chat.id === chatId ? { ...chat, messages: [...chat.messages, wamMessage] } : chat
+        )
+      );
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : "Courseo could not calculate your WAM.");
+    } finally {
+      setIsCalculatingWam(false);
+    }
+  };
+
   const handleNewChat = () => {
     if (isTyping || isCreatingChat || !requireChatAccess()) return;
     setShowMenu(false);
@@ -367,6 +401,7 @@ export function useChat() {
     inputRef, handbookHref, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
+    canCalculateWam, isCalculatingWam, handleCalculateWam,
   };
 }
 

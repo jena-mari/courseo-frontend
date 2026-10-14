@@ -64,3 +64,8 @@ export function buildCopilotStudyPlanPrompt(raw: string, summary: EnrolmentSumma
     raw.trim(),
   ].join("\n");
 }
+
+/** True when pasted text looks like a SOLS enrolment record (table or flattened). */
+export function looksLikeEnrolmentRecord(raw: string) {
+  return /subject\s*code/i.test(raw) && /\b[A-Z]{2,4}\d{3}[A-Z]?\b/.test(raw);
+}
