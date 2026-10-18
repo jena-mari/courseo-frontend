@@ -16,7 +16,7 @@ import { getKeyProviders, personalKeyState } from "../lib/keyApi";
 type StartMode = "choice" | "account" | "login" | "register" | "copilot-details";
 type Campus = "Wollongong" | "Liverpool";
 const COMMENCEMENT_YEARS = ["2026"];
-const DEGREES = [{ value: "1807", label: "1807 — Bachelor of Information Technology" }, { value: "766", label: "766 — Bachelor of Computer Science" }];
+const DEGREES = [{ value: "1807", label: "1807 — Bachelor of Information Technology" }, { value: "766", label: "766 — Bachelor of Computer Science" }, { value: "1838", label: "1838 — Bachelor of Business Information Systems" }];
 
 function Shell({ children }: { children: ReactNode }) {
   const shellRef = useRef<HTMLDivElement>(null);
