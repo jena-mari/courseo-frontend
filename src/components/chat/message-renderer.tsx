@@ -6,12 +6,17 @@ interface MessageRendererProps {
 export function MessageRenderer({ content }: MessageRendererProps) {
   const renderFormattedText = (text: string) => {
     const normalized = text.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/?strong>/gi, "**").replace(/<\/?em>/gi, "*");
-    return normalized.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|<a\s+[^>]*href=["'][^"']+["'][^>]*>.*?<\/a>)/gi).map((part, index) => {
+    return normalized.split(/(\*\*[^*]+?\*\*|`[^`]+`|\*[^*]+?\*|<a\s+[^>]*href=["'][^"']+["'][^>]*>.*?<\/a>)/gi).map((part, index) => {
+      if (!part) return null;
       const linkMatch = part.match( /<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/i ); 
-      if (linkMatch) { const [, href, linkText] = linkMatch; return ( <a key={index} href={href} target="_blank" rel="noopener noreferrer" className="text-[#000181] underline hover:opacity-80" > {linkText} </a> ); }
-      if (part.startsWith("**") && part.endsWith("**")) return <strong key={index}>{part.slice(2, -2)}</strong>;
-      if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
-      if (part.startsWith("`") && part.endsWith("`")) return <code key={index}>{part.slice(1, -1)}</code>;
+      if (linkMatch) { const [, href, linkText] = linkMatch; 
+        return ( <a key={index} href={href} target="_blank" rel="noopener noreferrer" className="text-[#000181] underline hover:opacity-80" > {linkText} </a> ); }
+      if (part.startsWith("**") && part.endsWith("**")) 
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      if (part.startsWith("*") && part.endsWith("*")) 
+        return <em key={index}>{part.slice(1, -1)}</em>;
+      if (part.startsWith("`") && part.endsWith("`")) 
+        return <code key={index}>{part.slice(1, -1)}</code>;
       return <span key={index} className="">{part}</span>;
     });
   };
