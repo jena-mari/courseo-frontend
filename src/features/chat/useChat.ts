@@ -50,8 +50,6 @@ export function useChat() {
   const inputRef = useComposer(inputText);
   const pendingPromptSentRef = useRef(false);
 
-  const handbookHref = `https://courses.uow.edu.au/courses/${user?.commencementYear ?? new Date().getFullYear()}/${user?.degreeCode ?? "766"}`;
-
   const { availableModels, selectedModel, keyStatus, showKeyNotice, setShowKeyNotice,
     privacyAcknowledged, requireChatAccess, handleUnavailableKey, acknowledgePrivacy, changeModel
   } = useChatAccess(setChatError);
@@ -364,7 +362,7 @@ export function useChat() {
     setMobileSidebarOpen, mobileStudyPlanOpen, setMobileStudyPlanOpen, showAccount,
     setShowAccount, showMenu, setShowMenu, showHelp,
     setShowHelp, isLoggingOut, studyPlanData, messagesEndRef,
-    inputRef, handbookHref, handleKeyDown, handleNewChat,
+    inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
   };

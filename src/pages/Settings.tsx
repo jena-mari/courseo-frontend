@@ -470,8 +470,8 @@ export function SettingsPage() {
                   </Panel>
                 </div>
 
-                <Panel icon={<BookOpen size={20} />} title="Course handbook" description="View the handbook details available to Courseo">
-                  <SettingRow label="Handbook details" sub="Review your course, campus, and handbook year">
+                <Panel icon={<BookOpen size={20} />} title="Course handbook" description="Browse the official UOW handbook">
+                  <SettingRow label="Handbook details" sub="Find your course in the School of Computing and Information Technology handbook">
                     <button type="button" onClick={() => setShowHandbook(true)} className="rounded-[12px] bg-[#eef0ff] px-4 py-2 text-[12px] font-extrabold text-[#000181]">View handbook</button>
                   </SettingRow>
                 </Panel>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, KeyRound, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
 import imgLogo from "../../assets/courseo-logo.png";
 import { motion } from "framer-motion";
-import { useAuth } from "../../auth/AuthContext";
+import { GENERAL_HANDBOOK_URL } from "../../lib/handbookLinks";
 
 export interface Chat {
   id: string;
@@ -41,10 +41,6 @@ export function CourseoSidebar({
   expandedWidth = "clamp(232px, 20vw, 264px)",
 }: CourseoSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user } = useAuth();
-  const handbookYear = user?.commencementYear ?? new Date().getFullYear();
-  const handbookHref = `https://courses.uow.edu.au/courses/${handbookYear}/${user?.degreeCode ?? "766"}`;
-  const handbookContext = [user?.major, String(handbookYear)].filter(Boolean).join(", ");
 
   const filteredChats = chats.filter((c) =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -118,10 +114,11 @@ export function CourseoSidebar({
         </button>
 
           <a
-            href={handbookHref}
+            href={GENERAL_HANDBOOK_URL}
             target="_blank"
             rel="noopener noreferrer"
-            title={`Open the ${user?.degreeCode ?? "766"} handbook${handbookContext ? ` (${handbookContext})` : ""}`}
+            title="Browse the UOW School of Computing and Information Technology handbook"
+            aria-label="Browse the UOW handbook"
             className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
           >
             <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>

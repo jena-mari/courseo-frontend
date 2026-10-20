@@ -158,6 +158,13 @@ AI warning acknowledgements persist through logout for each account in the same
 browser, and Settings → System → View warning reopens the disclosure. Cross-device
 acknowledgements require a backend preference; clearing browser data resets them.
 
+Registration requires agreement to Courseo’s AI Policy. Selecting the policy link
+or its unchecked checkbox opens the same AI disclosure used in chat. The user
+must acknowledge the disclosure and select Agree and continue before the form
+records agreement. Only successful registration saves that acknowledgement under
+the returned account ID, so the first chat in this browser does not ask again.
+Cancellation or a failed registration does not save an account acknowledgement.
+
 `autoDeploy` is disabled in `render.yaml` so a deploy happens only after the GitHub Actions
 build succeeds. A deploy can also be started manually from the **Actions** tab using the
 workflow's **Run workflow** button.
@@ -244,13 +251,20 @@ through `PATCH /api/v1/auth/me`. Chat starts and continuations derive `elective_
 preferences and send it with the interests in `context.profile`. This integrates
 the functional change from `origin/Tabitha` without its console payload logging.
 
-Settings → System → View handbook reads
-`GET /api/v1/handbook/courses/{course}?year={year}&campus={campus}`. That endpoint
-exists in the local backend checkout. It displays the returned handbook year and
-campus because the service can fall back to an older or different-campus entry.
-The official handbook link remains available if the API or seeded data is absent.
-Confirm that these routes and the required handbook data are deployed; the public
-handbook API address is still pending.
+The chat menu, sidebar, and Settings → System → View handbook all link to the
+[general UOW School of Computing and Information Technology handbook](https://courses.uow.edu.au/browse/By%20School/SchoolofComputingandInformationTechnology).
+The shared destination is defined in `src/lib/handbookLinks.ts`. These actions
+previously used the profile's default course `766`, and the Settings dialog also
+hard-coded its course label. Chat-confirmed course details are not exposed to
+these controls, so the general page avoids opening an unrelated course. The
+Settings dialog no longer requests course-specific API data from that default.
+Restore personalised links only when the backend supplies reliable current
+course, year, and campus details to the frontend. Subject-card links still open
+individual subject pages.
+
+The obsolete Add Enrolment / Update Enrolment chat-menu action has been removed
+because it only returned to the welcome page. Paste enrolment records directly
+into the chat composer instead.
 
 Courseo tutorial slide 4 uses `src/assets/instructions/04-courseo.gif` to demonstrate creating and refining a plan.
 

@@ -1,11 +1,13 @@
 import { LoadingIndicator } from "../components/ui/LoadingIndicator";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Eye, EyeOff, User, Lock, Mail, X } from "lucide-react";
 import imgBg from "../assets/courseo-bg.png";
 import imgLogo from "../assets/courseo-logo.png";
 import { useAuth } from "../auth/AuthContext";
+import { LlmPrivacyDisclosure } from "../components/account/LlmPrivacyDisclosure";
+import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
 
 interface RegisterCardProps {
   onClose?: () => void;
@@ -22,12 +24,14 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeAiPolicy, setAgreeAiPolicy] = useState(false);
+  const [showAiPolicy, setShowAiPolicy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
     if (!username.trim()) return setError("Please enter a username.");
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
@@ -35,11 +39,16 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
     }
     if (password.length < 8) return setError("Password must be at least 8 characters.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
-    if (!agreePrivacy) return setError("Please agree to the Privacy Policy.");
+    if (!agreeAiPolicy) {
+      setError("Please review and agree to Courseo’s AI Policy.");
+      setShowAiPolicy(true);
+      return;
+    }
 
     setLoading(true);
     try {
-      await register(email.trim(), password, username.trim());
+      const current = await register(email.trim(), password, username.trim());
+      accountStorage(current.id).setItem(STORAGE_KEYS.llmPrivacyAcknowledged, current.id);
       if (onSuccess) onSuccess();
       else navigate("/profile");
     } catch (err) {
@@ -50,7 +59,9 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
   };
 
   return (
+    <>
     <motion.div
+      aria-hidden={showAiPolicy || undefined}
       initial={{ opacity: 0, scale: 0.92, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -167,26 +178,37 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
           </div>
         </div>
 
-        <label className="flex items-center gap-2.5 cursor-pointer">
+        <div className="flex items-center gap-2 px-0.5">
           <input
+            id="register-ai-policy"
             type="checkbox"
-            checked={agreePrivacy}
-            onChange={(e) => setAgreePrivacy(e.target.checked)}
-            className="w-4 h-4 border-2 border-[#000181] rounded accent-[#000181]"
+            checked={agreeAiPolicy}
+            onChange={(e) => {
+              if (e.target.checked) setShowAiPolicy(true);
+              else setAgreeAiPolicy(false);
+            }}
+            disabled={loading}
+            aria-labelledby="register-ai-policy-label register-ai-policy-link"
+            className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-[#000181] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#000181] disabled:cursor-wait"
           />
-          <span className="font-bold text-[13px] text-[#000181]">
-            I agree to the{" "}
+          <span className="min-w-0 text-[11px] font-medium leading-5 text-[#000181]/65">
+            <label id="register-ai-policy-label" htmlFor="register-ai-policy" className="cursor-pointer text-[11px] font-medium leading-5">I agree to</label>{" "}
             <button
+              id="register-ai-policy-link"
               type="button"
-              className="italic underline hover:opacity-70 transition-opacity"
+              onClick={() => setShowAiPolicy(true)}
+              disabled={loading}
+              aria-haspopup="dialog"
+              className="text-[11px] font-semibold leading-5 text-[#000181] underline decoration-[#000181]/30 underline-offset-[3px] transition-colors hover:decoration-[#000181] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#000181]"
             >
-              Privacy policy
+              Courseo’s AI Policy
             </button>
           </span>
-        </label>
+        </div>
 
         {error && (
           <motion.p
+            role="alert"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-red-500 text-sm font-semibold text-center"
@@ -224,6 +246,18 @@ export function RegisterCard({ onClose, onLogin, onSuccess }: RegisterCardProps 
         </p>
       </form>
     </motion.div>
+    <AnimatePresence>
+      {showAiPolicy && <LlmPrivacyDisclosure
+        purpose="registration"
+        onLeave={() => setShowAiPolicy(false)}
+        onAcknowledge={() => {
+          setAgreeAiPolicy(true);
+          setShowAiPolicy(false);
+          setError("");
+        }}
+      />}
+    </AnimatePresence>
+    </>
   );
 }
 
