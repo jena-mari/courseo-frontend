@@ -24,7 +24,7 @@ export function ChatPage() {
     setMobileSidebarOpen, mobileStudyPlanOpen, setMobileStudyPlanOpen, showAccount,
     setShowAccount, showMenu, setShowMenu, showHelp,
     setShowHelp, isLoggingOut, studyPlanData, messagesEndRef,
-    inputRef, handbookHref, handleKeyDown, handleNewChat,
+    inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
   } = useChat();
@@ -75,8 +75,6 @@ export function ChatPage() {
             showMenu={showMenu}
             isCreatingChat={isCreatingChat}
             handleNewChat={handleNewChat}
-            handbookHref={handbookHref}
-            enrollment={enrollment}
             handleLogout={handleLogout}
             isLoggingOut={isLoggingOut}
           />

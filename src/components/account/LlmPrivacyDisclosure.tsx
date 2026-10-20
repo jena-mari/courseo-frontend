@@ -1,17 +1,53 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, ArrowLeft, MessageSquareText, ShieldCheck, UserRoundX } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface LlmPrivacyDisclosureProps {
   reviewOnly?: boolean;
+  purpose?: "chat" | "registration";
   onAcknowledge: () => void;
   onLeave: () => void;
 }
 
-export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = false }: LlmPrivacyDisclosureProps) {
+export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = false, purpose = "chat" }: LlmPrivacyDisclosureProps) {
   const [confirmed, setConfirmed] = useState(false);
+  const registration = purpose === "registration";
+  const dialogRef = useRef<HTMLElement>(null);
 
-  return (
+  useEffect(() => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+    // Start at the policy heading instead of scrolling mobile readers to its checkbox.
+    dialogRef.current?.focus({ preventScroll: true });
+    return () => { if (previousFocus?.isConnected) previousFocus.focus(); };
+  }, []);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Escape" && (registration || reviewOnly)) {
+      event.preventDefault();
+      onLeave();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const controls = dialogRef.current?.querySelectorAll<HTMLElement>("input:not(:disabled), button:not(:disabled), a[href]");
+    if (!controls?.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (document.activeElement === dialogRef.current) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -19,6 +55,9 @@ export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = fals
       className="fixed inset-0 z-[80] flex flex-col overflow-y-auto overscroll-contain bg-[#050515]/55 p-4 backdrop-blur-[4px] touch-pan-y [-webkit-overflow-scrolling:touch] sm:p-6"
     >
       <motion.section
+        ref={dialogRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
         initial={{ opacity: 0, scale: 0.96, y: 18 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 18 }}
@@ -26,16 +65,16 @@ export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = fals
         aria-modal="true"
         aria-labelledby="llm-privacy-title"
         aria-describedby="llm-privacy-description"
-        className="mx-auto my-auto w-full shrink-0 max-w-[650px] rounded-[28px] border border-white/80 bg-white p-5 text-[#000181] shadow-[0_28px_90px_rgba(0,0,0,0.34)] sm:p-8"
+        className="mx-auto my-auto w-full shrink-0 max-w-[650px] rounded-[28px] border border-white/80 bg-white p-5 text-[#000181] shadow-[0_28px_90px_rgba(0,0,0,0.34)] outline-none sm:p-8"
       >
         <div className="flex items-start gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-[#eef0ff]">
             <ShieldCheck size={24} aria-hidden="true" />
           </span>
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[rgba(0,1,129,0.52)]">Privacy before your first message</p>
-            <h2 id="llm-privacy-title" className="mt-1 text-[25px] font-black leading-tight tracking-tight sm:text-[30px]">What Courseo sends to the AI provider</h2>
-            <p id="llm-privacy-description" className="mt-2 text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.65)]">Please review this before you start chatting.</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[rgba(0,1,129,0.52)]">{registration ? "AI use and privacy" : "Privacy before your first message"}</p>
+            <h2 id="llm-privacy-title" className="mt-1 text-[25px] font-black leading-tight tracking-tight sm:text-[30px]">{registration ? "Courseo’s AI Policy" : "What Courseo sends to the AI provider"}</h2>
+            <p id="llm-privacy-description" className="mt-2 text-[13px] font-semibold leading-relaxed text-[rgba(0,1,129,0.65)]">{registration ? "Please review how Courseo uses AI before creating your account." : "Please review this before you start chatting."}</p>
           </div>
         </div>
 
@@ -60,10 +99,10 @@ export function LlmPrivacyDisclosure({ onAcknowledge, onLeave, reviewOnly = fals
         </label>}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-[auto_1fr]">
-          {!reviewOnly && <button type="button" onClick={onLeave} className="flex h-12 items-center justify-center gap-2 rounded-[15px] border-2 border-[rgba(0,1,129,0.16)] px-5 text-[12px] font-extrabold transition hover:bg-[#f3f4ff]"><ArrowLeft size={16} /> Back to home</button>}
-          <button type="button" onClick={onAcknowledge} disabled={!reviewOnly && !confirmed} className="h-12 rounded-[15px] bg-[#000181] px-5 text-[12px] font-extrabold text-white transition hover:bg-[#171899] disabled:cursor-not-allowed disabled:opacity-40">{reviewOnly ? "Close warning" : "I understand — continue to chat"}</button>
+          {!reviewOnly && <button type="button" onClick={onLeave} className="flex h-12 items-center justify-center gap-2 rounded-[15px] border-2 border-[rgba(0,1,129,0.16)] px-5 text-[12px] font-extrabold transition hover:bg-[#f3f4ff]"><ArrowLeft size={16} />{registration ? "Cancel" : "Back to home"}</button>}
+          <button type="button" onClick={onAcknowledge} disabled={!reviewOnly && !confirmed} className="h-12 rounded-[15px] bg-[#000181] px-5 text-[12px] font-extrabold text-white transition hover:bg-[#171899] disabled:cursor-not-allowed disabled:opacity-40">{reviewOnly ? "Close warning" : registration ? "Agree and continue" : "I understand — continue to chat"}</button>
         </div>
       </motion.section>
-    </motion.div>
+    </motion.div>, document.body
   );
 }

@@ -2,10 +2,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { ProviderModelOptions } from "../account/ProviderModelOptions";
 import type { ChatController } from "../../features/chat/useChat";
+import { GENERAL_HANDBOOK_URL } from "../../lib/handbookLinks";
 
-type Props = Pick<ChatController, "navigate" | "setMobileSidebarOpen" | "availableModels" | "selectedModel" | "changeModel" | "setMobileStudyPlanOpen" | "setShowMenu" | "showMenu" | "isCreatingChat" | "handleNewChat" | "handbookHref" | "enrollment" | "handleLogout" | "isLoggingOut">;
+type Props = Pick<ChatController, "navigate" | "setMobileSidebarOpen" | "availableModels" | "selectedModel" | "changeModel" | "setMobileStudyPlanOpen" | "setShowMenu" | "showMenu" | "isCreatingChat" | "handleNewChat" | "handleLogout" | "isLoggingOut">;
 
-export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, selectedModel, changeModel, setMobileStudyPlanOpen, setShowMenu, showMenu, isCreatingChat, handleNewChat, handbookHref, enrollment, handleLogout, isLoggingOut }: Props) {
+export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, selectedModel, changeModel, setMobileStudyPlanOpen, setShowMenu, showMenu, isCreatingChat, handleNewChat, handleLogout, isLoggingOut }: Props) {
   return (
           <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 shrink-0">
             <div className="flex min-w-0 items-center gap-1.5">
@@ -44,6 +45,8 @@ export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, se
               <div className="relative">
               <button
                 onClick={() => setShowMenu((v) => !v)}
+                aria-label="Chat actions"
+                aria-expanded={showMenu}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-[#000181]"
               >
                 <MoreVertical size={22} />
@@ -62,12 +65,8 @@ export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, se
                         label: isCreatingChat ? "Creating Chat…" : "New Chat",
                         action: () => void handleNewChat(),
                       },
-                      { label: "Handbook →", action: () => { window.open(handbookHref, "_blank", "noopener,noreferrer"); setShowMenu(false); } },
+                      { label: "Handbook →", action: () => { window.open(GENERAL_HANDBOOK_URL, "_blank", "noopener,noreferrer"); setShowMenu(false); } },
                       { label: "Settings", action: () => navigate("/settings") },
-                      {
-                        label: enrollment ? "Update Enrolment" : "Add Enrolment",
-                        action: () => navigate("/"),
-                      },
                     ].map((item) => (
                       <button
                         key={item.label}
