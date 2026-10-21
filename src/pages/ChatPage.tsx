@@ -27,7 +27,7 @@ export function ChatPage() {
     inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
-    saveCurrentStudyPlan, planSaveStatus,
+    saveCurrentStudyPlan, planSaveStatus, planSaveError,
   } = useChat();
 
   if (isLoggingOut) {
@@ -115,8 +115,9 @@ export function ChatPage() {
             collapsed={studyPlanCollapsed}
             onToggle={() => setStudyPlanCollapsed((v) => !v)}
             studyPlanInput={studyPlanData}
-          onSavePlan={() => void saveCurrentStudyPlan()}
-          planSaveStatus={planSaveStatus}
+            onSavePlan={() => void saveCurrentStudyPlan()}
+            planSaveStatus={planSaveStatus}
+            planSaveError={planSaveError}
           />
         </div>
       </div>
@@ -192,6 +193,7 @@ export function ChatPage() {
                 studyPlanInput={studyPlanData}
                 onSavePlan={() => void saveCurrentStudyPlan()}
                 planSaveStatus={planSaveStatus}
+                planSaveError={planSaveError}
               />
             </motion.div>
           </motion.div>
