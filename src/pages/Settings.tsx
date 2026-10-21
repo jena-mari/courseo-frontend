@@ -25,7 +25,7 @@ import { LlmPrivacyDisclosure } from "../components/account/LlmPrivacyDisclosure
 import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
 import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/account/ElectiveInterestsField";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
-import { getCourseHandbookUrl } from "../lib/handbookLinks";
+import { getCourseHandbookUrl, isValidCourseCode } from "../lib/handbookLinks";
 import { clearStudyPlansFromChats } from "../lib/savedStudyPlans";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
@@ -191,7 +191,7 @@ export function SettingsPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarChats, setSidebarChats] = useState<Chat[]>(() => getStoredChats(storage));
-  const handbookCode = sidebarChats.find((chat) => /^\d{3,6}$/.test(chat.degreeCode?.trim() ?? ""))?.degreeCode;
+  const handbookCode = sidebarChats.find((chat) => isValidCourseCode(chat.degreeCode))?.degreeCode;
   const handbookUrl = getCourseHandbookUrl(handbookCode, user?.commencementYear);
   const [storedProfile] = useState(() => getStoredProfile(user));
   const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username }));
@@ -545,7 +545,7 @@ export function SettingsPage() {
       </div>
 
       <AnimatePresence>
-        {showHandbook && <HandbookModal onClose={() => setShowHandbook(false)} />}
+        {showHandbook && <HandbookModal onClose={() => setShowHandbook(false)} handbookUrl={handbookUrl} />}
       </AnimatePresence>
 
       {showDeleteAccount && <DeleteAccountDialog onClose={() => setShowDeleteAccount(false)} />}

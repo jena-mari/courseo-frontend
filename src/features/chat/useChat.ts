@@ -13,7 +13,7 @@ import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
 import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
 import { saveStudyPlan } from "../../lib/savedPlansApi";
-import { getCourseCodeFromConversation, getCourseHandbookUrl, isValidCourseCode } from "../../lib/handbookLinks";
+import { getCourseHandbookUrl, isValidCourseCode } from "../../lib/handbookLinks";
 
 export function useChat() {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export function useChat() {
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
     initialActiveChat?.studyPlanData ?? null
   );
-  const [activeCourseCode, setActiveCourseCode] = useState<string | null>(initialActiveChat?.degreeCode ?? null);
+  const [activeCourseCode, setActiveCourseCode] = useState<string | null>(null);
   const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [planSaveError, setPlanSaveError] = useState("");
 
@@ -68,37 +68,25 @@ export function useChat() {
       const found = chats.find((c) => c.id === activeChatId);
       setActiveMessages(found?.messages ?? []);
       setStudyPlanData(found?.studyPlanData ?? null);
-      setActiveCourseCode(found?.degreeCode ?? null);
     }
   }, [activeChatId, chats]);
 
   useEffect(() => {
     if (activeChatId === "new") return;
     let cancelled = false;
+    setActiveCourseCode(null);
     void getChatHistory(activeChatId).then((history) => {
       if (cancelled) return;
-      const activeChat = chats.find((chat) => chat.id === activeChatId);
-      const degreeCode = getCourseCodeFromConversation(activeChat?.messages ?? [])
-        ?? (isValidCourseCode(history.degree_code) ? history.degree_code : null);
+      const degreeCode = isValidCourseCode(history.degree_code) ? history.degree_code.trim() : null;
       setActiveCourseCode(degreeCode);
       setChats((previousChats) => previousChats.map((chat) =>
         chat.id === activeChatId ? { ...chat, degreeCode } : chat
       ));
     }).catch(() => {
-      // An unavailable metadata endpoint falls back to the general handbook.
+      // Do not infer a course code when chat history is unavailable.
     });
     return () => { cancelled = true; };
   }, [activeChatId]);
-
-  useEffect(() => {
-    if (activeChatId === "new") return;
-    const degreeCode = getCourseCodeFromConversation(activeMessages);
-    if (!degreeCode) return;
-    setActiveCourseCode(degreeCode);
-    setChats((previousChats) => previousChats.map((chat) =>
-      chat.id === activeChatId && chat.degreeCode !== degreeCode ? { ...chat, degreeCode } : chat
-    ));
-  }, [activeChatId, activeMessages]);
 
   useEffect(() => { setPlanSaveStatus("idle"); setPlanSaveError(""); }, [activeChatId, studyPlanData]);
 
@@ -182,11 +170,8 @@ export function useChat() {
 
         const finalMessages = [...newMessages, aiMsg];
         setActiveMessages(finalMessages);
-        const transcriptCourseCode = getCourseCodeFromConversation(finalMessages);
-
         void getChatHistory(activeChat.backendSessionId).then((history) => {
-          const degreeCode = transcriptCourseCode
-            ?? (isValidCourseCode(history.degree_code) ? history.degree_code : null);
+          const degreeCode = isValidCourseCode(history.degree_code) ? history.degree_code.trim() : null;
           setActiveCourseCode(degreeCode);
           setChats((previousChats) => previousChats.map((chat) =>
             chat.id === activeChat.id ? { ...chat, degreeCode } : chat
@@ -413,7 +398,7 @@ export function useChat() {
     title: c.title || buildChatTitle(c),
     degreeCode: c.degreeCode,
   }));
-  const handbookUrl = getCourseHandbookUrl(getCourseCodeFromConversation(activeMessages) ?? activeCourseCode, user?.commencementYear);
+  const handbookUrl = getCourseHandbookUrl(activeCourseCode, user?.commencementYear);
 
   return {
     navigate, user, enrollment, activeChatId, handbookUrl,
