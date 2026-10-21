@@ -11,6 +11,7 @@ export interface UserOut {
   major: string | null;
   elective_interests: string[];
   created_at: string;
+  is_guest?: boolean;
 }
 
 export interface ProfileUpdate {
@@ -40,6 +41,10 @@ export function loginUser(input: { email: string; password: string }) {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export function createGuestUser() {
+  return api<UserOut>("/api/v1/auth/guest", { method: "POST" });
 }
 
 export function logoutUser() {
@@ -72,4 +77,8 @@ export function resetPassword(token: string, password: string) {
 
 export function deleteCurrentAccount(password: string) {
   return api<void>("/api/v1/auth/me", { method: "DELETE", body: JSON.stringify({ password }) });
+}
+
+export function deleteGuestWorkspace() {
+  return api<void>("/api/v1/auth/guest", { method: "DELETE" });
 }

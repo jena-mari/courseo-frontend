@@ -7,7 +7,8 @@ import { useAuth } from "../../auth/AuthContext";
 import { LoadingIndicator } from "../ui/LoadingIndicator";
 
 export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
-  const { deleteAccount } = useAuth();
+  const { deleteAccount, user } = useAuth();
+  const isGuest = user?.isGuest === true;
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +44,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (submitting.current || !password) return;
+    if (submitting.current || (!isGuest && !password)) return;
     submitting.current = true;
     setBusy(true);
     setError("");
@@ -64,13 +65,13 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       <form onSubmit={(event) => void submit(event)} onClick={(event) => event.stopPropagation()} onKeyDown={handleKeyDown} role="alertdialog" aria-modal="true" aria-labelledby="delete-account-title" aria-describedby="delete-account-description" aria-busy={busy} className="mx-auto my-auto w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-700"><AlertTriangle size={21} /></span>
-          <div><h2 id="delete-account-title" className="text-[18px] font-black text-[#000181]">Delete your account?</h2><p id="delete-account-description" className="mt-2 text-[12px] font-semibold leading-relaxed text-[#000181]/60">Deletion permanently removes your account, chat history, and stored API keys. This cannot be undone. Enter your current password to confirm.</p></div>
+          <div><h2 id="delete-account-title" className="text-[18px] font-black text-[#000181]">{isGuest ? "Delete guest workspace?" : "Delete your account?"}</h2><p id="delete-account-description" className="mt-2 text-[12px] font-semibold leading-relaxed text-[#000181]/60">Deletion permanently removes your account, chat history, saved plans, and stored API keys. This cannot be undone.{isGuest ? "" : " Enter your current password to confirm."}</p></div>
         </div>
-        <label className="mt-4 block text-[12px] font-bold text-[#000181]">Current password<input autoFocus required type="password" autoComplete="current-password" value={password} disabled={busy} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#d9daea] bg-[#fafaff] px-3 text-[14px] text-[#000181] outline-none focus:border-[#000181] focus:ring-2 focus:ring-[#000181]/10" /></label>
+        {!isGuest && <label className="mt-4 block text-[12px] font-bold text-[#000181]">Current password<input autoFocus required type="password" autoComplete="current-password" value={password} disabled={busy} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#d9daea] bg-[#fafaff] px-3 text-[14px] text-[#000181] outline-none focus:border-[#000181] focus:ring-2 focus:ring-[#000181]/10" /></label>}
         {error && <p role="alert" className="mt-3 rounded-[14px] bg-red-50 px-4 py-3 text-[12px] font-semibold text-red-700">{error}</p>}
         <div className="mt-6 flex gap-3">
           <button type="button" onClick={cancel} disabled={busy} className="h-12 flex-1 rounded-[15px] border border-[#000181]/20 text-[12px] font-extrabold text-[#000181] disabled:opacity-50">Cancel</button>
-          <button type="submit" disabled={busy || !password} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy && <LoadingIndicator size={15} />}{busy ? "Deleting account…" : "Permanently delete account"}</button>
+          <button type="submit" disabled={busy || (!isGuest && !password)} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy && <LoadingIndicator size={15} />}{busy ? "Deleting…" : isGuest ? "Delete guest workspace" : "Permanently delete account"}</button>
         </div>
       </form>
     </motion.div>, document.body

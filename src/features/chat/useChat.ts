@@ -12,6 +12,7 @@ import { buildChatTitle, isProviderKeyError, loadInitialChats, parseAIResponse }
 import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
 import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
+import { saveStudyPlan } from "../../lib/savedPlansApi";
 
 export function useChat() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export function useChat() {
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
     initialActiveChat?.studyPlanData ?? null
   );
+  const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useComposer(inputText);
@@ -64,6 +66,8 @@ export function useChat() {
       setStudyPlanData(found?.studyPlanData ?? null);
     }
   }, [activeChatId, chats]);
+
+  useEffect(() => { setPlanSaveStatus("idle"); }, [activeChatId, studyPlanData]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
@@ -338,6 +342,18 @@ export function useChat() {
     setChatError("");
   };
 
+  const saveCurrentStudyPlan = async () => {
+    if (!studyPlanData || planSaveStatus === "saving") return;
+    setPlanSaveStatus("saving");
+    try {
+      const current = chats.find((chat) => chat.id === activeChatId);
+      await saveStudyPlan(current?.title?.trim() || "My study plan", studyPlanData);
+      setPlanSaveStatus("saved");
+    } catch {
+      setPlanSaveStatus("error");
+    }
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
@@ -365,6 +381,7 @@ export function useChat() {
     inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
+    saveCurrentStudyPlan, planSaveStatus,
   };
 }
 

@@ -10,6 +10,8 @@ import {
 } from "react";
 import {
   deleteCurrentAccount,
+  createGuestUser,
+  deleteGuestWorkspace,
   fetchCurrentUser,
   loginUser,
   logoutUser,
@@ -39,8 +41,9 @@ interface AuthContextValue {
     password: string,
     displayName?: string | null
   ) => Promise<CourseoUser>;
+  continueAsGuest: () => Promise<CourseoUser>;
   logout: () => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
   updateUser: (user: CourseoUser) => void;
   updateProfile: (profile: ProfileUpdate) => Promise<CourseoUser>;
   refresh: () => Promise<void>;
@@ -123,6 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const continueAsGuest = useCallback(async () => {
+    const current = await createGuestUser();
+    authMutationRef.current += 1;
+    const mapped = applyUser(current);
+    setUser(mapped);
+    setStatus("authenticated");
+    return mapped;
+  }, []);
+
   const logout = useCallback(async () => {
     authMutationRef.current += 1;
     try {
@@ -134,11 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const deleteAccount = useCallback(async (password: string) => {
+  const deleteAccount = useCallback(async (password?: string) => {
     if (!user) throw new ApiError("Your session has expired. Log in again to continue.", 401);
     const mutationAtStart = authMutationRef.current;
     try {
-      await deleteCurrentAccount(password);
+      if (user.isGuest) await deleteGuestWorkspace();
+      else if (password) await deleteCurrentAccount(password);
+      else throw new ApiError("Enter your current password to delete this account.", 400);
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 401 && mutationAtStart === authMutationRef.current) {
         authMutationRef.current += 1;
@@ -186,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       login,
       register,
+      continueAsGuest,
       logout,
       deleteAccount,
       updateUser,
@@ -193,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refresh,
       loadProfile,
     }),
-    [user, status, login, register, logout, deleteAccount, updateUser, updateProfile, refresh, loadProfile]
+    [user, status, login, register, continueAsGuest, logout, deleteAccount, updateUser, updateProfile, refresh, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

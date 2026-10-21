@@ -17,6 +17,7 @@ export interface CourseoUser {
   major: string | null;
   electiveMode: ElectiveRecommendationMode;
   electiveInterests: string[];
+  isGuest: boolean;
 }
 
 export function toCourseoUser(user: UserOut): CourseoUser {
@@ -32,6 +33,7 @@ export function toCourseoUser(user: UserOut): CourseoUser {
     major: user.major ?? null,
     electiveMode: user.elective_interests?.length ? "interest" : "degree",
     electiveInterests: user.elective_interests ?? [],
+    isGuest: user.is_guest === true,
   };
 }
 
@@ -58,6 +60,7 @@ export function getCachedAuthUser(): CourseoUser | null {
       major: user.major ?? null,
       electiveMode: user.electiveMode === "interest" ? "interest" : "degree", 
       electiveInterests: Array.isArray(user.electiveInterests) ? user.electiveInterests : [],
+      isGuest: user.isGuest === true,
     };
   } catch {
     clearCachedAuthUser();
