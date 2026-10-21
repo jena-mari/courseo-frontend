@@ -71,7 +71,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
         {error && <p role="alert" className="mt-3 rounded-[14px] bg-red-50 px-4 py-3 text-[12px] font-semibold text-red-700">{error}</p>}
         <div className="mt-6 flex gap-3">
           <button type="button" onClick={cancel} disabled={busy} className="h-12 flex-1 rounded-[15px] border border-[#000181]/20 text-[12px] font-extrabold text-[#000181] disabled:opacity-50">Cancel</button>
-          <button type="submit" disabled={busy || (!isGuest && !password)} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy && <LoadingIndicator size={15} />}{busy ? "Deleting…" : isGuest ? "Delete guest workspace" : "Permanently delete account"}</button>
+          <button type="submit" disabled={busy || (!isGuest && !password)} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[15px] bg-red-700 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy && <LoadingIndicator size={15} />}{busy ? (isGuest ? "Deleting workspace…" : "Deleting account…") : isGuest ? "Delete guest workspace" : "Permanently delete account"}</button>
         </div>
       </form>
     </motion.div>, document.body
