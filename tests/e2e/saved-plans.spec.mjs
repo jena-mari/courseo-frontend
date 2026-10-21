@@ -9,6 +9,7 @@ const initialPlan = { plan: [{ year: '2027', sessions: [{ session: 'Autumn', sub
 
 test('a generated plan can be saved, retrieved, edited, and reloaded from the profile', async ({ page }) => {
   const saved = [];
+  let saveAttempts = 0;
   await page.addInitScript(({ userId, plan }) => {
     const prefix = `courseo:account:${encodeURIComponent(userId)}:`;
     localStorage.setItem(prefix + 'courseoLlmPrivacyAcknowledgedV1', userId);
@@ -31,6 +32,8 @@ test('a generated plan can be saved, retrieved, edited, and reloaded from the pr
     const request = route.request();
     const url = new URL(request.url());
     if (request.method() === 'POST' && url.pathname === '/api/v1/plans') {
+      saveAttempts += 1;
+      if (saveAttempts === 1) return route.fulfill({ status: 503, json: { detail: 'temporary database error' } });
       const body = request.postDataJSON();
       const item = { id: 'saved-plan-1', ...body, created_at: '2026-10-20T00:00:00.000Z', updated_at: '2026-10-20T00:00:00.000Z' };
       saved.push(item);
@@ -53,6 +56,8 @@ test('a generated plan can be saved, retrieved, edited, and reloaded from the pr
 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/#/chat');
+  await page.getByRole('button', { name: 'Save to profile' }).click();
+  await expect(page.getByRole('alert')).toHaveText('Courseo is temporarily unavailable. Please try again in a few moments.');
   await page.getByRole('button', { name: 'Save to profile' }).click();
   await expect(page.getByRole('button', { name: 'Saved to profile' })).toBeVisible();
 

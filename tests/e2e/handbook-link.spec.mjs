@@ -16,13 +16,16 @@ test('handbook links follow the active chat course code', async ({ page }) => {
   await page.addInitScript((userId) => {
     localStorage.setItem(`courseo:account:${encodeURIComponent(userId)}:courseoChats`, JSON.stringify([{
       id: 'course-session', backendSessionId: 'course-session', title: 'My course plan',
-      messages: [], studyPlanData: null, model: 'test-model',
+      messages: [
+        { id: 'prompt', role: 'assistant', content: 'What is your UOW course code?', timestamp: new Date().toISOString() },
+        { id: 'answer', role: 'user', content: '1807', timestamp: new Date().toISOString() },
+      ], studyPlanData: null, model: 'test-model',
     }]));
   }, user.id);
   await page.route('**/api/v1/**', (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/auth/me')) return route.fulfill({ json: user });
-    if (path.endsWith('/chat/course-session')) return route.fulfill({ json: { session_id: 'course-session', degree_code: '1807', messages: [] } });
+    if (path.endsWith('/chat/course-session')) return route.fulfill({ json: { session_id: 'course-session', degree_code: 'UNKNOWN', messages: [] } });
     if (path.endsWith('/keys/providers')) return route.fulfill({ json: { providers: [], default_model: null } });
     return route.fulfill({ json: [] });
   });

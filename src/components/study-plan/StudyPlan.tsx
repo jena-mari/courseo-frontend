@@ -11,6 +11,7 @@ interface studyPlanProps {
   expandedWidth?: number | string;
   onSavePlan?: () => void;
   planSaveStatus?: "idle" | "saving" | "saved" | "error";
+  planSaveError?: string;
 }
 
 export function StudyPlan({
@@ -20,6 +21,7 @@ export function StudyPlan({
   expandedWidth = "clamp(270px, 24vw, 300px)",
   onSavePlan,
   planSaveStatus = "idle",
+  planSaveError = "",
 }: studyPlanProps) {
 
   return (
@@ -63,7 +65,7 @@ export function StudyPlan({
           <button type="button" onClick={onSavePlan} disabled={planSaveStatus === "saving"} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#000181] px-3 text-xs font-extrabold text-white transition hover:bg-[#15159a] disabled:opacity-60">
             <Save size={15} />{planSaveStatus === "saving" ? "Saving plan…" : planSaveStatus === "saved" ? "Saved to profile" : "Save to profile"}
           </button>
-          {planSaveStatus === "error" && <p role="alert" className="mt-2 text-center text-[11px] font-semibold text-red-700">Could not save this plan. Try again.</p>}
+          {planSaveStatus === "error" && <p role="alert" className="mt-2 text-center text-[11px] font-semibold text-red-700">{planSaveError || "Could not save this plan. Try again."}</p>}
         </div>
       )}
 

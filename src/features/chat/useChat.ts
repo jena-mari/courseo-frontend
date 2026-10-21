@@ -13,7 +13,7 @@ import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
 import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
 import { saveStudyPlan } from "../../lib/savedPlansApi";
-import { getCourseHandbookUrl } from "../../lib/handbookLinks";
+import { getCourseCodeFromConversation, getCourseHandbookUrl, isValidCourseCode } from "../../lib/handbookLinks";
 
 export function useChat() {
   const navigate = useNavigate();
@@ -49,6 +49,7 @@ export function useChat() {
   );
   const [activeCourseCode, setActiveCourseCode] = useState<string | null>(initialActiveChat?.degreeCode ?? null);
   const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [planSaveError, setPlanSaveError] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useComposer(inputText);
@@ -76,7 +77,9 @@ export function useChat() {
     let cancelled = false;
     void getChatHistory(activeChatId).then((history) => {
       if (cancelled) return;
-      const degreeCode = history.degree_code || null;
+      const activeChat = chats.find((chat) => chat.id === activeChatId);
+      const degreeCode = getCourseCodeFromConversation(activeChat?.messages ?? [])
+        ?? (isValidCourseCode(history.degree_code) ? history.degree_code : null);
       setActiveCourseCode(degreeCode);
       setChats((previousChats) => previousChats.map((chat) =>
         chat.id === activeChatId ? { ...chat, degreeCode } : chat
@@ -87,7 +90,17 @@ export function useChat() {
     return () => { cancelled = true; };
   }, [activeChatId]);
 
-  useEffect(() => { setPlanSaveStatus("idle"); }, [activeChatId, studyPlanData]);
+  useEffect(() => {
+    if (activeChatId === "new") return;
+    const degreeCode = getCourseCodeFromConversation(activeMessages);
+    if (!degreeCode) return;
+    setActiveCourseCode(degreeCode);
+    setChats((previousChats) => previousChats.map((chat) =>
+      chat.id === activeChatId && chat.degreeCode !== degreeCode ? { ...chat, degreeCode } : chat
+    ));
+  }, [activeChatId, activeMessages]);
+
+  useEffect(() => { setPlanSaveStatus("idle"); setPlanSaveError(""); }, [activeChatId, studyPlanData]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
@@ -169,9 +182,11 @@ export function useChat() {
 
         const finalMessages = [...newMessages, aiMsg];
         setActiveMessages(finalMessages);
+        const transcriptCourseCode = getCourseCodeFromConversation(finalMessages);
 
         void getChatHistory(activeChat.backendSessionId).then((history) => {
-          const degreeCode = history.degree_code || null;
+          const degreeCode = transcriptCourseCode
+            ?? (isValidCourseCode(history.degree_code) ? history.degree_code : null);
           setActiveCourseCode(degreeCode);
           setChats((previousChats) => previousChats.map((chat) =>
             chat.id === activeChat.id ? { ...chat, degreeCode } : chat
@@ -373,11 +388,13 @@ export function useChat() {
   const saveCurrentStudyPlan = async () => {
     if (!studyPlanData || planSaveStatus === "saving") return;
     setPlanSaveStatus("saving");
+    setPlanSaveError("");
     try {
       const current = chats.find((chat) => chat.id === activeChatId);
       await saveStudyPlan(current?.title?.trim() || "My study plan", studyPlanData);
       setPlanSaveStatus("saved");
-    } catch {
+    } catch (error) {
+      setPlanSaveError(error instanceof Error ? error.message : "Could not save this plan. Try again.");
       setPlanSaveStatus("error");
     }
   };
@@ -396,7 +413,7 @@ export function useChat() {
     title: c.title || buildChatTitle(c),
     degreeCode: c.degreeCode,
   }));
-  const handbookUrl = getCourseHandbookUrl(activeCourseCode, user?.commencementYear);
+  const handbookUrl = getCourseHandbookUrl(getCourseCodeFromConversation(activeMessages) ?? activeCourseCode, user?.commencementYear);
 
   return {
     navigate, user, enrollment, activeChatId, handbookUrl,
@@ -411,7 +428,7 @@ export function useChat() {
     inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
-    saveCurrentStudyPlan, planSaveStatus,
+    saveCurrentStudyPlan, planSaveStatus, planSaveError,
   };
 }
 
