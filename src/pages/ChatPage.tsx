@@ -15,7 +15,7 @@ import { useChat } from "../features/chat/useChat";
 
 export function ChatPage() {
   const {
-    navigate, user, enrollment, activeChatId,
+    navigate, user, enrollment, activeChatId, handbookUrl,
     activeMessages, inputText, setInputText, isTyping,
     chatPhase, isCreatingChat, chatError, availableModels,
     selectedModel, keyStatus, showKeyNotice, setShowKeyNotice,
@@ -51,6 +51,7 @@ export function ChatPage() {
         <div className="hidden lg:block h-full">
           <CourseoSidebar
           chats={sidebarChats}
+          handbookUrl={handbookUrl}
           activeChatId={activeChatId}
           onNewChat={handleNewChat}
           onSelectChat={handleSelectChat}
@@ -67,6 +68,7 @@ export function ChatPage() {
         <main className="flex-1 bg-white rounded-[22px] sm:rounded-[26px] xl:rounded-[30px] shadow-[2px_2px_10px_3px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden min-w-0">
           <ChatHeader
             navigate={navigate}
+            handbookUrl={handbookUrl}
             setMobileSidebarOpen={setMobileSidebarOpen}
             availableModels={availableModels}
             selectedModel={selectedModel}
@@ -138,6 +140,7 @@ export function ChatPage() {
             >
               <CourseoSidebar
                 chats={sidebarChats}
+                handbookUrl={handbookUrl}
                 activeChatId={activeChatId}
                 onNewChat={() => {
                   setMobileSidebarOpen(false);

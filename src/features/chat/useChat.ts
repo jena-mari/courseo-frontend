@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent }
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { buildChatContext } from "../../lib/chatContext";
-import { continueChat, startChat } from "../../lib/chatApi";
+import { continueChat, getChatHistory, startChat } from "../../lib/chatApi";
 import { accountStorage, STORAGE_KEYS } from "../../lib/storageKeys";
 import type { StudyPlanResponse } from "../../types/studyPlanType";
 import type { ChatPhase } from "../../lib/chatProgress";
@@ -13,6 +13,7 @@ import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
 import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
 import { saveStudyPlan } from "../../lib/savedPlansApi";
+import { getCourseHandbookUrl } from "../../lib/handbookLinks";
 
 export function useChat() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export function useChat() {
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanResponse | null>(
     initialActiveChat?.studyPlanData ?? null
   );
+  const [activeCourseCode, setActiveCourseCode] = useState<string | null>(initialActiveChat?.degreeCode ?? null);
   const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,12 +62,30 @@ export function useChat() {
     if (activeChatId === "new") {
       setActiveMessages([]);
       setStudyPlanData(null);
+      setActiveCourseCode(null);
     } else {
       const found = chats.find((c) => c.id === activeChatId);
       setActiveMessages(found?.messages ?? []);
       setStudyPlanData(found?.studyPlanData ?? null);
+      setActiveCourseCode(found?.degreeCode ?? null);
     }
   }, [activeChatId, chats]);
+
+  useEffect(() => {
+    if (activeChatId === "new") return;
+    let cancelled = false;
+    void getChatHistory(activeChatId).then((history) => {
+      if (cancelled) return;
+      const degreeCode = history.degree_code || null;
+      setActiveCourseCode(degreeCode);
+      setChats((previousChats) => previousChats.map((chat) =>
+        chat.id === activeChatId ? { ...chat, degreeCode } : chat
+      ));
+    }).catch(() => {
+      // An unavailable metadata endpoint falls back to the general handbook.
+    });
+    return () => { cancelled = true; };
+  }, [activeChatId]);
 
   useEffect(() => { setPlanSaveStatus("idle"); }, [activeChatId, studyPlanData]);
 
@@ -149,6 +169,14 @@ export function useChat() {
 
         const finalMessages = [...newMessages, aiMsg];
         setActiveMessages(finalMessages);
+
+        void getChatHistory(activeChat.backendSessionId).then((history) => {
+          const degreeCode = history.degree_code || null;
+          setActiveCourseCode(degreeCode);
+          setChats((previousChats) => previousChats.map((chat) =>
+            chat.id === activeChat.id ? { ...chat, degreeCode } : chat
+          ));
+        }).catch(() => {});
 
         setChats((previousChats) =>
           previousChats.map((chat) =>
@@ -366,10 +394,12 @@ export function useChat() {
   const sidebarChats: Chat[] = chats.map((c) => ({
     id: c.id,
     title: c.title || buildChatTitle(c),
+    degreeCode: c.degreeCode,
   }));
+  const handbookUrl = getCourseHandbookUrl(activeCourseCode, user?.commencementYear);
 
   return {
-    navigate, user, enrollment, activeChatId,
+    navigate, user, enrollment, activeChatId, handbookUrl,
     activeMessages, inputText, setInputText, isTyping,
     chatPhase, isCreatingChat, chatError, availableModels,
     selectedModel, keyStatus, showKeyNotice, setShowKeyNotice,

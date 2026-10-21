@@ -149,6 +149,9 @@ test('follow-up uses the available UI model instead of the saved obsolete model 
   });
   let calls = 0;
   await page.route('**/api/v1/chat/*', route => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({json:{session_id:'00000000-0000-4000-8000-000000000001',degree_code:'1807',messages:[]}});
+    }
     calls += 1;
     const payload = route.request().postDataJSON();
     expect(payload.model).toBe('gemini-test');
