@@ -66,6 +66,7 @@ export function ChatHeader({ navigate, setMobileSidebarOpen, availableModels, se
                         action: () => void handleNewChat(),
                       },
                       { label: "Handbook →", action: () => { window.open(GENERAL_HANDBOOK_URL, "_blank", "noopener,noreferrer"); setShowMenu(false); } },
+                      { label: "Saved plans", action: () => navigate("/saved-plans") },
                       { label: "Settings", action: () => navigate("/settings") },
                     ].map((item) => (
                       <button

@@ -83,6 +83,10 @@ export const router = createHashRouter([{
           path: "/settings",
           lazy: async () => ({ Component: (await import("./pages/Settings")).SettingsPage }),
         },
+        {
+          path: "/saved-plans",
+          lazy: async () => ({ Component: (await import("./pages/SavedPlansPage")).SavedPlansPage }),
+        },
       ],
     },
   ],
