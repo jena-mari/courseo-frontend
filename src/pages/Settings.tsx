@@ -25,6 +25,7 @@ import { LlmPrivacyDisclosure } from "../components/account/LlmPrivacyDisclosure
 import { ApiKeysPanel } from "../components/account/ApiKeysPanel";
 import { ElectiveInterestsField, inferElectiveMode, type ElectiveRecommendationMode } from "../components/account/ElectiveInterestsField";
 import { accountStorage, STORAGE_KEYS } from "../lib/storageKeys";
+import { getCourseHandbookUrl } from "../lib/handbookLinks";
 import { clearStudyPlansFromChats } from "../lib/savedStudyPlans";
 import { checkBackendHealth, type BackendHealth } from "../lib/api";
 
@@ -37,10 +38,10 @@ const TABS: Array<{ id: SettingsTab; label: string }> = [
 
 function getStoredChats(storage: ReturnType<typeof accountStorage>): Chat[] {
   try {
-    const chats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string; title?: string }>;
+    const chats = JSON.parse(storage.getItem(STORAGE_KEYS.chats) ?? "[]") as Array<{ id?: string; title?: string; degreeCode?: string | null }>;
     return chats
-      .filter((chat): chat is { id: string; title: string } => Boolean(chat.id && chat.title))
-      .map(({ id, title }) => ({ id, title }));
+      .filter((chat): chat is { id: string; title: string; degreeCode?: string | null } => Boolean(chat.id && chat.title))
+      .map(({ id, title, degreeCode }) => ({ id, title, degreeCode }));
   } catch {
     return [];
   }
@@ -190,6 +191,8 @@ export function SettingsPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarChats, setSidebarChats] = useState<Chat[]>(() => getStoredChats(storage));
+  const handbookCode = sidebarChats.find((chat) => /^\d{3,6}$/.test(chat.degreeCode?.trim() ?? ""))?.degreeCode;
+  const handbookUrl = getCourseHandbookUrl(handbookCode, user?.commencementYear);
   const [storedProfile] = useState(() => getStoredProfile(user));
   const [profile, setProfile] = useState(() => ({ email: storedProfile.email, username: storedProfile.username }));
   const [saveStatus, setSaveStatus] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle");
@@ -349,6 +352,7 @@ export function SettingsPage() {
         <div className="hidden h-full lg:block">
           <CourseoSidebar
             chats={sidebarChats}
+            handbookUrl={handbookUrl}
             activeChatId="settings"
             onNewChat={goToChat}
             onSelectChat={goToChat}

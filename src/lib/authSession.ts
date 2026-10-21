@@ -27,7 +27,8 @@ export function toCourseoUser(user: UserOut): CourseoUser {
     email: user.email,
     displayName,
     username: displayName || user.email.split("@")[0] || user.email,
-    degreeCode: user.degree_code ?? "766",
+    // Do not guess a course code: missing data must use the general handbook link.
+    degreeCode: user.degree_code ?? "",
     commencementYear: user.commencement_year ?? null,
     campus: user.campus ?? null,
     major: user.major ?? null,
@@ -54,7 +55,7 @@ export function getCachedAuthUser(): CourseoUser | null {
     }
     return {
       ...user,
-      degreeCode: user.degreeCode ?? "766",
+      degreeCode: user.degreeCode ?? "",
       commencementYear: user.commencementYear ?? null,
       campus: user.campus ?? null,
       major: user.major ?? null,

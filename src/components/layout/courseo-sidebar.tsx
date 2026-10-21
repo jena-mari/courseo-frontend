@@ -7,10 +7,12 @@ import { GENERAL_HANDBOOK_URL } from "../../lib/handbookLinks";
 export interface Chat {
   id: string;
   title: string;
+  degreeCode?: string | null;
 }
 
 interface CourseoSidebarProps {
   chats: Chat[];
+  handbookUrl?: string;
   activeChatId?: string;
   onNewChat: () => void;
   onSelectChat: (id: string) => void;
@@ -27,6 +29,7 @@ interface CourseoSidebarProps {
 
 export function CourseoSidebar({
   chats,
+  handbookUrl = GENERAL_HANDBOOK_URL,
   activeChatId,
   onNewChat,
   onSelectChat,
@@ -114,18 +117,18 @@ export function CourseoSidebar({
         </button>
 
           <a
-            href={GENERAL_HANDBOOK_URL}
+            href={handbookUrl}
             target="_blank"
             rel="noopener noreferrer"
-            title="Browse the UOW School of Computing and Information Technology handbook"
-            aria-label="Browse the UOW handbook"
+            title="Open your UOW course handbook"
+            aria-label="Open your handbook"
             className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
           >
             <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
               <BookOpen size={14} className="shrink-0 text-[#000181]" />
               {!collapsed && (
                 <span className="whitespace-nowrap text-[12px] font-bold text-[#000181]">
-                  Handbook <span aria-hidden="true">→</span>
+                  Your Handbook <span aria-hidden="true">→</span>
                 </span>
               )}
             </div>
