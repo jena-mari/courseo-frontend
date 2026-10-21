@@ -64,14 +64,22 @@ export function ChatHeader({ navigate, handbookUrl, setMobileSidebarOpen, availa
                         label: isCreatingChat ? "Creating Chat…" : "New Chat",
                         action: () => void handleNewChat(),
                       },
-                      { label: "Your Handbook →", action: () => { window.open(handbookUrl, "_blank", "noopener,noreferrer"); setShowMenu(false); } },
+                      {
+                        label: handbookUrl ? "Your Handbook →" : "Course not confirmed yet",
+                        disabled: !handbookUrl,
+                        action: () => {
+                          if (handbookUrl) window.open(handbookUrl, "_blank", "noopener,noreferrer");
+                          setShowMenu(false);
+                        },
+                      },
                       { label: "Saved plans", action: () => navigate("/saved-plans") },
                       { label: "Settings", action: () => navigate("/settings") },
                     ].map((item) => (
                       <button
                         key={item.label}
                         onClick={item.action}
-                        className="w-full text-left px-4 py-2 text-[13px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] transition-colors"
+                        disabled={item.disabled}
+                        className="w-full text-left px-4 py-2 text-[13px] font-semibold text-[#000181] hover:bg-[rgba(131,231,255,0.2)] transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
                       >
                         {item.label}
                       </button>

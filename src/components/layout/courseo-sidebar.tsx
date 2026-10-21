@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Search, PenLine, BookOpen, ChevronRight, Settings, HelpCircle, KeyRound, User, PanelLeftClose, PanelLeftOpen, MessageSquare, Trash2 } from "lucide-react";
 import imgLogo from "../../assets/courseo-logo.png";
 import { motion } from "framer-motion";
-import { GENERAL_HANDBOOK_URL } from "../../lib/handbookLinks";
 
 export interface Chat {
   id: string;
@@ -12,7 +11,7 @@ export interface Chat {
 
 interface CourseoSidebarProps {
   chats: Chat[];
-  handbookUrl?: string;
+  handbookUrl?: string | null;
   activeChatId?: string;
   onNewChat: () => void;
   onSelectChat: (id: string) => void;
@@ -29,7 +28,7 @@ interface CourseoSidebarProps {
 
 export function CourseoSidebar({
   chats,
-  handbookUrl = GENERAL_HANDBOOK_URL,
+  handbookUrl,
   activeChatId,
   onNewChat,
   onSelectChat,
@@ -116,24 +115,24 @@ export function CourseoSidebar({
           {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
         </button>
 
-          <a
-            href={handbookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Open your UOW course handbook"
-            aria-label="Open your handbook"
-            className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
+          <button
+            type="button"
+            disabled={!handbookUrl}
+            onClick={() => handbookUrl && window.open(handbookUrl, "_blank", "noopener,noreferrer")}
+            title={handbookUrl ? "Open your UOW course handbook" : "Course not confirmed yet"}
+            aria-label={handbookUrl ? "Open your handbook" : "Course not confirmed yet"}
+            className={`flex h-10 items-center overflow-hidden rounded-[13px] bg-[rgba(131,231,255,0.5)] transition-all hover:bg-[rgba(131,231,255,0.7)] disabled:cursor-not-allowed disabled:opacity-50 ${collapsed ? "w-10 justify-center px-0" : "w-full justify-between gap-2 px-3.5"}`}
           >
             <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
               <BookOpen size={14} className="shrink-0 text-[#000181]" />
               {!collapsed && (
                 <span className="whitespace-nowrap text-[12px] font-bold text-[#000181]">
-                  Your Handbook <span aria-hidden="true">→</span>
+                  {handbookUrl ? <>Your Handbook <span aria-hidden="true">→</span></> : "Course not confirmed yet"}
                 </span>
               )}
             </div>
             {!collapsed && <ChevronRight size={15} className="text-[#000181]" />}
-          </a>
+          </button>
       </div>
 
       <div className={`${collapsed ? "mx-3" : "mx-4"} my-3 border-t border-[#000181]`} />
