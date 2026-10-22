@@ -12,7 +12,6 @@ import { buildChatTitle, isProviderKeyError, loadInitialChats, parseAIResponse }
 import { useChatAccess } from "./useChatAccess";
 import { useComposer } from "./useComposer";
 import { inferElectiveMode } from "../../components/account/ElectiveInterestsField";
-import { saveStudyPlan } from "../../lib/savedPlansApi";
 import { getCourseHandbookUrl, isValidCourseCode } from "../../lib/handbookLinks";
 
 export function useChat() {
@@ -48,9 +47,6 @@ export function useChat() {
     initialActiveChat?.studyPlanData ?? null
   );
   const [activeCourseCode, setActiveCourseCode] = useState<string | null>(null);
-  const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [planSaveError, setPlanSaveError] = useState("");
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useComposer(inputText);
   const pendingPromptSentRef = useRef(false);
@@ -87,8 +83,6 @@ export function useChat() {
     });
     return () => { cancelled = true; };
   }, [activeChatId]);
-
-  useEffect(() => { setPlanSaveStatus("idle"); setPlanSaveError(""); }, [activeChatId, studyPlanData]);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
@@ -370,20 +364,6 @@ export function useChat() {
     setChatError("");
   };
 
-  const saveCurrentStudyPlan = async () => {
-    if (!studyPlanData || planSaveStatus === "saving") return;
-    setPlanSaveStatus("saving");
-    setPlanSaveError("");
-    try {
-      const current = chats.find((chat) => chat.id === activeChatId);
-      await saveStudyPlan(current?.title?.trim() || "My study plan", studyPlanData);
-      setPlanSaveStatus("saved");
-    } catch (error) {
-      setPlanSaveError(error instanceof Error ? error.message : "Could not save this plan. Try again.");
-      setPlanSaveStatus("error");
-    }
-  };
-
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
@@ -413,7 +393,6 @@ export function useChat() {
     inputRef, handleKeyDown, handleNewChat,
     fillComposer, submitComposer, handleSelectChat, handleDeleteChat,
     handleLogout, isEmptyChat, sidebarChats,
-    saveCurrentStudyPlan, planSaveStatus, planSaveError,
   };
 }
 

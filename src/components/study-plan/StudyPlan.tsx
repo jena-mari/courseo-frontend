@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, PanelRightClose, PanelRightOpen, Save } from "lucide-react";
+import { BookOpen, CalendarDays, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import SubjectCard from "./subject-card";
 import type { StudyPlanResponse } from "../../types/studyPlanType";
@@ -9,9 +9,6 @@ interface studyPlanProps {
   onToggle?: () => void;
   studyPlanInput: StudyPlanResponse | null;
   expandedWidth?: number | string;
-  onSavePlan?: () => void;
-  planSaveStatus?: "idle" | "saving" | "saved" | "error";
-  planSaveError?: string;
 }
 
 export function StudyPlan({
@@ -19,9 +16,6 @@ export function StudyPlan({
   onToggle,
   studyPlanInput = null,
   expandedWidth = "clamp(270px, 24vw, 300px)",
-  onSavePlan,
-  planSaveStatus = "idle",
-  planSaveError = "",
 }: studyPlanProps) {
 
   return (
@@ -59,15 +53,6 @@ export function StudyPlan({
       </div>
 
       <div className="mx-4 mb-4 border-t border-[rgba(0,1,129,0.10)]" />
-
-      {!collapsed && studyPlanInput && onSavePlan && (
-        <div className="shrink-0 px-4 pb-3">
-          <button type="button" onClick={onSavePlan} disabled={planSaveStatus === "saving"} className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#000181] px-3 text-xs font-extrabold text-white transition hover:bg-[#15159a] disabled:opacity-60">
-            <Save size={15} />{planSaveStatus === "saving" ? "Saving plan…" : planSaveStatus === "saved" ? "Saved to profile" : "Save to profile"}
-          </button>
-          {planSaveStatus === "error" && <p role="alert" className="mt-2 text-center text-[11px] font-semibold text-red-700">{planSaveError || "Could not save this plan. Try again."}</p>}
-        </div>
-      )}
 
       {!collapsed && (
         <div role="region" aria-label="Study plan" tabIndex={0} className="courseo-scroll flex-1 overflow-y-auto min-h-0 px-4 pb-4">
