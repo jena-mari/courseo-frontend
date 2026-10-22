@@ -10,7 +10,6 @@ import {
 } from "react";
 import {
   deleteCurrentAccount,
-  createGuestUser,
   deleteGuestWorkspace,
   fetchCurrentUser,
   loginUser,
@@ -41,7 +40,6 @@ interface AuthContextValue {
     password: string,
     displayName?: string | null
   ) => Promise<CourseoUser>;
-  continueAsGuest: () => Promise<CourseoUser>;
   logout: () => Promise<void>;
   deleteAccount: (password?: string) => Promise<void>;
   updateUser: (user: CourseoUser) => void;
@@ -126,15 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const continueAsGuest = useCallback(async () => {
-    const current = await createGuestUser();
-    authMutationRef.current += 1;
-    const mapped = applyUser(current);
-    setUser(mapped);
-    setStatus("authenticated");
-    return mapped;
-  }, []);
-
   const logout = useCallback(async () => {
     authMutationRef.current += 1;
     try {
@@ -200,7 +189,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       login,
       register,
-      continueAsGuest,
       logout,
       deleteAccount,
       updateUser,
@@ -208,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refresh,
       loadProfile,
     }),
-    [user, status, login, register, continueAsGuest, logout, deleteAccount, updateUser, updateProfile, refresh, loadProfile]
+    [user, status, login, register, logout, deleteAccount, updateUser, updateProfile, refresh, loadProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

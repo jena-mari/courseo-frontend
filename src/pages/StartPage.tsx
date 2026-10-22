@@ -80,7 +80,7 @@ function ChoiceHero({ onCopilot, onCourseo, onMoreInformation, user, loading }: 
 export function StartPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, status, continueAsGuest } = useAuth();
+  const { user, status } = useAuth();
   const routeState = location.state as { authRequired?: boolean; returnTo?: string } | null;
   const [mode, setMode] = useState<StartMode>(routeState?.authRequired ? "account" : "choice");
   const [showHelp, setShowHelp] = useState(false);
@@ -90,23 +90,6 @@ export function StartPage() {
   const [copilotError, setCopilotError] = useState("");
   const [openingCourseo, setOpeningCourseo] = useState(false);
   const [showKeyNotice, setShowKeyNotice] = useState(false);
-  const [guestBusy, setGuestBusy] = useState(false);
-  const [guestError, setGuestError] = useState("");
-
-  const startGuestWorkspace = async () => {
-    if (guestBusy) return;
-    setGuestBusy(true);
-    setGuestError("");
-    try {
-      await continueAsGuest();
-      navigate("/chat", { replace: true });
-    } catch (cause) {
-      setGuestError(cause instanceof Error ? cause.message : "Courseo could not start a guest workspace.");
-    } finally {
-      setGuestBusy(false);
-    }
-  };
-
   const chooseCourseo = async () => {
     if (status === "loading") return;
     if (!user) {
@@ -150,7 +133,7 @@ export function StartPage() {
   return <Shell>
     <AnimatePresence mode="wait">
       {mode === "choice" && <ChoiceHero key="choice" onCopilot={() => setMode("copilot-details")} onCourseo={() => void chooseCourseo()} onMoreInformation={() => setShowHelp(true)} user={Boolean(user)} loading={status === "loading" || openingCourseo} />}
-      {mode === "account" && <FlowCard key="account" title="Continue to Courseo" description={routeState?.authRequired ? "Log in before connecting or managing an API key. Courseo will bring you back to secure setup afterwards." : "Log in or create an account to keep your plans across devices, or try a temporary guest workspace."} onBack={() => setMode("choice")}><div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setMode("login")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white transition hover:-translate-y-0.5 hover:shadow-lg"><LogIn size={18} /> Log in</button><button type="button" onClick={() => setMode("register")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] border-2 border-[rgba(0,1,129,0.22)] text-[14px] font-extrabold text-[#000181] transition hover:-translate-y-0.5 hover:bg-[#eef0ff]"><UserPlus size={18} /> Create account</button></div><button type="button" onClick={() => void startGuestWorkspace()} disabled={guestBusy} className="mt-3 flex h-[54px] w-full items-center justify-center rounded-[18px] border border-[rgba(0,1,129,0.16)] bg-white text-[13px] font-extrabold text-[#000181] transition hover:bg-[#f5f6ff] disabled:opacity-60">{guestBusy ? "Starting guest workspace…" : "Continue as guest"}</button>{guestError && <p role="alert" className="mt-3 text-center text-[12px] font-semibold text-red-700">{guestError}</p>}<p className="mt-3 text-center text-[11px] font-semibold leading-relaxed text-[rgba(0,1,129,0.5)]">Guest workspaces are temporary. Signing out deletes their saved data.</p></FlowCard>}
+      {mode === "account" && <FlowCard key="account" title="Continue to Courseo" description={routeState?.authRequired ? "Log in before connecting or managing an API key. Courseo will bring you back to secure setup afterwards." : "Log in or create an account to keep your plans across devices."} onBack={() => setMode("choice")}><div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setMode("login")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] bg-[#000181] text-[14px] font-extrabold text-white transition hover:-translate-y-0.5 hover:shadow-lg"><LogIn size={18} /> Log in</button><button type="button" onClick={() => setMode("register")} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] border-2 border-[rgba(0,1,129,0.22)] text-[14px] font-extrabold text-[#000181] transition hover:-translate-y-0.5 hover:bg-[#eef0ff]"><UserPlus size={18} /> Create account</button></div></FlowCard>}
       {mode === "copilot-details" && <FlowCard key="copilot-details" title="Find your Copilot agent" description="Choose your course details and Courseo will open the matching UOW Copilot agent." onBack={() => setMode("choice")}>
         <div className="space-y-4">
           <label className="block text-[13px] font-extrabold text-[#000181]">Commencement year<select value={commencementYear} onChange={(event) => { setCommencementYear(event.target.value); setCopilotError(""); }} className="mt-2 h-[52px] w-full rounded-[16px] border-2 border-[rgba(0,1,129,0.25)] bg-white px-4 text-[14px] font-semibold outline-none focus:border-[#000181]"><option value="">Select commencement year</option>{COMMENCEMENT_YEARS.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>

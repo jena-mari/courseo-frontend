@@ -43,10 +43,6 @@ export function loginUser(input: { email: string; password: string }) {
   });
 }
 
-export function createGuestUser() {
-  return api<UserOut>("/api/v1/auth/guest", { method: "POST" });
-}
-
 export function logoutUser() {
   return api<void>("/api/v1/auth/logout", { method: "POST" });
 }
